@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class Network(Base):
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), server_onupdate=func.now())
     created_by_id = Column(

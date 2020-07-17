@@ -12,13 +12,12 @@ class NetworkBase(BaseModel):
 
 # Properties to receive on item creation
 class NetworkCreate(NetworkBase):
-    created_by_id: int
-    updated_by_id: int
+    pass
 
 
 # Properties to receive on item update
 class NetworkUpdate(NetworkBase):
-    updated_by_id: int
+    pass
 
 
 # Properties shared by models stored in DB

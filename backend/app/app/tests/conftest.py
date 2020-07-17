@@ -7,8 +7,11 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.main import app
-from app.models.user import User
+
+from app.models.item import Item
 from app.models.network import Network
+from app.models.user import User
+
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import get_superuser_token_headers, get_superuser
 
@@ -49,10 +52,21 @@ def normal_user(client: TestClient) -> User:
 
 def clear_db():
     db = SessionLocal()
+    models = [Network, Item]
+    for model in models:
+        try:
+            db.query(model).delete()
+        except Exception as e:
+            print(f'Failed to delete {model}s')
+            print(e)
+            db.rollback()
+
     try:
-        num_rows_deleted = db.query(Network).delete()
+        db.query(User).filter(User.id > 1).delete()
         db.commit()
-    except:
+    except Exception as e:
+        print(e)
+        print('Failed to delete extra users.')
         db.rollback()
 
 

@@ -18,7 +18,7 @@ def test_create_network(
     content = response.json()
     assert content["name"] == data["name"]
     assert "id" in content
-    assert "owner_id" in content
+    assert "created_by_id" in content
 
 
 def test_read_network(

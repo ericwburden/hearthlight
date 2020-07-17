@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app import crud, models
-from app.schemas.item import NetworkCreate
+from app.schemas.network import NetworkCreate
 from app.tests.utils.user import create_random_user
 
 

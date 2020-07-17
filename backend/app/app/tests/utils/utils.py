@@ -5,6 +5,7 @@ from typing import Dict
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.models.user import User
 
 
 def random_lower_string() -> str:
@@ -25,3 +26,10 @@ def get_superuser_token_headers(client: TestClient) -> Dict[str, str]:
     a_token = tokens["access_token"]
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+def get_superuser(client: TestClient) -> User:
+    superuser_token_headers = get_superuser_token_headers(client)
+    r = client.get(f"{settings.API_V1_STR}/users/me", headers=superuser_token_headers)
+    body = r.json()
+    return User(**body)

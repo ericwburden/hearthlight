@@ -9,7 +9,6 @@ from app.db.session import SessionLocal
 from app.main import app
 
 from app.models.item import Item
-from app.models.network import Network
 from app.models.node import Node
 from app.models.user import User
 
@@ -53,7 +52,7 @@ def normal_user(client: TestClient) -> User:
 
 def clear_db():
     db = SessionLocal()
-    models = [Network, Item, Node]
+    models = [Item, Node]
     for model in models:
         try:
             db.query(model).delete()

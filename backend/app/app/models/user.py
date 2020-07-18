@@ -28,3 +28,13 @@ class User(Base):
         back_populates="updated_by_user",
         primaryjoin="User.id==Network.updated_by_id",
     )
+    nodes_created = relationship(
+        "Node",
+        back_populates="created_by_user",
+        primaryjoin="User.id==Node.created_by_id",
+    )
+    nodes_updated = relationship(
+        "Node",
+        back_populates="updated_by_user",
+        primaryjoin="User.id==Node.updated_by_id",
+    )

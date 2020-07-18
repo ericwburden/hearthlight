@@ -71,8 +71,10 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
     Extends CRUDBase by adding capture for created_by_id and updated_by_id
     to the create and update methods, respectively.
     """
-    
-    def create(self, db: Session, *, obj_in: CreateSchemaType, created_by_id: int) -> ModelType:
+
+    def create(
+        self, db: Session, *, obj_in: CreateSchemaType, created_by_id: int
+    ) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data, created_by_id=created_by_id, updated_by_id=created_by_id)  # type: ignore
         db.add(db_obj)
@@ -93,10 +95,11 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
+
+        update_data["updated_by_id"] = updated_by_id
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
-        setattr(db_obj, 'updated_by_id', updated_by_id)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

@@ -36,7 +36,9 @@ def create_network(
     Create new network.
     """
     logging.info(network_in)
-    network = crud.network.create(db=db, obj_in=network_in, created_by_id=current_user.id)
+    network = crud.network.create(
+        db=db, obj_in=network_in, created_by_id=current_user.id
+    )
     return network
 
 

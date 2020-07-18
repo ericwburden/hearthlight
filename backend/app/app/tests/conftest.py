@@ -10,6 +10,7 @@ from app.main import app
 
 from app.models.item import Item
 from app.models.network import Network
+from app.models.node import Node
 from app.models.user import User
 
 from app.tests.utils.user import authentication_token_from_email, create_random_user
@@ -52,12 +53,12 @@ def normal_user(client: TestClient) -> User:
 
 def clear_db():
     db = SessionLocal()
-    models = [Network, Item]
+    models = [Network, Item, Node]
     for model in models:
         try:
             db.query(model).delete()
         except Exception as e:
-            print(f'Failed to delete {model}s')
+            print(f"Failed to delete {model}s")
             print(e)
             db.rollback()
 
@@ -66,7 +67,7 @@ def clear_db():
         db.commit()
     except Exception as e:
         print(e)
-        print('Failed to delete extra users.')
+        print("Failed to delete extra users.")
         db.rollback()
 
 
@@ -75,4 +76,5 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    clear_db()
+    # clear_db()
+    pass

@@ -79,3 +79,40 @@ def test_add_user_to_user_group(db: Session, normal_user: User) -> None:
     association = crud.user_group.add_user_to_group(db=db, user_group=user_group, user=user)
     assert association.user_group_id == user_group.id
     assert association.user_id == user.id
+
+
+def test_get_user_group_users(db: Session, normal_user: User) -> None:
+    node = create_random_node(db, created_by_id=normal_user.id, node_type='test_get_user_group_users')
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(db=db, obj_in=user_group_in, created_by_id=normal_user.id)
+
+    user1 = create_random_user(db)
+    user2 = create_random_user(db)
+    user3 = create_random_user(db)
+    crud.user_group.add_user_to_group(db=db, user_group=user_group, user=user1)
+    crud.user_group.add_user_to_group(db=db, user_group=user_group, user=user2)
+    group_users = crud.user_group.get_users(db, user_group=user_group)
+
+    for user in group_users:
+        assert user.id in [user1.id, user2.id]
+        assert user.id != user3.id
+
+
+def test_remove_user_from_user_group(db: Session, normal_user: User) -> None:
+    node = create_random_node(db, created_by_id=normal_user.id, node_type='test_remove_user_from_user_group')
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(db=db, obj_in=user_group_in, created_by_id=normal_user.id)
+
+    user = create_random_user(db)
+    association = crud.user_group.add_user_to_group(db=db, user_group=user_group, user=user)
+    crud.user_group.remove_user_from_group(db=db, user_group=user_group, user=user)
+    group_users = crud.user_group.get_users(db, user_group=user_group)
+    
+    assert association.user_group_id == user_group.id
+    assert association.user_id == user.id
+    for group_user in group_users:
+        assert group_user.id != user.id
+
+

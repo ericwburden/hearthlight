@@ -36,3 +36,5 @@ class Node(Base):
     node_type = Column(String(64), nullable=False)
     name = Column(String(256), nullable=False, unique=True)
     is_active = Column(Boolean, default=True)
+
+    user_groups = relationship('UserGroup', backref="node")

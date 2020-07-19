@@ -7,7 +7,8 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .item import Item  # noqa: F401
-    from .node import Node
+    from .node import Node # noqa
+    from .user import UserGroup # noqa
 
 
 class User(Base):
@@ -18,6 +19,7 @@ class User(Base):
     is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
     items = relationship("Item", back_populates="owner")
+
     nodes_created = relationship(
         "Node",
         back_populates="created_by_user",
@@ -27,4 +29,15 @@ class User(Base):
         "Node",
         back_populates="updated_by_user",
         primaryjoin="User.id==Node.updated_by_id",
+    )
+
+    user_groups_created = relationship(
+        "UserGroup",
+        back_populates="created_by_user",
+        primaryjoin="User.id==UserGroup.created_by_id",
+    )
+    user_groups_updated = relationship(
+        "UserGroup",
+        back_populates="updated_by_user",
+        primaryjoin="User.id==UserGroup.updated_by_id",
     )

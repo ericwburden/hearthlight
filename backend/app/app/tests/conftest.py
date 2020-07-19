@@ -11,6 +11,7 @@ from app.main import app
 from app.models.item import Item
 from app.models.node import Node
 from app.models.user import User
+from app.models.user_group import UserGroup, UserGroupUser
 
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import get_superuser_token_headers, get_superuser
@@ -52,10 +53,12 @@ def normal_user(client: TestClient) -> User:
 
 def clear_db():
     db = SessionLocal()
-    models = [Item, Node]
+    models = [Item, UserGroupUser, UserGroup, Node]
     for model in models:
         try:
-            db.query(model).delete()
+            n = db.query(model).delete()
+            # print(f'Deleted {n} {model.__name__}s')
+            db.commit()
         except Exception as e:
             print(f"Failed to delete {model}s")
             print(e)
@@ -75,5 +78,5 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    # clear_db()
-    pass
+    clear_db()
+    # pass

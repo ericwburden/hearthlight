@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.core.security import verify_password
 from app.schemas.user import UserCreate, UserUpdate
+from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_email, random_lower_string
 
 
@@ -92,3 +93,23 @@ def test_update_user(db: Session) -> None:
     assert user_2
     assert user.email == user_2.email
     assert verify_password(new_password, user_2.hashed_password)
+
+
+def test_get_user_groups_for_user(db: Session) -> None:
+    email = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=email, password=password)
+    user = crud.user.create(db, obj_in=user_in)
+
+    user_group1 = create_random_user_group(db, created_by_id=user.id)
+    user_group2 = create_random_user_group(db, created_by_id=user.id)
+    user_group3 = create_random_user_group(db, created_by_id=user.id)
+
+    crud.user_group.add_user_to_group(db, user_group=user_group1, user=user)
+    crud.user_group.add_user_to_group(db, user_group=user_group2, user=user)
+
+    user_user_groups = crud.user.get_user_groups(db, user=user)
+
+    for user_group in user_user_groups:
+        assert user_group.id in [user_group1.id, user_group2.id]
+        assert user_group.id != user_group3.id

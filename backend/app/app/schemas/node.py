@@ -7,15 +7,16 @@ from pydantic import BaseModel
 # Shared properties
 class NodeBase(BaseModel):
     parent_id: Optional[int]
-    node_type: str
-    name: str
-    is_active: bool = True
+    node_type: Optional[str]
+    name: Optional[str]
+    is_active: Optional[bool] = True
 
 
 # Properties to receive on item creation
 class NodeCreate(NodeBase):
-    pass
-
+    node_type: str
+    name: str
+    
 
 # Properties to receive on item update
 class NodeUpdate(NodeBase):

@@ -40,7 +40,7 @@ def test_update_node(db: Session, normal_user: User) -> None:
     node_in = NodeCreate(name=name, node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
     name2 = random_lower_string()
-    node_update = NodeCreate(name=name2, node_type="node")
+    node_update = NodeUpdate(name=name2)
     node2 = crud.node.update(
         db=db, db_obj=node, obj_in=node_update, updated_by_id=normal_user.id
     )

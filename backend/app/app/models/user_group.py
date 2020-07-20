@@ -14,13 +14,6 @@ class UserGroupUser(Base, Default):
     user_group_id = Column(Integer, ForeignKey('user_group.id'), primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
 
-# user_group_user = Table(
-#     'user_group_user',
-#     Base.metadata,
-#     Column('user_group_id', Integer, ForeignKey('user_group.id')),
-#     Column('user_id', Integer, ForeignKey('user.id'))
-# )
-
 
 class UserGroup(Base, Default):
     id = Column(Integer, primary_key=True, index=True)

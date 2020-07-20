@@ -2,6 +2,7 @@ from .crud_item import item
 from .crud_user import user
 from .crud_user_group import user_group
 from .crud_node import node
+from .crud_permission import permission, node_permission
 
 # For a new basic set of CRUD operations you could just do
 

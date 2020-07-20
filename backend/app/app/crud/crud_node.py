@@ -6,10 +6,12 @@ from sqlalchemy.sql.expression import literal
 
 from app.crud.base import CRUDBaseLogging
 from app.models.node import Node
+from app.models.permission import Permission
 from app.schemas.node import NodeCreate, NodeUpdate
 
 
 class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
+    # Needed a custom create to ensure validation on node.depth
     def create(self, db: Session, *, obj_in: NodeCreate, created_by_id: int) -> Node:
         obj_in_data = jsonable_encoder(obj_in)
         obj_in_data["depth"] = 0
@@ -22,6 +24,8 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    
+    # Needed a custom update to ensure validation on node.depth
     def update(
         self,
         db: Session,
@@ -60,6 +64,11 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         )
         node_ids = db.query(rec).all()
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
+
+    def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
+        # I know having this is redundant, but it's consistent to have it as a 
+        # CRUD function
+        return db.query(self.model).get(id).permissions
 
 
 node = CRUDNode(Node)

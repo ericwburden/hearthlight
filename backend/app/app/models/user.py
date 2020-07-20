@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .item import Item  # noqa: F401
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .user import UserGroup # noqa
 
 
-class User(Base):
+class User(Base, Default):
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String, index=True)
     email = Column(String, unique=True, index=True, nullable=False)

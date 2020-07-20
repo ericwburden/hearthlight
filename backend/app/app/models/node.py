@@ -4,13 +4,13 @@ from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.db.base_class import Base
+from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
 
 
-class Node(Base):
+class Node(Base, Default):
     id = Column(Integer, primary_key=True, index=True)
     parent_id = Column(Integer, ForeignKey("node.id"), index=True)
     children = relationship("Node")

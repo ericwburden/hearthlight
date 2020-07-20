@@ -6,3 +6,4 @@ from app.models.node import Node  # noqa
 from app.models.user import User  # noqa
 from app.models.user_group import UserGroup # noqa
 from app.models.user_group import UserGroupUser # noqa
+from app.models.permission import Permission, NodePermission # noqa

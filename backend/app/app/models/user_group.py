@@ -4,13 +4,13 @@ from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String, T
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.db.base_class import Base
+from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
 
 
-class UserGroupUser(Base):
+class UserGroupUser(Base, Default):
     user_group_id = Column(Integer, ForeignKey('user_group.id'), primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
 
@@ -22,7 +22,7 @@ class UserGroupUser(Base):
 # )
 
 
-class UserGroup(Base):
+class UserGroup(Base, Default):
     id = Column(Integer, primary_key=True, index=True)
     node_id = Column(Integer, ForeignKey("node.id"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())

@@ -88,4 +88,22 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         return user_group_permission
 
 
+    def grant_permission(self, db: Session, *, user_group: UserGroup, permission: Permission) -> UserGroupPermission:
+        user_group_permission = (
+            db.query(UserGroupPermission)
+            .filter(
+                and_(
+                    literal_column("user_group_id") == user_group.id,
+                    literal_column("permission_id") == permission.id,
+                )
+            )
+            .first()
+        )
+        user_group_permission.enabled = True
+        db.add(user_group_permission)
+        db.commit()
+        db.refresh(user_group_permission)
+        return user_group_permission
+
+
 user_group = CRUDUserGroup(UserGroup)

@@ -178,7 +178,7 @@ def test_add_permission_to_user_group(db: Session, normal_user: User) -> None:
 
 def test_get_permission_for_user_group(db: Session, normal_user: User) -> None:
     node = create_random_node(
-        db, created_by_id=normal_user.id, node_type="test_add_permission_to_user_group"
+        db, created_by_id=normal_user.id, node_type="test_get_permission_for_user_group"
     )
     name = random_lower_string()
     user_group_in = UserGroupCreate(name=name, node_id=node.id)
@@ -196,6 +196,34 @@ def test_get_permission_for_user_group(db: Session, normal_user: User) -> None:
     assert permission.id == stored_permission.id
     assert permission.resource_id == stored_permission.resource_id
     assert permission.permission_type == stored_permission.permission_type
+
+
+def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=normal_user.id,
+        node_type="test_get_all_permissions_for_user_group",
+    )
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(
+        db=db, obj_in=user_group_in, created_by_id=normal_user.id
+    )
+    permissions = [create_random_permission(db, node_id=node.id) for n in range(10)]
+    for permission in permissions:
+        crud.user_group.add_permission(
+            db=db, user_group=user_group, permission=permission, enabled=True
+        )
+    stored_permissions = crud.user_group.get_all_permissions(
+        db=db, user_group=user_group
+    )
+
+    for permission in permissions:
+        assert permission.id in [sp.id for sp in stored_permissions]
+        assert permission.resource_id in [sp.resource_id for sp in stored_permissions]
+        assert permission.permission_type in [
+            sp.permission_type for sp in stored_permissions
+        ]
 
 
 def test_delete_permission_from_user_group(db: Session, normal_user: User) -> None:

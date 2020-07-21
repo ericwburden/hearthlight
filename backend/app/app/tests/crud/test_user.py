@@ -140,7 +140,11 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
         db, user_group=user_group, permission=permission, enabled=True
     )
     has_permission = crud.user.has_permission(
-        db, user=user, resource=node, permission_type=permission.permission_type
+        db,
+        user=user,
+        resource_type="node",
+        resource_id=node.id,
+        permission_type=permission.permission_type,
     )
 
     # Need to add an explicit 'False' permission for the User to the resource
@@ -160,6 +164,10 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
     assert has_permission == True
     for png in permissions_not_granted:
         has_permission = crud.user.has_permission(
-            db, user=user, resource=node, permission_type=png
+            db,
+            user=user,
+            resource_type="node",
+            resource_id=node.id,
+            permission_type=png,
         )
         assert has_permission == False

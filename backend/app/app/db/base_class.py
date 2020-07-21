@@ -14,5 +14,5 @@ class Default:
     __name__: str
     # Generate __tablename__ automatically
     @declared_attr
-    def __tablename__(cls) -> str: # noqa
+    def __tablename__(cls) -> str:  # noqa
         return re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()

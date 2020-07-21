@@ -56,8 +56,8 @@ def clear_db():
     db = SessionLocal()
     models = [
         Item,
-        NodePermission,
         UserGroupPermission,
+        NodePermission,
         Permission,
         UserGroupUser,
         UserGroup,

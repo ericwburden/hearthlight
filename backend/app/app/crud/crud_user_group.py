@@ -63,6 +63,13 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
             .first()
         )
 
+
+    def get_all_permissions(
+        self, db: Session, *, user_group: UserGroup
+    ) -> List[Permission]:
+        return db.query(Permission).join(UserGroupPermission).join(UserGroup).all()
+
+
     def delete_permission(
         self, db: Session, *, user_group: UserGroup, permission: Permission
     ) -> UserGroupPermission:

@@ -4,6 +4,5 @@ from app.db.base_class import Base  # noqa
 from app.models.item import Item  # noqa
 from app.models.node import Node  # noqa
 from app.models.user import User  # noqa
-from app.models.user_group import UserGroup # noqa
-from app.models.user_group import UserGroupUser # noqa
-from app.models.permission import Permission, NodePermission # noqa
+from app.models.user_group import UserGroup, UserGroupUser, UserGroupPermission  # noqa
+from app.models.permission import Permission, NodePermission  # noqa

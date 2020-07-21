@@ -8,7 +8,7 @@ from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
-    from .permission import NodePermission # noqa
+    from .permission import NodePermission  # noqa
 
 
 class Node(Base, Default):
@@ -38,5 +38,5 @@ class Node(Base, Default):
     name = Column(String(256), nullable=False, unique=True)
     is_active = Column(Boolean, default=True)
 
-    user_groups = relationship('UserGroup', backref="node")
-    permissions = relationship('NodePermission', backref="node")
+    user_groups = relationship("UserGroup", backref="node")
+    permissions = relationship("NodePermission", backref="node")

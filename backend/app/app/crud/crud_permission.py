@@ -11,9 +11,9 @@ from app.models.permission import Permission, NodePermission
 from app.schemas.permission import PermissionCreate, PermissionUpdate, ResourceTypeEnum
 
 
-
-
-class CRUDPermission(CRUDBase[Union[Permission,NodePermission], PermissionCreate, PermissionUpdate]):
+class CRUDPermission(
+    CRUDBase[Union[Permission, NodePermission], PermissionCreate, PermissionUpdate]
+):
     def update(
         self,
         db: Session,
@@ -21,12 +21,14 @@ class CRUDPermission(CRUDBase[Union[Permission,NodePermission], PermissionCreate
         db_obj: Union[Permission, NodePermission],
         obj_in: Union[PermissionUpdate, Dict[str, Any]]
     ) -> Permission:
-        # The default `jsonable_encoder` fails on derived classes. This seems to 
+        # The default `jsonable_encoder` fails on derived classes. This seems to
         # be related to lazy loading of the class attributes. When `jsonable_encoder`
         # is called on an instance of a db object from a derived class (convoluted,
         # I know), the actual values aren't loaded yet, so obj_data is an empty
         # dictionary
-        obj_data = {col.name: getattr(db_obj, col.name) for col in db_obj.__table__.columns}
+        obj_data = {
+            col.name: getattr(db_obj, col.name) for col in db_obj.__table__.columns
+        }
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -38,6 +40,7 @@ class CRUDPermission(CRUDBase[Union[Permission,NodePermission], PermissionCreate
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
 
 permission = CRUDPermission(Permission)
 node_permission = CRUDPermission(NodePermission)

@@ -16,7 +16,7 @@ class NodeBase(BaseModel):
 class NodeCreate(NodeBase):
     node_type: str
     name: str
-    
+
 
 # Properties to receive on item update
 class NodeUpdate(NodeBase):

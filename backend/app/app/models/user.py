@@ -7,8 +7,8 @@ from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .item import Item  # noqa: F401
-    from .node import Node # noqa
-    from .user import UserGroup # noqa
+    from .node import Node  # noqa
+    from .user import UserGroup  # noqa
 
 
 class User(Base, Default):

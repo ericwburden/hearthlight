@@ -6,14 +6,14 @@ from pydantic import BaseModel
 
 
 class ResourceTypeEnum(str, Enum):
-    node = 'node'
+    node = "node"
 
 
 class PermissionTypeEnum(str, Enum):
-    create = 'create'
-    read   = 'read'
-    update = 'update'
-    delete = 'delete'
+    create = "create"
+    read = "read"
+    update = "update"
+    delete = "delete"
 
 
 # Shared properties

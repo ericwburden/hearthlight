@@ -10,6 +10,7 @@ from app.db.base_class import Base
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
 
+
 class Permission(Base):
     __tablename__ = "permission"
 
@@ -18,15 +19,15 @@ class Permission(Base):
     permission_type = Column(String(256), nullable=False)
 
     __mapper_args__ = {
-        'polymorphic_identity':'permission',
-        'polymorphic_on':resource_type,
-        'with_polymorphic':'*'
+        "polymorphic_identity": "permission",
+        "polymorphic_on": resource_type,
+        "with_polymorphic": "*",
     }
 
 
 class NodePermission(Permission):
-    resource_id = Column(Integer, ForeignKey('node.id'), index=True)
+    resource_id = Column(Integer, ForeignKey("node.id"), index=True)
 
     __mapper_args__ = {
-        'polymorphic_identity':'node',
+        "polymorphic_identity": "node",
     }

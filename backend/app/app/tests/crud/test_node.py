@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.models.user import User
 from app.schemas.node import NodeCreate, NodeUpdate
-from app.schemas.permission import PermissionCreate, PermissionTypeEnum, ResourceTypeEnum
+from app.schemas.permission import (
+    PermissionCreate,
+    PermissionTypeEnum,
+    ResourceTypeEnum,
+)
 from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string
 
@@ -137,23 +141,44 @@ def test_get_node_descendants(db: Session, normal_user: User) -> None:
 def test_node_get_node_permissions(db: Session, normal_user: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
-    
-    create_permission_in = PermissionCreate(resource_id=node.id, resource_type=ResourceTypeEnum.node, permission_type=PermissionTypeEnum.create)
+
+    create_permission_in = PermissionCreate(
+        resource_id=node.id,
+        resource_type=ResourceTypeEnum.node,
+        permission_type=PermissionTypeEnum.create,
+    )
     create_permission = crud.node_permission.create(db=db, obj_in=create_permission_in)
-    read_permission_in = PermissionCreate(resource_id=node.id, resource_type=ResourceTypeEnum.node, permission_type=PermissionTypeEnum.read)
+    read_permission_in = PermissionCreate(
+        resource_id=node.id,
+        resource_type=ResourceTypeEnum.node,
+        permission_type=PermissionTypeEnum.read,
+    )
     read_permission = crud.node_permission.create(db=db, obj_in=read_permission_in)
-    update_permission_in = PermissionCreate(resource_id=node.id, resource_type=ResourceTypeEnum.node, permission_type=PermissionTypeEnum.update)
+    update_permission_in = PermissionCreate(
+        resource_id=node.id,
+        resource_type=ResourceTypeEnum.node,
+        permission_type=PermissionTypeEnum.update,
+    )
     update_permission = crud.node_permission.create(db=db, obj_in=update_permission_in)
-    delete_permission_in = PermissionCreate(resource_id=node.id, resource_type=ResourceTypeEnum.node, permission_type=PermissionTypeEnum.delete)
+    delete_permission_in = PermissionCreate(
+        resource_id=node.id,
+        resource_type=ResourceTypeEnum.node,
+        permission_type=PermissionTypeEnum.delete,
+    )
     delete_permission = crud.node_permission.create(db=db, obj_in=delete_permission_in)
-    all_permissions = [create_permission, read_permission, update_permission, delete_permission]
+    all_permissions = [
+        create_permission,
+        read_permission,
+        update_permission,
+        delete_permission,
+    ]
 
     node_permissions = crud.node.get_permissions(db=db, id=node.id)
     node_permission_permission_types = [np.permission_type for np in node_permissions]
     node_permission_resource_ids = [np.resource_id for np in node_permissions]
     node_permission_permission_ids = [np.id for np in node_permissions]
     all_permission_types = list(PermissionTypeEnum)
-    
+
     for p in all_permissions:
         assert p.id in node_permission_permission_ids
         assert p.resource_id in node_permission_resource_ids

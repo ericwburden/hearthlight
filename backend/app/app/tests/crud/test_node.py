@@ -18,6 +18,15 @@ def test_create_node(db: Session, normal_user: User) -> None:
     assert node.created_by_id == normal_user.id
 
 
+def test_node_instantiate_permissions(db: Session, normal_user: User) -> None:
+    node_in = NodeCreate(name=random_lower_string(), node_type="node")
+    node = crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
+    permissions = crud.node.instantiate_permissions(db, node=node)
+    node_permission_types = [p.permission_type for p in permissions]
+    for pt in list(PermissionTypeEnum):
+        assert pt in node_permission_types
+
+
 def test_get_node(db: Session, normal_user: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
@@ -136,6 +145,52 @@ def test_get_node_descendants(db: Session, normal_user: User) -> None:
         ]
         assert node.parent_id in [parent_node.id, child_node2.id] or not node.parent_id
         assert node.parent_id not in [child_node1.id, child_node3.id, outlaw_node.id]
+
+
+def test_get_node_descendant_permissions(db: Session, normal_user: User) -> None:
+    parent_node_in = NodeCreate(name=random_lower_string(), node_type="network")
+    parent_node = crud.node.create(
+        db=db, obj_in=parent_node_in, created_by_id=normal_user.id
+    )
+    parent_node_permissions = crud.node.instantiate_permissions(db, node=parent_node)
+
+    # Child of parent_node
+    child_node1_in = NodeCreate(
+        name=random_lower_string(), node_type="node", parent_id=parent_node.id
+    )
+    child_node1 = crud.node.create(
+        db=db, obj_in=child_node1_in, created_by_id=normal_user.id
+    )
+    child_node1_permissions = crud.node.instantiate_permissions(db, node=child_node1)
+
+    # Child of parent_node
+    child_node2_in = NodeCreate(
+        name=random_lower_string(), node_type="node", parent_id=parent_node.id
+    )
+    child_node2 = crud.node.create(
+        db=db, obj_in=child_node2_in, created_by_id=normal_user.id
+    )
+    child_node2_permissions = crud.node.instantiate_permissions(db, node=child_node2)
+
+    # Child of child_node2
+    child_node3_in = NodeCreate(
+        name=random_lower_string(), node_type="node", parent_id=child_node2.id
+    )
+    child_node3 = crud.node.create(
+        db=db, obj_in=child_node3_in, created_by_id=normal_user.id
+    )
+    child_node3_permissions = crud.node.instantiate_permissions(db, node=child_node3)
+
+    combined_permissions = [
+        *parent_node_permissions,
+        *child_node1_permissions,
+        *child_node2_permissions,
+        *child_node3_permissions,
+    ]
+    child_permissions = crud.node.get_child_permissions(db, id=parent_node.id)
+
+    for permission in combined_permissions:
+        assert permission in child_permissions
 
 
 def test_node_get_node_permissions(db: Session, normal_user: User) -> None:

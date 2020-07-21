@@ -6,11 +6,23 @@ from sqlalchemy.sql.expression import literal
 
 from app.crud.base import CRUDBaseLogging
 from app.models.node import Node
-from app.models.permission import Permission
+from app.models.permission import Permission, NodePermission
 from app.schemas.node import NodeCreate, NodeUpdate
+from app.schemas.permission import PermissionTypeEnum, ResourceTypeEnum
 
 
 class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
+    def child_node_ids(self, db: Session, *, id: int):
+        rec = db.query(literal(id).label("id")).cte(
+            recursive=True, name="recursive_node_children"
+        )
+        ralias = aliased(rec, name="R")
+        lalias = aliased(self.model, name="L")
+        rec = rec.union_all(
+            db.query(lalias.id).join(ralias, ralias.c.id == lalias.parent_id)
+        )
+        return db.query(rec).all()
+
     # Needed a custom create to ensure validation on node.depth
     def create(self, db: Session, *, obj_in: NodeCreate, created_by_id: int) -> Node:
         obj_in_data = jsonable_encoder(obj_in)
@@ -53,21 +65,35 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         return db_obj
 
     def get_children(self, db: Session, *, id: int):
-        rec = db.query(literal(id).label("id")).cte(
-            recursive=True, name="recursive_node_children"
-        )
-        ralias = aliased(rec, name="R")
-        lalias = aliased(self.model, name="L")
-        rec = rec.union_all(
-            db.query(lalias.id).join(ralias, ralias.c.id == lalias.parent_id)
-        )
-        node_ids = db.query(rec).all()
+        node_ids = self.child_node_ids(db, id=id)
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
+
+    def instantiate_permissions(self, db: Session, *, node: Node) -> List[Permission]:
+        permissions = [
+            NodePermission(
+                resource_id=node.id,
+                resource_type="node",
+                permission_type=permission_type,
+            )
+            for permission_type in list(PermissionTypeEnum)
+        ]
+        for permission in permissions:
+            db.add(permission)
+        db.commit()
+        return db.query(Node).get(node.id).permissions
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
         # I know having this is redundant, but it's consistent to have it as a
         # CRUD function
         return db.query(self.model).get(id).permissions
+
+    def get_child_permissions(self, db: Session, *, id: int):
+        node_ids = self.child_node_ids(db, id=id)
+        return (
+            db.query(NodePermission)
+            .filter(NodePermission.resource_id.in_(node_ids))
+            .all()
+        )
 
 
 node = CRUDNode(Node)

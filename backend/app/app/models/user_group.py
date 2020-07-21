@@ -8,11 +8,21 @@ from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
+    from .permission import Permission # noqa
 
 
 class UserGroupUser(Base, Default):
     user_group_id = Column(Integer, ForeignKey('user_group.id'), primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
+
+
+class UserGroupPermission(Base, Default):
+    user_group_id = Column(Integer, ForeignKey('user_group.id'), primary_key=True)
+    permission_id = Column(Integer, ForeignKey('permission.id'), primary_key=True)
+    enabled = Column(Boolean, default=False)
+
+    user_group = relationship("UserGroup", backref="permissions")
+    permission = relationship("Permission", backref="user_groups")
 
 
 class UserGroup(Base, Default):

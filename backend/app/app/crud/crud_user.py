@@ -1,11 +1,16 @@
 from typing import Any, Dict, Optional, Union, List
 
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import literal_column
 
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
+from app.models.node import Node
+from app.models.permission import Permission
 from app.models.user import User
-from app.models.user_group import UserGroup
+from app.models.user_group import UserGroup, UserGroupPermission, UserGroupUser
+from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user import UserCreate, UserUpdate
 
 
@@ -54,6 +59,30 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
+
+    def has_permission(
+        self, db, user: User, resource: Union[Node], permission_type: PermissionTypeEnum
+    ):
+        query = (
+            db.query(Permission)
+            .join(UserGroupPermission)
+            .join(UserGroup)
+            .join(UserGroupUser)
+            .join(User)
+            .filter(
+                and_(
+                    User.id == user.id,
+                    Permission.permission_type == permission_type,
+                    literal_column("permission.resource_id") == resource.id,
+                )
+            )
+            .add_columns(UserGroupPermission.enabled)
+        )
+        
+        result = query.first()
+        if result:
+            return result.enabled
+        return False
 
 
 user = CRUDUser(User)

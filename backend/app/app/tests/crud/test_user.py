@@ -1,9 +1,14 @@
+import random
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.security import verify_password
+from app.models.user import User
+from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user import UserCreate, UserUpdate
+from app.tests.utils.node import create_random_node
+from app.tests.utils.permission import create_random_permission
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_email, random_lower_string
 
@@ -113,3 +118,33 @@ def test_get_user_groups_for_user(db: Session) -> None:
     for user_group in user_user_groups:
         assert user_group.id in [user_group1.id, user_group2.id]
         assert user_group.id != user_group3.id
+
+
+def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
+    email = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=email, password=password)
+    user = crud.user.create(db, obj_in=user_in)
+    node = create_random_node(
+        db, created_by_id=normal_user.id, node_type="verify_user_node_permission"
+    )
+    user_group = create_random_user_group(db, created_by_id=normal_user.id)
+    permission = create_random_permission(db, node_id=node.id)
+    crud.user_group.add_user_to_group(db, user_group=user_group, user=user)
+    crud.user_group.add_permission(
+        db, user_group=user_group, permission=permission, enabled=True
+    )
+    permissions_not_granted = [
+        i for i in list(PermissionTypeEnum) if i != permission.permission_type
+    ]
+
+    has_permission = crud.user.has_permission(
+        db, user=user, resource=node, permission_type=permission.permission_type
+    )
+
+    assert has_permission == True
+    for png in permissions_not_granted:
+        has_permission = crud.user.has_permission(
+            db, user=user, resource=node, permission_type=png
+        )
+        assert has_permission == False

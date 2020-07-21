@@ -1,10 +1,14 @@
+import pytest
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 from app import crud
 from app.models.user import User
+from app.models.user_group import UserGroupPermission
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
+from app.tests.utils.permission import create_random_permission
 from app.tests.utils.utils import random_lower_string
 
 
@@ -109,10 +113,53 @@ def test_remove_user_from_user_group(db: Session, normal_user: User) -> None:
     association = crud.user_group.add_user_to_group(db=db, user_group=user_group, user=user)
     crud.user_group.remove_user_from_group(db=db, user_group=user_group, user=user)
     group_users = crud.user_group.get_users(db, user_group=user_group)
-    
-    assert association.user_group_id == user_group.id
-    assert association.user_id == user.id
+
+    with pytest.raises(ObjectDeletedError):
+        assert association.user_group_id
+
     for group_user in group_users:
         assert group_user.id != user.id
+
+
+def test_add_permission_to_user_group(db: Session, normal_user: User) -> None:
+    node = create_random_node(db, created_by_id=normal_user.id, node_type='test_add_permission_to_user_group')
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(db=db, obj_in=user_group_in, created_by_id=normal_user.id)
+    permission = create_random_permission(db, node_id=node.id)
+        
+    association = crud.user_group.add_permission(db=db, user_group=user_group, permission=permission, enabled=True)
+    assert association.user_group_id == user_group.id
+    assert association.permission_id == permission.id
+    assert association.enabled == True
+
+
+def test_get_permission_for_user_group(db: Session, normal_user: User) -> None:
+    node = create_random_node(db, created_by_id=normal_user.id, node_type='test_add_permission_to_user_group')
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(db=db, obj_in=user_group_in, created_by_id=normal_user.id)
+    permission = create_random_permission(db, node_id=node.id)
+    crud.user_group.add_permission(db=db, user_group=user_group, permission=permission, enabled=True)
+    stored_permission = crud.user_group.get_permission(db=db, user_group=user_group, permission_id=permission.id)
+
+    assert permission.id == stored_permission.id
+    assert permission.resource_id == stored_permission.resource_id
+    assert permission.permission_type == stored_permission.permission_type
+
+
+def test_delete_permission_from_user_group(db: Session, normal_user: User) -> None:
+    node = create_random_node(db, created_by_id=normal_user.id, node_type='test_add_permission_to_user_group')
+    name = random_lower_string()
+    user_group_in = UserGroupCreate(name=name, node_id=node.id)
+    user_group = crud.user_group.create(db=db, obj_in=user_group_in, created_by_id=normal_user.id)
+    permission = create_random_permission(db, node_id=node.id)
+        
+    association = crud.user_group.add_permission(db=db, user_group=user_group, permission=permission, enabled=True)
+    deleted_user_group_permission = crud.user_group.delete_permission(db=db, user_group=user_group, permission=permission)
+    stored_permission = crud.user_group.get_permission(db, user_group=user_group, permission_id=permission.id)
+
+    assert deleted_user_group_permission.permission_id == permission.id
+    assert stored_permission is None
 
 

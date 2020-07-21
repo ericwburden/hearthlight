@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.core.security import verify_password
 from app.models.user import User
-from app.schemas.permission import PermissionTypeEnum
+from app.schemas.permission import (
+    PermissionTypeEnum,
+    PermissionCreate,
+    ResourceTypeEnum,
+)
 from app.schemas.user import UserCreate, UserUpdate
 from app.tests.utils.node import create_random_node
 from app.tests.utils.permission import create_random_permission
@@ -129,18 +133,29 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
         db, created_by_id=normal_user.id, node_type="verify_user_node_permission"
     )
     user_group = create_random_user_group(db, created_by_id=normal_user.id)
-    permission = create_random_permission(db, node_id=node.id)
     crud.user_group.add_user_to_group(db, user_group=user_group, user=user)
+
+    permission = create_random_permission(db, node_id=node.id)
     crud.user_group.add_permission(
         db, user_group=user_group, permission=permission, enabled=True
     )
-    permissions_not_granted = [
-        i for i in list(PermissionTypeEnum) if i != permission.permission_type
-    ]
-
     has_permission = crud.user.has_permission(
         db, user=user, resource=node, permission_type=permission.permission_type
     )
+
+    # Need to add an explicit 'False' permission for the User to the resource
+    # to ensure that will return False in addition to the missing permissions
+    permissions_not_granted = [
+        i for i in list(PermissionTypeEnum) if i != permission.permission_type
+    ]
+    permission_type = random.choice(permissions_not_granted)
+    permission_in = PermissionCreate(
+        resource_id=node.id,
+        resource_type=ResourceTypeEnum.node,
+        permission_type=permission_type,
+        enabled=False,
+    )
+    permission_not_granted = crud.node_permission.create(db=db, obj_in=permission_in)
 
     assert has_permission == True
     for png in permissions_not_granted:

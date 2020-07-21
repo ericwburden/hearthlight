@@ -62,7 +62,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def has_permission(
         self, db, user: User, resource: Union[Node], permission_type: PermissionTypeEnum
-    ):
+    ) -> bool:
         query = (
             db.query(Permission)
             .join(UserGroupPermission)
@@ -78,7 +78,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             )
             .add_columns(UserGroupPermission.enabled)
         )
-        
+
         result = query.first()
         if result:
             return result.enabled

@@ -63,12 +63,10 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
             .first()
         )
 
-
     def get_all_permissions(
         self, db: Session, *, user_group: UserGroup
     ) -> List[Permission]:
         return db.query(Permission).join(UserGroupPermission).join(UserGroup).all()
-
 
     def delete_permission(
         self, db: Session, *, user_group: UserGroup, permission: Permission
@@ -87,8 +85,9 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         db.commit()
         return user_group_permission
 
-
-    def grant_permission(self, db: Session, *, user_group: UserGroup, permission: Permission) -> UserGroupPermission:
+    def grant_permission(
+        self, db: Session, *, user_group: UserGroup, permission: Permission
+    ) -> UserGroupPermission:
         user_group_permission = (
             db.query(UserGroupPermission)
             .filter(
@@ -105,8 +104,9 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         db.refresh(user_group_permission)
         return user_group_permission
 
-
-    def revoke_permission(self, db: Session, *, user_group: UserGroup, permission: Permission) -> UserGroupPermission:
+    def revoke_permission(
+        self, db: Session, *, user_group: UserGroup, permission: Permission
+    ) -> UserGroupPermission:
         user_group_permission = (
             db.query(UserGroupPermission)
             .filter(

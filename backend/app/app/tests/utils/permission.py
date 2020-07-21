@@ -14,7 +14,7 @@ from app.tests.utils.utils import random_lower_string
 
 
 def create_random_permission(
-    db: Session, *, node_id: Optional[int] = None
+    db: Session, *, node_id: Optional[int] = None, enabled: Optional[bool] = True
 ) -> models.Node:
     if node_id is None:
         node = create_random_node(
@@ -26,5 +26,6 @@ def create_random_permission(
         resource_id=node_id,
         resource_type=ResourceTypeEnum.node,
         permission_type=permission_type,
+        enabled=enabled,
     )
     return crud.node_permission.create(db=db, obj_in=permission_in)

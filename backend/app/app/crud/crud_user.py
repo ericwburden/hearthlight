@@ -61,7 +61,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user.is_superuser
 
     def has_permission(
-        self, db, user: User, resource: Union[Node], permission_type: PermissionTypeEnum
+        self,
+        db,
+        user: User,
+        resource_type: str,
+        resource_id: int,
+        permission_type: PermissionTypeEnum,
     ) -> bool:
         query = (
             db.query(Permission)
@@ -73,7 +78,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 and_(
                     User.id == user.id,
                     Permission.permission_type == permission_type,
-                    literal_column("permission.resource_id") == resource.id,
+                    literal_column("permission.resource_type") == resource_type,
+                    literal_column("permission.resource_id") == resource_id,
                 )
             )
             .add_columns(UserGroupPermission.enabled)

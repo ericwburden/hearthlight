@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from .permission import Permission  # noqa
 
 
-class UserGroupUser(Base, Default):
+class UserGroupUserRel(Base, Default):
     user_group_id = Column(Integer, ForeignKey("user_group.id"), primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
 
 
-class UserGroupPermission(Base, Default):
+class UserGroupPermissionRel(Base, Default):
     user_group_id = Column(Integer, ForeignKey("user_group.id"), primary_key=True)
     permission_id = Column(Integer, ForeignKey("permission.id"), primary_key=True)
     enabled = Column(Boolean, default=False)
@@ -49,5 +49,5 @@ class UserGroup(Base, Default):
     name = Column(String(256), nullable=False, unique=True)
 
     users = relationship(
-        "User", secondary=lambda: UserGroupUser.__table__, backref="user_groups"
+        "User", secondary=lambda: UserGroupUserRel.__table__, backref="user_groups"
     )

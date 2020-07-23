@@ -11,7 +11,7 @@ from app.main import app
 from app.models.item import Item
 from app.models.node import Node
 from app.models.user import User
-from app.models.user_group import UserGroup, UserGroupUser, UserGroupPermission
+from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
 from app.models.permission import Permission, NodePermission
 
 from app.tests.utils.user import authentication_token_from_email, create_random_user
@@ -56,10 +56,10 @@ def clear_db():
     db = SessionLocal()
     models = [
         Item,
-        UserGroupPermission,
+        UserGroupPermissionRel,
         NodePermission,
         Permission,
-        UserGroupUser,
+        UserGroupUserRel,
         UserGroup,
         Node,
     ]

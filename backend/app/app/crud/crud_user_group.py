@@ -8,17 +8,17 @@ from sqlalchemy.sql.expression import literal, literal_column
 from app.crud.base import CRUDBaseLogging
 from app.models.user import User
 from app.models.permission import Permission
-from app.models.user_group import UserGroup, UserGroupUser, UserGroupPermission
+from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 
 
 class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]):
     def add_user_to_group(
         self, db: Session, *, user_group: UserGroup, user: User
-    ) -> UserGroupUser:
+    ) -> UserGroupUserRel:
         user_group.users.append(user)
         db.commit()
-        q = db.query(UserGroupUser).filter(
+        q = db.query(UserGroupUserRel).filter(
             and_(
                 literal_column("user_group_id") == user_group.id,
                 literal_column("user_id") == user.id,
@@ -43,8 +43,8 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         user_group: UserGroup,
         permission: Permission,
         enabled: bool
-    ) -> UserGroupPermission:
-        user_group_permission = UserGroupPermission(
+    ) -> UserGroupPermissionRel:
+        user_group_permission = UserGroupPermissionRel(
             user_group_id=user_group.id, permission_id=permission.id, enabled=enabled
         )
         db.add(user_group_permission)
@@ -57,7 +57,7 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
     ) -> Permission:
         return (
             db.query(Permission)
-            .join(UserGroupPermission)
+            .join(UserGroupPermissionRel)
             .join(UserGroup)
             .filter(UserGroup.id == user_group.id)
             .first()
@@ -66,13 +66,13 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
     def get_all_permissions(
         self, db: Session, *, user_group: UserGroup
     ) -> List[Permission]:
-        return db.query(Permission).join(UserGroupPermission).join(UserGroup).all()
+        return db.query(Permission).join(UserGroupPermissionRel).join(UserGroup).all()
 
     def delete_permission(
         self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermission:
+    ) -> UserGroupPermissionRel:
         user_group_permission = (
-            db.query(UserGroupPermission)
+            db.query(UserGroupPermissionRel)
             .filter(
                 and_(
                     literal_column("user_group_id") == user_group.id,
@@ -87,9 +87,9 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
 
     def grant_permission(
         self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermission:
+    ) -> UserGroupPermissionRel:
         user_group_permission = (
-            db.query(UserGroupPermission)
+            db.query(UserGroupPermissionRel)
             .filter(
                 and_(
                     literal_column("user_group_id") == user_group.id,
@@ -106,9 +106,9 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
 
     def revoke_permission(
         self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermission:
+    ) -> UserGroupPermissionRel:
         user_group_permission = (
-            db.query(UserGroupPermission)
+            db.query(UserGroupPermissionRel)
             .filter(
                 and_(
                     literal_column("user_group_id") == user_group.id,

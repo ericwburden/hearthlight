@@ -9,7 +9,7 @@ from app.crud.base import CRUDBase
 from app.models.node import Node
 from app.models.permission import Permission
 from app.models.user import User
-from app.models.user_group import UserGroup, UserGroupPermission, UserGroupUser
+from app.models.user_group import UserGroup, UserGroupPermissionRel, UserGroupUserRel
 from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user import UserCreate, UserUpdate
 
@@ -70,9 +70,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     ) -> bool:
         query = (
             db.query(Permission)
-            .join(UserGroupPermission)
+            .join(UserGroupPermissionRel)
             .join(UserGroup)
-            .join(UserGroupUser)
+            .join(UserGroupUserRel)
             .join(User)
             .filter(
                 and_(
@@ -82,7 +82,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     literal_column("permission.resource_id") == resource_id,
                 )
             )
-            .add_columns(UserGroupPermission.enabled)
+            .add_columns(UserGroupPermissionRel.enabled)
         )
 
         result = query.first()

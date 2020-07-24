@@ -1,4 +1,5 @@
-from typing import Generator
+import logging
+from typing import Generator, List
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -52,10 +53,42 @@ def get_current_active_user(
 
 
 def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:
     if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
+        raise HTTPException(status_code=400, detail="The user is not a superuser")
     return current_user
+
+
+class UserPermissionValidator:
+    def __init__(
+        self,
+        resource_type: schemas.ResourceTypeEnum,
+        permission_type: schemas.PermissionTypeEnum,
+    ):
+        self.resource_type = resource_type
+        self.permission_type = permission_type
+
+    def __call__(
+        self,
+        resource_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user),
+    ):
+        user_has_permission = crud.user.has_permission(
+            db,
+            user=current_user,
+            resource_type=self.resource_type,
+            resource_id=resource_id,
+            permission_type=self.permission_type,
+        )
+        if not user_has_permission:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"User ID {current_user.id} does not have "
+                    f"{str(self.permission_type)} permissions for "
+                    f"{str(self.resource_type)} ID {resource_id}"
+                ),
+            )
+        return current_user

@@ -1,7 +1,9 @@
 from typing import List, Union, Dict, Any
 
 from fastapi.encoders import jsonable_encoder
+from psycopg2.errors import UniqueViolation
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased, with_polymorphic
 from sqlalchemy.sql.expression import literal, literal_column
 
@@ -14,6 +16,25 @@ from app.schemas.permission import PermissionCreate, PermissionUpdate, ResourceT
 class CRUDPermission(
     CRUDBase[Union[Permission, NodePermission], PermissionCreate, PermissionUpdate]
 ):
+    def create(self, db: Session, *, obj_in: PermissionCreate) -> Permission:
+        try:
+            return super().create(db, obj_in=obj_in)
+        except IntegrityError as e:
+            # There is a unique constraint on the Permission table to unique
+            # combinations of resource_id and permission_type. If the permission
+            # already exists in the database, just return the existing permission
+            # Otherwise, pass the exception on
+            db.rollback()
+            if isinstance(e.orig, UniqueViolation):
+                query = db.query(Permission).filter(
+                    and_(
+                        literal_column("resource_id") == obj_in.resource_id,
+                        literal_column("permission_type") == obj_in.permission_type,
+                    )
+                )
+                return query.first()
+            raise e
+
     def update(
         self,
         db: Session,

@@ -2,16 +2,37 @@ from typing import List, Union, Dict, Any
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql.expression import literal
+from sqlalchemy.sql.expression import literal, and_
 
 from app.crud.base import CRUDBaseLogging
 from app.models.node import Node
 from app.models.permission import Permission, NodePermission
+from app.models.user import User
+from app.models.user_group import UserGroup, UserGroupPermissionRel, UserGroupUserRel
 from app.schemas.node import NodeCreate, NodeUpdate
 from app.schemas.permission import PermissionTypeEnum, ResourceTypeEnum
 
 
 class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
+    def get_multi_with_permissions(
+        self, db: Session, *, user: User, skip: int = 0, limit: int = 100
+    ) -> List[Node]:
+        return (
+            db.query(self.model)
+            .join(NodePermission)
+            .join(UserGroupPermissionRel)
+            .join(UserGroup)
+            .join(UserGroupUserRel)
+            .join(User)
+            .filter(
+                and_(
+                    User.id == user.id,
+                    NodePermission.permission_type == PermissionTypeEnum.read,
+                )
+            )
+            .all()
+        )
+
     def child_node_ids(self, db: Session, *, id: int):
         rec = db.query(literal(id).label("id")).cte(
             recursive=True, name="recursive_node_children"
@@ -80,12 +101,21 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         for permission in permissions:
             db.add(permission)
         db.commit()
-        return db.query(Node).get(node.id).permissions
+        return db.query(NodePermission).join(Node).filter(Node.id == node.id).all()
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
-        # I know having this is redundant, but it's consistent to have it as a
-        # CRUD function
-        return db.query(self.model).get(id).permissions
+        return db.query(NodePermission).join(Node).filter(Node.id == id).all()
+
+    def get_permission(
+        self, db: Session, *, id: int, permission_type: PermissionTypeEnum
+    ) -> Permission:
+        query = db.query(NodePermission).filter(
+            and_(
+                NodePermission.resource_id == id,
+                NodePermission.permission_type == permission_type,
+            )
+        )
+        return query.first()
 
     def get_child_permissions(self, db: Session, *, id: int):
         node_ids = self.child_node_ids(db, id=id)

@@ -1,7 +1,16 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String, Table
-from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    DateTime,
+    Boolean,
+    String,
+    Table,
+    UniqueConstraint,
+)
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -31,3 +40,7 @@ class NodePermission(Permission):
     __mapper_args__ = {
         "polymorphic_identity": "node",
     }
+
+
+uc = UniqueConstraint("resource_id", "permission_type", name="resource_permission_uc")
+Permission.__table__.append_constraint(uc)

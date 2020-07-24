@@ -1,3 +1,4 @@
+import random
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -8,6 +9,7 @@ from app.schemas.permission import (
     PermissionTypeEnum,
     ResourceTypeEnum,
 )
+from app.schemas.user_group import UserGroupCreate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string
 
@@ -44,6 +46,60 @@ def test_get_multi_node(db: Session, normal_user: User) -> None:
         for node_in in new_nodes_in
     ]
     stored_nodes = crud.node.get_multi(db=db)
+    stored_node_names = [sn.name for sn in stored_nodes]
+    for n in names:
+        assert n in stored_node_names
+
+
+def test_get_multi_node_with_permission(db: Session, normal_user: User) -> None:
+    # Create parent node
+    parent_node_in = NodeCreate(
+        name=random_lower_string(),
+        node_type="test_get_multi_node_with_permission_parent",
+    )
+    parent_node = crud.node.create(
+        db=db, obj_in=parent_node_in, created_by_id=normal_user.id
+    )
+
+    # Create User Group attached to parent node
+    user_group_in = UserGroupCreate(
+        name="test_get_multi_node_with_permission", node_id=parent_node.id
+    )
+    user_group = crud.user_group.create(
+        db, obj_in=user_group_in, created_by_id=normal_user.id
+    )
+    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=normal_user.id)
+
+    # Create a bunch of child nodes (it doesn't matter whether or not they're attached
+    # to the parent node)
+    names = [random_lower_string() for n in range(10)]
+    new_nodes_in = [
+        NodeCreate(
+            name=name,
+            node_type="test_get_multi_node_with_permission_other",
+            parent_id=random.choice([parent_node.id, None]),
+        )
+        for name in names
+    ]
+    new_nodes = [
+        crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
+        for node_in in new_nodes_in
+    ]
+
+    # For each node, instantiate permissions, get the read permission, then add it to
+    # the user group, enabled
+    for node in new_nodes:
+        crud.node.instantiate_permissions(db, node=node)
+        node_read_permission = crud.node.get_permission(
+            db, id=node.id, permission_type=PermissionTypeEnum.read
+        )
+        crud.user_group.add_permission(
+            db, user_group=user_group, permission=node_read_permission, enabled=True
+        )
+
+    # Get the nodes back with permission requirements and ensure that you get back
+    # all the nodes we just put in
+    stored_nodes = crud.node.get_multi_with_permissions(db=db, user=normal_user)
     stored_node_names = [sn.name for sn in stored_nodes]
     for n in names:
         assert n in stored_node_names
@@ -191,6 +247,18 @@ def test_get_node_descendant_permissions(db: Session, normal_user: User) -> None
 
     for permission in combined_permissions:
         assert permission in child_permissions
+
+
+def test_node_get_permission(db: Session, normal_user: User) -> None:
+    node_in = NodeCreate(name=random_lower_string(), node_type="node")
+    node = crud.node.create(db=db, obj_in=node_in, created_by_id=normal_user.id)
+    permissions = crud.node.instantiate_permissions(db, node=node)
+    stored_permissions = [
+        crud.node.get_permission(db, id=node.id, permission_type=pt)
+        for pt in list(PermissionTypeEnum)
+    ]
+    for permission in permissions:
+        assert permission.id in [sp.id for sp in stored_permissions]
 
 
 def test_node_get_node_permissions(db: Session, normal_user: User) -> None:

@@ -52,7 +52,7 @@ def test_get_multi_node_permission(db: Session, normal_user: User) -> None:
     node = create_random_node(
         db, created_by_id=normal_user.id, node_type="test_get_multi_permission"
     )
-    permission_types = [random.choice(list(PermissionTypeEnum)) for n in range(10)]
+    permission_types = list(PermissionTypeEnum)
     new_permissions_in = [
         PermissionCreate(
             resource_id=node.id, resource_type=ResourceTypeEnum.node, permission_type=pt
@@ -95,7 +95,6 @@ def test_update_node_permission(db: Session, normal_user: User) -> None:
     permission2 = crud.node_permission.update(
         db=db, db_obj=permission, obj_in=permission_update
     )
-    # breakpoint()
     assert permission.id == permission2.id
     assert permission.resource_id == node2.id
     assert permission2.resource_id == node2.id

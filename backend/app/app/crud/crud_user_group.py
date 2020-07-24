@@ -14,14 +14,15 @@ from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 
 class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]):
     def add_user_to_group(
-        self, db: Session, *, user_group: UserGroup, user: User
+        self, db: Session, *, user_group: UserGroup, user_id: int
     ) -> UserGroupUserRel:
+        user = db.query(User).get(user_id)
         user_group.users.append(user)
         db.commit()
         q = db.query(UserGroupUserRel).filter(
             and_(
                 literal_column("user_group_id") == user_group.id,
-                literal_column("user_id") == user.id,
+                literal_column("user_id") == user_id,
             )
         )
         return q.first()

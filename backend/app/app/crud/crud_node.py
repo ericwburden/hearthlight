@@ -28,6 +28,7 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
                 and_(
                     User.id == user.id,
                     NodePermission.permission_type == PermissionTypeEnum.read,
+                    UserGroupPermissionRel.enabled == True
                 )
             )
             .all()

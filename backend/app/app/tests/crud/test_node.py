@@ -80,11 +80,13 @@ def test_delete_node(db: Session, superuser: User) -> None:
     assert node2.name == name
     assert node2.created_by_id == superuser.id
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for tree structure CRUD operations --------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_create_child_node(db: Session, superuser: User) -> None:
     parent_node_in = NodeCreate(name=random_lower_string(), node_type="network")
@@ -156,11 +158,13 @@ def test_get_node_descendants(db: Session, superuser: User) -> None:
         assert node.parent_id in [parent_node.id, child_node2.id] or not node.parent_id
         assert node.parent_id not in [child_node1.id, child_node3.id, outlaw_node.id]
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for permission CRUD operations ------------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_node_get_permissions(db: Session, superuser: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
@@ -219,11 +223,13 @@ def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
     for permission in combined_permissions:
         assert permission in child_permissions
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for CRUD with normal user and permissions -------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     # Create parent node
@@ -275,23 +281,29 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
         )
 
     # Create a new node, instantiate permissions, add it to the user group, disabled
-    blocked_node = create_random_node(db, created_by_id=superuser.id, node_type="blocked", parent_id=parent_node.id)
+    blocked_node = create_random_node(
+        db, created_by_id=superuser.id, node_type="blocked", parent_id=parent_node.id
+    )
     crud.node.instantiate_permissions(db, node=blocked_node)
     blocked_node_read_permission = crud.node.get_permission(
         db, id=blocked_node.id, permission_type=PermissionTypeEnum.read
     )
     crud.user_group.add_permission(
-        db, user_group=user_group, permission=blocked_node_read_permission, enabled=False
+        db,
+        user_group=user_group,
+        permission=blocked_node_read_permission,
+        enabled=False,
     )
 
     # Get the nodes back with permission requirements and ensure that you get back
-    # all the nodes we just put in with permissions and that you don't get the 
+    # all the nodes we just put in with permissions and that you don't get the
     # blocked node
     stored_nodes = crud.node.get_multi_with_permissions(db=db, user=normal_user)
     stored_node_names = [sn.name for sn in stored_nodes]
     for n in names:
         assert n in stored_node_names
     assert blocked_node.name not in stored_node_names
+
 
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------

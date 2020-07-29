@@ -38,11 +38,15 @@ def create_node(
     """
     Create new node.
     """
-    if node_in.parent_id  and node_in.node_type == "network":
-        raise HTTPException(status_code=400, detail="New networks should not have a parent node")
-    
+    if node_in.parent_id and node_in.node_type == "network":
+        raise HTTPException(
+            status_code=400, detail="New networks should not have a parent node"
+        )
+
     if not current_user.is_superuser and node_in.node_type == "network":
-        raise HTTPException(status_code=403, detail="Only superusers can create new networks.")
+        raise HTTPException(
+            status_code=403, detail="Only superusers can create new networks."
+        )
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=current_user.id)
     return node
 

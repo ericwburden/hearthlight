@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.node import create_random_node
 
@@ -43,4 +44,19 @@ def test_create_network_fail_with_parent(
     assert response.status_code == 400
     content = response.json()
     assert content["detail"] == "New networks should not have a parent node"
+
+
+def test_create_network_fail_not_superuser(
+    client: TestClient,  db: Session
+) -> None:
+    """Network creation should fail if the user is not a superuser"""
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(client=client, email=user.email, db=db)
+    data = {"node_type": "network", "name": random_lower_string(), "is_active": True}
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == "Only superusers can create new networks."
 

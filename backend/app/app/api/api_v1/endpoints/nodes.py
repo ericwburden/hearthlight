@@ -7,6 +7,136 @@ from app import crud, models, schemas
 from app.api import deps
 
 router = APIRouter()
+node_create_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.create
+)
+node_read_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.read
+)
+node_update_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.update
+)
+node_delete_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.delete
+)
+
+
+@router.post("/", response_model=schemas.Node)
+def create_node(
+    *,
+    db: Session = Depends(deps.get_db),
+    node_in: schemas.NodeCreate,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> models.Node:
+    """# Create a new node. 
+    
+    Nodes are the basic organizational structure and are organized in a
+    tree-like hierarchy, with a 'network' node forming the root node 
+    for a grouping of nodes. This provides a flexible organizational 
+    structure where nodes can be nested arbitrarily deeply. There are a
+    number of validation rules in place, including:
+    - A 'network' node must have a node_type='network'
+    - Network nodes must not have a parent_id specified
+    - Only superusers can create networks
+    - Any 'non-network' node (i.e. node_type!='network') must have a
+    parent_id specified
+    - The parent_id must refer to an existing node in the database
+    - The node indicated by parent_id must be active (i.e., 
+    is_active=True)
+    - The user must belong to a user group with create permissions on 
+    the parent node
+
+    ## Args:
+
+    - node_in (schemas.NodeCreate): Object specifying the attributes of
+    the node to create
+    - db (Session, optional): SQLAlchemy session. Defaults to 
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the 
+    authenticated user. Defaults to Depends(deps.get_current_active_user).
+
+    ## Raises:
+
+    - HTTPException: 400 - When a 'network' node has a parent_id 
+    specified
+    - HTTPException: 403 - When a normal user attempts to create a 
+    'network' node
+    - HTTPException: 400 - When attempting to create a 'non-network' 
+    node without a parent_id specified
+    - HTTPException: 404 - When the parent_id doesn't match a node 
+    in the database
+    - HTTPException: 403 - When the node indicated by parent_id is 
+    inactive
+    - HTTPException: 403 - When a normal user attempts to create a node
+    without create permissions on the parent
+
+    ## Returns:
+
+    - Node: the created Node
+    """
+
+    # Validation for creating network (root) nodes
+    if node_in.node_type == "network":
+
+        # Fail if attempting to create a 'network' node with a parent
+        if node_in.parent_id:
+            raise HTTPException(
+                status_code=400, detail="New networks should not have a parent node"
+            )
+
+        # Fail if a non-superuser tries to create a 'network' node
+        if not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403, detail="Only superusers can create new networks."
+            )
+    else: # Validation for creating a non-network node
+
+        # Fail if attempting to create a non-'network' node without a parent
+        if not node_in.parent_id:
+            raise HTTPException(
+                status_code=400, detail="Cannot create a node without a parent."
+            )
+
+        # Fail if the node for parent_id doesn't exist
+        parent = crud.node.get(db, id=node_in.parent_id)
+        if not parent:
+            raise HTTPException(
+                status_code=404, detail="Cannot find node indicated by parent_id."
+            )
+
+        # Fail if the parent node is not active
+        if not parent.is_active:
+            raise HTTPException(
+                status_code=403, detail="Cannot add a node to an inactive parent."
+            )
+
+        # Fail if normal user doesn't have create permission on parent node
+        user_has_permission = node_create_validator.check_permission(node_in.parent_id, db, current_user)
+        if not user_has_permission and not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403, detail="User does not have permission to create this node"
+            )
+    
+    node = crud.node.create(db=db, obj_in=node_in, created_by_id=current_user.id)
+    return node
+
+
+@router.get("/{id}", response_model=schemas.Node)
+def read_node(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Get node by ID.
+    """
+    node = crud.node.get(db=db, id=id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+    if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+    return node
 
 
 @router.get("/", response_model=List[schemas.Node])
@@ -28,29 +158,6 @@ def read_nodes(
     return nodes
 
 
-@router.post("/", response_model=schemas.Node)
-def create_node(
-    *,
-    db: Session = Depends(deps.get_db),
-    node_in: schemas.NodeCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> Any:
-    """
-    Create new node.
-    """
-    if node_in.parent_id and node_in.node_type == "network":
-        raise HTTPException(
-            status_code=400, detail="New networks should not have a parent node"
-        )
-
-    if not current_user.is_superuser and node_in.node_type == "network":
-        raise HTTPException(
-            status_code=403, detail="Only superusers can create new networks."
-        )
-    node = crud.node.create(db=db, obj_in=node_in, created_by_id=current_user.id)
-    return node
-
-
 @router.put("/{id}", response_model=schemas.Node)
 def update_node(
     *,
@@ -68,24 +175,6 @@ def update_node(
     if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     node = crud.node.update(db=db, db_obj=node, obj_in=node_in)
-    return node
-
-
-@router.get("/{id}", response_model=schemas.Node)
-def read_node(
-    *,
-    db: Session = Depends(deps.get_db),
-    id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> Any:
-    """
-    Get node by ID.
-    """
-    node = crud.node.get(db=db, id=id)
-    if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
-    if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     return node
 
 

@@ -20,7 +20,7 @@ def create_random_user_group(
             db, created_by_id=created_by_id, node_type="random_node"
         )
         node_id = node.id
-    user_group_in = UserGroupCreate(name=random_lower_string(), node_id=node.id)
+    user_group_in = UserGroupCreate(name=random_lower_string(), node_id=node_id)
     return crud.user_group.create(
         db=db, obj_in=user_group_in, created_by_id=created_by_id
     )

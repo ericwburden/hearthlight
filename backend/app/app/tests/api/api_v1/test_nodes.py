@@ -71,7 +71,6 @@ def test_create_network_fail_not_superuser(client: TestClient, db: Session) -> N
     content = response.json()
     assert content["detail"] == "Only superusers can create new networks."
 
-
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
@@ -260,3 +259,123 @@ def test_create_node_fail_permission_missing(
     assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "User does not have permission to create this node"
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node read one endpoint ----------------------------------------------
+# --------------------------------------------------------------------------------------
+
+def test_read_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read a node"""
+
+    node = create_random_node(db, created_by_id=1, node_type='network')
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["node_type"] == node.node_type
+    assert content["name"] == node.name
+    assert content["is_active"]
+    assert content["depth"] == 0
+    assert "id" in content
+    assert "parent_id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content
+
+
+def test_read_node_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read a node with permissions"""
+
+    # Setup: Create the parent node, instantiate permissions, get create permission,
+    # create user, create user group, add user to user group, give user group read
+    # permission on the parent node
+    node = create_random_node(db, created_by_id=1, node_type="network")
+    crud.node.instantiate_permissions(db, node=node)
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    user = create_random_user(db)
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
+    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=True)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=user_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["node_type"] == node.node_type
+    assert content["name"] == node.name
+    assert content["is_active"]
+    assert content["depth"] == 0
+    assert "id" in content
+    assert "parent_id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content
+
+
+def test_read_node_fail_node_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the node doesn't exist"""
+    
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/{-1}", headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find node."
+
+
+def test_read_node_fail_node_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user has no read permission on the node"""
+    
+    # Setup: Create the parent node, instantiate permissions, get create permission,
+    # create user, create user group, add user to user group, give user group read
+    # permission on the parent node
+
+    # TODO: Convert the following setup to a function
+    node = create_random_node(db, created_by_id=1, node_type="network")
+    crud.node.instantiate_permissions(db, node=node)
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    user = create_random_user(db)
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
+    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=False)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=user_token_headers,
+    )
+    # breakpoint()
+    assert response.status_code == 403
+    content = response.json()
+    # breakpoint()
+    assert content["detail"] == (
+        f"User ID {user.id} does not have "
+        f"read permissions for "
+        f"node ID {node.id}"
+    )
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

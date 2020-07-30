@@ -12,6 +12,40 @@ if TYPE_CHECKING:
 
 
 class Node(Base, Default):
+    """Class representing Node objects
+    
+    Nodes represent the basic organizational structure of Hearthlight. All nodes
+    are represented in the node table and are organized into a tree-like structure 
+    through recursive association by the parent_id attribute, which represents the
+    node id of the node's 'parent'. This is a flexible structure which allows for 
+    arbitrarily complex organizational structures. All nodes have a parent, with the 
+    exception of 'network' nodes, which represent the root of each organizational
+    structure. While 'network' is a reserved node_type, any other name can be given to 
+    a node to identify the node's purpose in the hierarchy. For example, node types 
+    could form the following hierarchy: network(1) > organization(n) > division(n) >
+    department(n) > program(n) > team(n). The node table contains the following
+    fields:
+
+    - id: primary key
+    - parent_id: primary key for the node's parent node
+    - created_at: timestamp for creation datetime
+    - updated_at: timestamp for update datetime
+    - created_by_id: User id for the user who created the node record
+    - updated_by_id: User id for the user who last updated the node record
+    - depth: integer indicating the number of parents this node has
+    - node_type: string indicating the type of node, not constrained to a list
+    - name: string representing the name for this node
+    - is_active: indicates whether the node is active, which impacts operations on the
+    node, such as creating child nodes
+
+    Nodes have relationships with the following object types:
+
+    - Other nodes (parent, children)
+    - Users (created_by, updated_by)
+    - User Groups (user_groups)
+    - Permissions (permissions)
+    """
+    
     id = Column(Integer, primary_key=True, index=True)
     parent_id = Column(Integer, ForeignKey("node.id"), index=True)
     children = relationship("Node")

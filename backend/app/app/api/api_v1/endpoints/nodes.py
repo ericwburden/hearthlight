@@ -121,21 +121,30 @@ def create_node(
     return node
 
 
-@router.get("/{id}", response_model=schemas.Node)
+@router.get("/{resource_id}", response_model=schemas.Node)
 def read_node(
     *,
     db: Session = Depends(deps.get_db),
-    id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    resource_id: int,
+    current_user: models.User = Depends(node_read_validator),
 ) -> Any:
+    """# Get a node by id.
+
+    Args:
+        id (int): [description]
+        db (Session, optional): [description]. Defaults to Depends(deps.get_db).
+        current_user (models.User, optional): [description]. Defaults to Depends(deps.get_current_active_user).
+
+    Raises:
+        HTTPException: [description]
+        HTTPException: [description]
+
+    Returns:
+        Any: [description]
     """
-    Get node by ID.
-    """
-    node = crud.node.get(db=db, id=id)
+    node = crud.node.get(db=db, id=resource_id)
     if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
-    if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=404, detail="Cannot find node.")
     return node
 
 

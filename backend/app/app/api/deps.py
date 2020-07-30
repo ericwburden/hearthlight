@@ -75,14 +75,17 @@ class UserPermissionValidator:
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
     ):
+        if current_user.is_superuser:
+            return current_user
+
         user_has_permission = self.check_permission(resource_id, db, current_user)
         if not user_has_permission:
             raise HTTPException(
-                status_code=400,
+                status_code=403,
                 detail=(
                     f"User ID {current_user.id} does not have "
-                    f"{str(self.permission_type)} permissions for "
-                    f"{str(self.resource_type)} ID {resource_id}"
+                    f"{self.permission_type.value} permissions for "
+                    f"{self.resource_type.value} ID {resource_id}"
                 ),
             )
         return current_user

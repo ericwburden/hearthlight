@@ -75,13 +75,7 @@ class UserPermissionValidator:
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
     ):
-        user_has_permission = crud.user.has_permission(
-            db,
-            user=current_user,
-            resource_type=self.resource_type,
-            resource_id=resource_id,
-            permission_type=self.permission_type,
-        )
+        user_has_permission = self.check_permission(resource_id, db, current_user)
         if not user_has_permission:
             raise HTTPException(
                 status_code=400,
@@ -92,3 +86,14 @@ class UserPermissionValidator:
                 ),
             )
         return current_user
+
+    def check_permission(
+        self, resource_id: int, db: Session, current_user: models.User
+    ):
+        return crud.user.has_permission(
+            db,
+            user=current_user,
+            resource_type=self.resource_type,
+            resource_id=resource_id,
+            permission_type=self.permission_type,
+        )

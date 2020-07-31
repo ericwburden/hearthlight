@@ -8,6 +8,7 @@ from app.tests.utils.user import authentication_token_from_email, create_random_
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.node import create_random_node
+from app.tests.utils.setup import node_permission_setup
 
 # --------------------------------------------------------------------------------------
 # region Tests for Node create network endpoint ----------------------------------------
@@ -71,11 +72,13 @@ def test_create_network_fail_not_superuser(client: TestClient, db: Session) -> N
     content = response.json()
     assert content["detail"] == "Only superusers can create new networks."
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node create other node endpoint -------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_create_node(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -109,27 +112,21 @@ def test_create_node_normal_user(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successful node creation by a normal user"""
-    # Setup: Create the parent node, instantiate permissions, get create permission,
-    # create user, create user group, add user to user group, give user group create
-    # permission on the parent node
-    parent_node = create_random_node(db, created_by_id=1, node_type="network")
-    crud.node.instantiate_permissions(db, node=parent_node)
-    permission = crud.node.get_permission(
-        db, id=parent_node.id, permission_type=PermissionTypeEnum.create
-    )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db, created_by_id=1, node_id=parent_node.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=True)
 
+    setup = node_permission_setup(
+        db,
+        node_type="test_create_node_normal_user",
+        permission_type=PermissionTypeEnum.create,
+        permission_enabled=True,
+    )
     user_token_headers = authentication_token_from_email(
-        client=client, email=user.email, db=db
+        client=client, email=setup["user"].email, db=db
     )
     data = {
         "node_type": "test_create_node",
         "name": random_lower_string(),
         "is_active": True,
-        "parent_id": parent_node.id,
+        "parent_id": setup["node"].id,
     }
     response = client.post(
         f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
@@ -181,13 +178,15 @@ def test_create_node_fail_parent_not_exist(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Cannot find node indicated by parent_id."
-    
+
 
 def test_create_node_fail_parent_not_active(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Node creation should fail if the parent node is not active"""
-    parent_node = create_random_node(db, created_by_id=1, node_type="network", is_active=False)
+    parent_node = create_random_node(
+        db, created_by_id=1, node_type="network", is_active=False
+    )
     data = {
         "node_type": "test_create_node",
         "name": random_lower_string(),
@@ -206,27 +205,21 @@ def test_create_node_fail_permission_false(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Node creation fails when user has a permission not enabled for node parent"""
-    # Setup: Create the parent node, instantiate permissions, get create permission,
-    # create user, create user group, add user to user group, give user group create
-    # permission on the parent node
-    parent_node = create_random_node(db, created_by_id=1, node_type="network")
-    crud.node.instantiate_permissions(db, node=parent_node)
-    permission = crud.node.get_permission(
-        db, id=parent_node.id, permission_type=PermissionTypeEnum.create
-    )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db, created_by_id=1, node_id=parent_node.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=False)
 
+    setup = node_permission_setup(
+        db,
+        node_type="test_create_node_fail_permission_false",
+        permission_type=PermissionTypeEnum.create,
+        permission_enabled=False,
+    )
     user_token_headers = authentication_token_from_email(
-        client=client, email=user.email, db=db
+        client=client, email=setup["user"].email, db=db
     )
     data = {
         "node_type": "test_create_node",
         "name": random_lower_string(),
         "is_active": True,
-        "parent_id": parent_node.id,
+        "parent_id": setup["node"].id,
     }
     response = client.post(
         f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
@@ -260,18 +253,20 @@ def test_create_node_fail_permission_missing(
     content = response.json()
     assert content["detail"] == "User does not have permission to create this node"
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node read one endpoint ----------------------------------------------
 # --------------------------------------------------------------------------------------
 
+
 def test_read_node(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully read a node"""
 
-    node = create_random_node(db, created_by_id=1, node_type='network')
+    node = create_random_node(db, created_by_id=1, node_type="network")
     response = client.get(
         f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers,
     )
@@ -294,29 +289,23 @@ def test_read_node_normal_user(
 ) -> None:
     """Successfully read a node with permissions"""
 
-    # Setup: Create the parent node, instantiate permissions, get create permission,
-    # create user, create user group, add user to user group, give user group read
-    # permission on the parent node
-    node = create_random_node(db, created_by_id=1, node_type="network")
-    crud.node.instantiate_permissions(db, node=node)
-    permission = crud.node.get_permission(
-        db, id=node.id, permission_type=PermissionTypeEnum.read
+    setup = node_permission_setup(
+        db,
+        node_type="test_read_node_normal_user",
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=True,
     )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=True)
     user_token_headers = authentication_token_from_email(
-        client=client, email=user.email, db=db
+        client=client, email=setup["user"].email, db=db
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{node.id}", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["node_type"] == node.node_type
-    assert content["name"] == node.name
+    assert content["node_type"] == setup["node"].node_type
+    assert content["name"] == setup["node"].name
     assert content["is_active"]
     assert content["depth"] == 0
     assert "id" in content
@@ -331,7 +320,7 @@ def test_read_node_fail_node_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Fails if the node doesn't exist"""
-    
+
     response = client.get(
         f"{settings.API_V1_STR}/nodes/{-1}", headers=superuser_token_headers,
     )
@@ -344,37 +333,28 @@ def test_read_node_fail_node_no_permission(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Fails if the user has no read permission on the node"""
-    
-    # Setup: Create the parent node, instantiate permissions, get create permission,
-    # create user, create user group, add user to user group, give user group read
-    # permission on the parent node
 
-    # TODO: Convert the following setup to a function
-    node = create_random_node(db, created_by_id=1, node_type="network")
-    crud.node.instantiate_permissions(db, node=node)
-    permission = crud.node.get_permission(
-        db, id=node.id, permission_type=PermissionTypeEnum.read
+    setup = node_permission_setup(
+        db,
+        node_type="test_read_node_fail_node_no_permission",
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=False,
     )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(db, user_group=user_group, permission=permission, enabled=False)
     user_token_headers = authentication_token_from_email(
-        client=client, email=user.email, db=db
+        client=client, email=setup["user"].email, db=db
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{node.id}", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers,
     )
-    # breakpoint()
     assert response.status_code == 403
     content = response.json()
-    # breakpoint()
     assert content["detail"] == (
-        f"User ID {user.id} does not have "
+        f"User ID {setup['user'].id} does not have "
         f"read permissions for "
-        f"node ID {node.id}"
+        f"node ID {setup['node'].id}"
     )
+
 
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------

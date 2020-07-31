@@ -89,7 +89,7 @@ def create_node(
             raise HTTPException(
                 status_code=403, detail="Only superusers can create new networks."
             )
-    else: # Validation for creating a non-network node
+    else:  # Validation for creating a non-network node
 
         # Fail if attempting to create a non-'network' node without a parent
         if not node_in.parent_id:
@@ -111,12 +111,15 @@ def create_node(
             )
 
         # Fail if normal user doesn't have create permission on parent node
-        user_has_permission = node_create_validator.check_permission(node_in.parent_id, db, current_user)
+        user_has_permission = node_create_validator.check_permission(
+            node_in.parent_id, db, current_user
+        )
         if not user_has_permission and not current_user.is_superuser:
             raise HTTPException(
-                status_code=403, detail="User does not have permission to create this node"
+                status_code=403,
+                detail="User does not have permission to create this node",
             )
-    
+
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=current_user.id)
     return node
 

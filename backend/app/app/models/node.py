@@ -45,7 +45,7 @@ class Node(Base, Default):
     - User Groups (user_groups)
     - Permissions (permissions)
     """
-    
+
     id = Column(Integer, primary_key=True, index=True)
     parent_id = Column(Integer, ForeignKey("node.id"), index=True)
     children = relationship("Node")

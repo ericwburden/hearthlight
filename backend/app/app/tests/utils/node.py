@@ -22,5 +22,7 @@ def create_random_node(
     if node_type is None:
         node_type = "node"
     name = random_lower_string()
-    node_in = NodeCreate(name=name, node_type=node_type, parent_id=parent_id, is_active=is_active)
+    node_in = NodeCreate(
+        name=name, node_type=node_type, parent_id=parent_id, is_active=is_active
+    )
     return crud.node.create(db=db, obj_in=node_in, created_by_id=created_by_id)

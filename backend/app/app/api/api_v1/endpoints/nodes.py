@@ -130,20 +130,27 @@ def read_node(
     db: Session = Depends(deps.get_db),
     resource_id: int,
     current_user: models.User = Depends(node_read_validator),
-) -> Any:
-    """# Get a node by id.
+) -> Node:
+    """# Get a node by id
 
-    Args:
-        id (int): [description]
-        db (Session, optional): [description]. Defaults to Depends(deps.get_db).
-        current_user (models.User, optional): [description]. Defaults to Depends(deps.get_current_active_user).
+    ## Args:
 
-    Raises:
-        HTTPException: [description]
-        HTTPException: [description]
+    - resource_id (int): Primary key ID for the node
+    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(node_read_validator).
 
-    Returns:
-        Any: [description]
+    ## Raises:
+
+    - HTTPException: 404 - When the resource_id doesn't match a node in
+    the database.
+    - HTTPException: 403 - When the current user doesn't have permission
+    to read the node indicated by resource_id.
+
+    ## Returns:
+
+    - Node: The Node with the primary id == resource_id
     """
     node = crud.node.get(db=db, id=resource_id)
     if not node:

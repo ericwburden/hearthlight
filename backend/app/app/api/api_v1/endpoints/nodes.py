@@ -130,7 +130,7 @@ def read_node(
     db: Session = Depends(deps.get_db),
     resource_id: int,
     current_user: models.User = Depends(node_read_validator),
-) -> Node:
+) -> models.Node:
     """# Get a node by id
 
     ## Args:

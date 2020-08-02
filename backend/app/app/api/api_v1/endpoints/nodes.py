@@ -210,7 +210,7 @@ def update_node(
         raise HTTPException(status_code=404, detail="Node not found")
     if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    node = crud.node.update(db=db, db_obj=node, obj_in=node_in)
+    node = crud.node.update(db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id)
     return node
 
 

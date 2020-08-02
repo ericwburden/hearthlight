@@ -502,3 +502,17 @@ def test_update_node_fail_node_not_exists(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Cannot find node."
+
+
+def test_update_node_fail_parent_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the specified node doesn't exist in the database"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_update_node_fail_parent_not_exists")
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers, json={"parent_id": -1}
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find parent node."

@@ -164,9 +164,25 @@ def read_nodes(
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> Any:
-    """
-    Retrieve nodes.
+) -> List[models.Node]:
+    """# Read a list of nodes
+
+    Returns nodes in descending primary key order by default
+
+    ## Args:
+
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults 
+    to Depends(deps.get_db).
+    - skip (int, optional): Number of records to skip. Defaults to 0.
+    - limit (int, optional): Number of records to retrieve. Defaults 
+    to 100.
+    - current_user (models.User, optional): User object for the user 
+    accessing the endpoint. Defaults to 
+    Depends(deps.get_current_active_user).
+
+    ## Returns:
+    
+    - List[models.Node]: List of retrieved nodes
     """
     if crud.user.is_superuser(current_user):
         nodes = crud.node.get_multi(db, skip=skip, limit=limit)

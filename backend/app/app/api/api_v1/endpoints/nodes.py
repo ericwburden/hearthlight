@@ -194,22 +194,20 @@ def read_nodes(
     return nodes
 
 
-@router.put("/{id}", response_model=schemas.Node)
+@router.put("/{resource_id}", response_model=schemas.Node)
 def update_node(
     *,
     db: Session = Depends(deps.get_db),
-    id: int,
+    resource_id: int,
     node_in: schemas.NodeUpdate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(node_update_validator),
 ) -> Any:
     """
     Update an node.
     """
-    node = crud.node.get(db=db, id=id)
+    node = crud.node.get(db=db, id=resource_id)
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
-    if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     node = crud.node.update(db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id)
     return node
 

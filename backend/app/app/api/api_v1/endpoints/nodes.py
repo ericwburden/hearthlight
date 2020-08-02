@@ -171,9 +171,10 @@ def read_nodes(
     if crud.user.is_superuser(current_user):
         nodes = crud.node.get_multi(db, skip=skip, limit=limit)
     else:
-        nodes = crud.node.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip, limit=limit
+        nodes = crud.node.get_multi_with_permissions(
+            db, user=current_user, skip=skip, limit=limit
         )
+
     return nodes
 
 

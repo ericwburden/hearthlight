@@ -489,3 +489,16 @@ def test_update_node_normal_user(
     assert "updated_at" in content
     assert "created_by_id" in content
     assert "updated_by_id" in content
+
+
+def test_update_node_fail_node_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the specified node doesn't exist in the database"""
+
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{-1}", headers=superuser_token_headers, json={}
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find node."

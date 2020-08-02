@@ -207,7 +207,7 @@ def update_node(
     """
     node = crud.node.get(db=db, id=resource_id)
     if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
+        raise HTTPException(status_code=404, detail="Cannot find node.")
     node = crud.node.update(db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id)
     return node
 

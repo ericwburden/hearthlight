@@ -8,7 +8,7 @@ from app.tests.utils.user import authentication_token_from_email, create_random_
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.node import create_random_node
-from app.tests.utils.setup import node_permission_setup
+from app.tests.utils.setup import node_permission_setup, multi_node_permission_setup
 
 # --------------------------------------------------------------------------------------
 # region Tests for Node create network endpoint ----------------------------------------
@@ -260,6 +260,7 @@ def test_create_node_fail_permission_missing(
 # region Tests for Node read one endpoint ----------------------------------------------
 # --------------------------------------------------------------------------------------
 
+
 def test_read_node(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
@@ -361,12 +362,15 @@ def test_read_node_fail_node_no_permission(
 # region Tests for Node read multi endpoint --------------------------------------------
 # --------------------------------------------------------------------------------------
 
+
 def test_read_nodes(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully read multiple entered nodes"""
 
-    nodes = [create_random_node(db, created_by_id=1, node_type="network") for i in range(10)]
+    nodes = [
+        create_random_node(db, created_by_id=1, node_type="network") for i in range(10)
+    ]
     response = client.get(
         f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers,
     )
@@ -376,3 +380,49 @@ def test_read_nodes(
     assert len(content) >= 10
     assert all([n.id in stored_node_ids for n in nodes])
 
+
+def test_read_nodes_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read nodes with permissions"""
+
+    setup = multi_node_permission_setup(
+        db,
+        n=10,
+        node_type="test_read_nodes_normal_user",
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=True,
+    )
+    node_ids = [node.id for node in setup["nodes"]]
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert len(content) == 10
+    assert all([n["id"] in node_ids for n in content])
+
+
+def test_read_nodes_fail_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """A normal user with no permissions should fetch no nodes"""
+
+    nodes = [
+        create_random_node(db, created_by_id=1, node_type="test_read_nodes_fail_no_permission") for i in range(10)
+    ]
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert len(content) == 0

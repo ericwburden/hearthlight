@@ -260,7 +260,6 @@ def test_create_node_fail_permission_missing(
 # region Tests for Node read one endpoint ----------------------------------------------
 # --------------------------------------------------------------------------------------
 
-
 def test_read_node(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
@@ -359,3 +358,21 @@ def test_read_node_fail_node_no_permission(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+# region Tests for Node read multi endpoint --------------------------------------------
+# --------------------------------------------------------------------------------------
+
+def test_read_nodes(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read multiple entered nodes"""
+
+    nodes = [create_random_node(db, created_by_id=1, node_type="network") for i in range(10)]
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers,
+    )
+    content = response.json()
+    stored_node_ids = [node["id"] for node in content]
+    assert response.status_code == 200
+    assert len(content) >= 10
+    assert all([n.id in stored_node_ids for n in nodes])
+

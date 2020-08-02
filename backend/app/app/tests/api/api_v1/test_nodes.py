@@ -253,13 +253,11 @@ def test_create_node_fail_permission_missing(
     content = response.json()
     assert content["detail"] == "User does not have permission to create this node"
 
-
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node read one endpoint ----------------------------------------------
 # --------------------------------------------------------------------------------------
-
 
 def test_read_node(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -355,13 +353,11 @@ def test_read_node_fail_node_no_permission(
         f"node ID {setup['node'].id}"
     )
 
-
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node read multi endpoint --------------------------------------------
 # --------------------------------------------------------------------------------------
-
 
 def test_read_nodes(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -426,3 +422,70 @@ def test_read_nodes_fail_no_permission(
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 0
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node update endpoint ------------------------------------------------
+# --------------------------------------------------------------------------------------
+
+def test_update_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully update a node"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_update_node")
+    data = {
+        "node_type": "updated_test_node",
+        "name": random_lower_string(),
+    }
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers, json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["node_type"] == data["node_type"]
+    assert content["name"] == data["name"]
+    assert content["is_active"] == node.is_active
+    assert content["parent_id"] == node.parent_id
+    assert content["depth"] == 0
+    assert "id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content
+
+
+def test_update_node_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully update a node"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test_update_node_normal_user",
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True,
+    )
+    data = {
+        "node_type": "updated_test_node",
+        "name": random_lower_string(),
+    }
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers, json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["node_type"] == data["node_type"]
+    assert content["name"] == data["name"]
+    assert content["is_active"] == setup["node"].is_active
+    assert content["parent_id"] == setup["node"].parent_id
+    assert content["depth"] == 0
+    assert "id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content

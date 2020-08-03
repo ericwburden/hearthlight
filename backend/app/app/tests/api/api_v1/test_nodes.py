@@ -253,11 +253,13 @@ def test_create_node_fail_permission_missing(
     content = response.json()
     assert content["detail"] == "User does not have permission to create this node"
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node read one endpoint ----------------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_read_node(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -353,11 +355,13 @@ def test_read_node_fail_node_no_permission(
         f"node ID {setup['node'].id}"
     )
 
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node read multi endpoint --------------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_read_nodes(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -394,9 +398,7 @@ def test_read_nodes_normal_user(
         client=client, email=setup["user"].email, db=db
     )
 
-    response = client.get(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,
-    )
+    response = client.get(f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,)
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 10
@@ -409,25 +411,28 @@ def test_read_nodes_fail_no_permission(
     """A normal user with no permissions should fetch no nodes"""
 
     nodes = [
-        create_random_node(db, created_by_id=1, node_type="test_read_nodes_fail_no_permission") for i in range(10)
+        create_random_node(
+            db, created_by_id=1, node_type="test_read_nodes_fail_no_permission"
+        )
+        for i in range(10)
     ]
     user = create_random_user(db)
     user_token_headers = authentication_token_from_email(
         client=client, email=user.email, db=db
     )
 
-    response = client.get(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,
-    )
+    response = client.get(f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,)
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 0
+
 
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for Node update endpoint ------------------------------------------------
 # --------------------------------------------------------------------------------------
+
 
 def test_update_node(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -440,7 +445,9 @@ def test_update_node(
         "name": random_lower_string(),
     }
     response = client.put(
-        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/{node.id}",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -475,7 +482,9 @@ def test_update_node_normal_user(
         client=client, email=setup["user"].email, db=db
     )
     response = client.put(
-        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -509,9 +518,13 @@ def test_update_node_fail_parent_not_exists(
 ) -> None:
     """Fails if the node indicated by parent_id doesn't exist in the database"""
 
-    node = create_random_node(db, created_by_id=1, node_type="test_update_node_fail_parent_not_exists")
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_update_node_fail_parent_not_exists"
+    )
     response = client.put(
-        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers, json={"parent_id": -1}
+        f"{settings.API_V1_STR}/nodes/{node.id}",
+        headers=superuser_token_headers,
+        json={"parent_id": -1},
     )
     assert response.status_code == 404
     content = response.json()
@@ -523,7 +536,9 @@ def test_update_node_fail_user_no_permission(
 ) -> None:
     """Fails if the user doesn't have update permissions on the new parent node"""
 
-    new_parent_node = create_random_node(db, created_by_id=1, node_type="new_parent_node")
+    new_parent_node = create_random_node(
+        db, created_by_id=1, node_type="new_parent_node"
+    )
     data = {"parent_id": new_parent_node.id}
     setup = node_permission_setup(
         db,
@@ -532,11 +547,16 @@ def test_update_node_fail_user_no_permission(
         permission_enabled=True,
     )
     user_token_headers = authentication_token_from_email(
-        client=client, email=setup['user'].email, db=db
+        client=client, email=setup["user"].email, db=db
     )
     response = client.put(
-        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers, json=data
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
-    assert content["detail"] == f"User does not have permission to assign resources to node {data['parent_id']}."
+    assert (
+        content["detail"]
+        == f"User does not have permission to assign resources to node {data['parent_id']}."
+    )

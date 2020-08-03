@@ -201,9 +201,43 @@ def update_node(
     resource_id: int,
     node_in: schemas.NodeUpdate,
     current_user: models.User = Depends(node_update_validator),
-) -> Any:
-    """
-    Update an node.
+) -> models.Node:
+    """# Update a node
+
+    Validation rules for updating the node:
+    - The target node to be updated must exist
+    - The user must have update permissions on the node to be updated,
+    or be a superuser
+    - If attempting to update the node's parent_id, i.e., reassign the 
+    node as the child of another parent node, the target parent node 
+    must exist
+    - If attempting to update the node's parent_id, the user must have
+    update permissions on the target parent
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the node to update
+    - node_in (schemas.NodeUpdate): Object specifying the attributes 
+    of the node to update
+    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user 
+    accessing the endpoint. Defaults to Depends(node_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the node identified by 'resource_id' 
+    does not exist
+    - HTTPException: 404 - When the parent_id in node_in refers to a 
+    node that does not exist
+    - HTTPException: 403 - When the user does not have update 
+    permissions on the node
+    - HTTPException: 403 - When the user does not have update 
+    permission on the parent node when attempting to reassign parent_id
+
+    ## Returns:
+
+    - Node: the updated Node
     """
 
     node = crud.node.get(db=db, id=resource_id)
@@ -222,7 +256,9 @@ def update_node(
                 status_code=403,
                 detail=f"User does not have permission to assign resources to node {node_in.parent_id}.",
             )
-    node = crud.node.update(db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id)
+    node = crud.node.update(
+        db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id
+    )
     return node
 
 

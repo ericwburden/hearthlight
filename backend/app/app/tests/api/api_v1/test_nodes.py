@@ -534,6 +534,35 @@ def test_update_node_fail_parent_not_exists(
 def test_update_node_fail_user_no_permission(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
+    """Fails if the user doesn't have update permissions on the target node"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test_update_node_fail_user_no_permission",
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=False,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    data = {"name": "no matter"}
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}",
+        headers=user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"User ID {setup['user'].id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {setup['node'].id}"
+    )
+
+
+def test_update_node_fail_user_no_parent_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
     """Fails if the user doesn't have update permissions on the new parent node"""
 
     new_parent_node = create_random_node(
@@ -602,7 +631,7 @@ def test_delete_node_normal_user(
     response = client.delete(
         f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers
     )
-    stored_node = crud.node.get(db, id=setup['node'].id)
+    stored_node = crud.node.get(db, id=setup["node"].id)
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == setup["node"].name
@@ -620,3 +649,29 @@ def test_delete_node_fail_node_not_exists(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Cannot find node."
+
+
+def test_delete_node_fail_user_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user doesn't have delete permissions on the target node"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test_delete_node_fail_user_no_permission",
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=False,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"User ID {setup['user'].id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {setup['node'].id}"
+    )

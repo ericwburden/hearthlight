@@ -262,12 +262,12 @@ def update_node(
     return node
 
 
-@router.delete("/{id}", response_model=schemas.Node)
+@router.delete("/{resource_id}", response_model=schemas.Node)
 def delete_node(
     *,
     db: Session = Depends(deps.get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(node_delete_validator),
 ) -> Any:
     """
     Delete an node.
@@ -275,7 +275,5 @@ def delete_node(
     node = crud.node.get(db=db, id=id)
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
-    if not crud.user.is_superuser(current_user) and (node.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     node = crud.node.remove(db=db, id=id)
     return node

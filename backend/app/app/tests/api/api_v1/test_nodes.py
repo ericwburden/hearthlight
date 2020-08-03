@@ -602,8 +602,21 @@ def test_delete_node_normal_user(
     response = client.delete(
         f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers
     )
-    stored_node = crud.node.get(db, id=node.id)
+    stored_node = crud.node.get(db, id=setup['node'].id)
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == setup["node"].name
     assert stored_node is None
+
+
+def test_delete_node_fail_node_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the specified node doesn't exist in the database"""
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/nodes/{-1}", headers=superuser_token_headers, json={}
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find node."

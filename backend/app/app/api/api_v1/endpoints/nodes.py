@@ -266,7 +266,7 @@ def update_node(
 def delete_node(
     *,
     db: Session = Depends(deps.get_db),
-    id: int,
+    resource_id: int,
     current_user: models.User = Depends(node_delete_validator),
 ) -> Any:
     """

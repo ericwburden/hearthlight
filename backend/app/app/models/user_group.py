@@ -21,9 +21,6 @@ class UserGroupPermissionRel(Base, Default):
     permission_id = Column(Integer, ForeignKey("permission.id"), primary_key=True)
     enabled = Column(Boolean, default=False)
 
-    user_group = relationship("UserGroup", backref="permissions")
-    permission = relationship("Permission", backref="user_groups")
-
 
 class UserGroup(Base, Default):
     id = Column(Integer, primary_key=True, index=True)
@@ -51,3 +48,4 @@ class UserGroup(Base, Default):
     users = relationship(
         "User", secondary=lambda: UserGroupUserRel.__table__, backref="user_groups"
     )
+    permissions = relationship("UserGroupPermissionRel", cascade="all, delete")

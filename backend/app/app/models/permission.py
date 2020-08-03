@@ -18,6 +18,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
+    from .user_group import UserGroupPermissionRel # noqa
 
 
 class Permission(Base):
@@ -26,6 +27,8 @@ class Permission(Base):
     id = Column(Integer, primary_key=True, index=True)
     resource_type = Column(String(256), nullable=False)
     permission_type = Column(String(256), nullable=False)
+
+    user_groups = relationship("UserGroupPermissionRel", cascade="all, delete")
 
     __mapper_args__ = {
         "polymorphic_identity": "permission",

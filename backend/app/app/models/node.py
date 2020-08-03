@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 
 from app.db.base_class import Base, Default
@@ -72,5 +72,5 @@ class Node(Base, Default):
     name = Column(String(256), nullable=False, unique=True)
     is_active = Column(Boolean, default=True)
 
-    user_groups = relationship("UserGroup", backref="node")
+    user_groups = relationship("UserGroup", cascade="all, delete")
     permissions = relationship("NodePermission", backref="node")

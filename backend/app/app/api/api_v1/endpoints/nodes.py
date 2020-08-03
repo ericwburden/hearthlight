@@ -205,9 +205,23 @@ def update_node(
     """
     Update an node.
     """
+
     node = crud.node.get(db=db, id=resource_id)
     if not node:
         raise HTTPException(status_code=404, detail="Cannot find node.")
+    if node_in.parent_id:
+        parent_node = crud.node.get(db=db, id=node_in.parent_id)
+        if not parent_node:
+            raise HTTPException(status_code=404, detail="Cannot find parent node.")
+
+        user_has_permission = node_update_validator.check_permission(
+            node_in.parent_id, db, current_user
+        )
+        if not user_has_permission and not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403,
+                detail=f"User does not have permission to assign resources to node {node_in.parent_id}.",
+            )
     node = crud.node.update(db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id)
     return node
 

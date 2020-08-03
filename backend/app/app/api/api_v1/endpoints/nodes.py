@@ -272,8 +272,8 @@ def delete_node(
     """
     Delete an node.
     """
-    node = crud.node.get(db=db, id=id)
+    node = crud.node.get(db=db, id=resource_id)
     if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
-    node = crud.node.remove(db=db, id=id)
+        raise HTTPException(status_code=404, detail="Cannot find node.")
+    node = crud.node.remove(db=db, id=resource_id)
     return node

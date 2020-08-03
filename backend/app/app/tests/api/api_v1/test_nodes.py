@@ -507,7 +507,7 @@ def test_update_node_fail_node_not_exists(
 def test_update_node_fail_parent_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Fails if the specified node doesn't exist in the database"""
+    """Fails if the node indicated by parent_id doesn't exist in the database"""
 
     node = create_random_node(db, created_by_id=1, node_type="test_update_node_fail_parent_not_exists")
     response = client.put(
@@ -516,3 +516,27 @@ def test_update_node_fail_parent_not_exists(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Cannot find parent node."
+
+
+def test_update_node_fail_user_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user doesn't have update permissions on the new parent node"""
+
+    new_parent_node = create_random_node(db, created_by_id=1, node_type="new_parent_node")
+    data = {"parent_id": new_parent_node.id}
+    setup = node_permission_setup(
+        db,
+        node_type="test_update_node_fail_user_no_permission",
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup['user'].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers, json=data
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == f"User does not have permission to assign resources to node {data['parent_id']}."

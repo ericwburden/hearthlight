@@ -466,7 +466,7 @@ def test_update_node(
 def test_update_node_normal_user(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully update a node"""
+    """Successfully update a node as a normal user"""
 
     setup = node_permission_setup(
         db,
@@ -560,3 +560,27 @@ def test_update_node_fail_user_no_permission(
         content["detail"]
         == f"User does not have permission to assign resources to node {data['parent_id']}."
     )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node delete endpoint ------------------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_delete_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully delete a node"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_delete_node")
+    response = client.delete(
+        f"{settings.API_V1_STR}/nodes/{node.id}",
+        headers=superuser_token_headers
+    )
+    stored_node = crud.node.get(db, id=node.id)
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == node.name
+    assert stored_node is None

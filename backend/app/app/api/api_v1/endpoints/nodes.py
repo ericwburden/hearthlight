@@ -269,8 +269,28 @@ def delete_node(
     resource_id: int,
     current_user: models.User = Depends(node_delete_validator),
 ) -> Any:
-    """
-    Delete an node.
+    """# Delete a node
+
+    When deleting a node, any user groups or permissions associated
+    with a node are also deleted. The user must either have delete
+    permissions on the node or be a superuser.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the node to delete.
+    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user 
+    accessing the endpoint. Defaults to Depends(node_delete_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the target node is not in the database.
+    - HTTPExceptoin: 403- When a normal user does not have delete permissions for the node.
+
+    ## Returns:
+    
+    - Node: The deleted Node
     """
     node = crud.node.get(db=db, id=resource_id)
     if not node:

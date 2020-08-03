@@ -182,7 +182,7 @@ def read_nodes(
 
     ## Returns:
     
-    - List[models.Node]: List of retrieved nodes
+    - List[Node]: List of retrieved nodes
     """
     if crud.user.is_superuser(current_user):
         nodes = crud.node.get_multi(db, skip=skip, limit=limit)

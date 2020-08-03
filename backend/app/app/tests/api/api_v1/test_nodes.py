@@ -576,11 +576,34 @@ def test_delete_node(
 
     node = create_random_node(db, created_by_id=1, node_type="test_delete_node")
     response = client.delete(
-        f"{settings.API_V1_STR}/nodes/{node.id}",
-        headers=superuser_token_headers
+        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers
     )
     stored_node = crud.node.get(db, id=node.id)
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == node.name
+    assert stored_node is None
+
+
+def test_delete_node_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully delete a node as a normal user"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test_delete_node_normal_user",
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=True,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers
+    )
+    stored_node = crud.node.get(db, id=node.id)
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == setup["node"].name
     assert stored_node is None

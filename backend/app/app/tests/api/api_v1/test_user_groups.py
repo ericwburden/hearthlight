@@ -65,6 +65,21 @@ def test_create_user_group_normal_user(client: TestClient, db: Session) -> None:
     assert "updated_by_id" in content
 
 
+def test_create_user_group_fail_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """User Group creation fails if the node doesn't exist"""
+    data = {"name": random_lower_string(), "node_id": -100}
+    response = client.post(
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find node indicated by node_id."
+
+
 def test_create_user_group_fail_no_permission(client: TestClient, db: Session) -> None:
     """User Group creation fails without create permission on the node"""
 

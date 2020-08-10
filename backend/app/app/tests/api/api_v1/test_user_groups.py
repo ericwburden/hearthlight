@@ -19,7 +19,7 @@ from app.tests.utils.setup import node_permission_setup
 def test_create_user_group(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successful user_group creation"""
+    """Successful UserGroup creation"""
     node = create_random_node(db, created_by_id=1, node_type="test_create_user_group")
     data = {"name": random_lower_string(), "node_id": node.id}
     response = client.post(
@@ -39,7 +39,7 @@ def test_create_user_group(
 
 
 def test_create_user_group_normal_user(client: TestClient, db: Session) -> None:
-    """Successfully create user group with normal user"""
+    """Successfully create UserGroup with normal user"""
 
     setup = node_permission_setup(
         db,
@@ -68,7 +68,7 @@ def test_create_user_group_normal_user(client: TestClient, db: Session) -> None:
 def test_create_user_group_fail_not_exist(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """User Group creation fails if the node doesn't exist"""
+    """UserGroup creation fails if the node doesn't exist"""
     data = {"name": random_lower_string(), "node_id": -100}
     response = client.post(
         f"{settings.API_V1_STR}/user_groups/",
@@ -80,8 +80,29 @@ def test_create_user_group_fail_not_exist(
     assert content["detail"] == "Cannot find node indicated by node_id."
 
 
+def test_create_user_group_fail_inactive_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """UserGroup creation failes if the node is inactive"""
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="test_create_user_group_fail_inactive_node",
+        is_active=False,
+    )
+    data = {"name": random_lower_string(), "node_id": node.id}
+    response = client.post(
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == "Cannot add user group to an inactive node."
+
+
 def test_create_user_group_fail_no_permission(client: TestClient, db: Session) -> None:
-    """User Group creation fails without create permission on the node"""
+    """UserGroup creation fails without create permission on the node"""
 
     setup = node_permission_setup(
         db,

@@ -26,6 +26,12 @@ def create_user_group(
             status_code=404, detail="Cannot find node indicated by node_id."
         )
 
+    # Fail if the node is inactive
+    if not node.is_active:
+        raise HTTPException(
+            status_code=403, detail="Cannot add user group to an inactive node."
+        )
+
     # Fail if normal user doesn't have create permission on parent node
     user_has_permission = user_group_create_validator.check_permission(
         user_group_in.node_id, db, current_user

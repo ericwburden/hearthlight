@@ -19,6 +19,37 @@ def create_user_group(
     user_group_in: schemas.UserGroupCreate,
     current_user: models.User = Depends(deps.get_current_active_user)
 ) -> models.UserGroup:
+    """# Create a new user group.
+
+    UserGroups are the mechanism by which Users and their Permissions
+    are related to Nodes and other structural objects. The validation 
+    rule in place are:
+    - A new UserGroup must be attached to an existing Node
+    - The parent Node must be active
+    - The User, if not a superuser, must have create permissions on the
+    parent Node
+
+    ##Args:
+
+    - user_group_in (schemas.UserGroupCreate): Object specifying the
+    attributes of the user group to create.
+    - db (Session, optional): SQLAlchemy session. Defaults to 
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the 
+    authenticated user. Defaults to Depends(deps.get_current_active_user).
+
+    ##Raises:
+
+    - HTTPException: 404 - When the node_id references a node that does
+    not exist
+    - HTTPException: 403 - When the parent node is inactive
+    - HTTPException: 403 - When the user does not have create permission
+    on the parent node.
+
+    ##Returns:
+        
+    - models.UserGroup: the created UserGroup
+    """
     # Fail if the node for node_id doesn't exist
     node = crud.node.get(db, id=user_group_in.node_id)
     if not node:

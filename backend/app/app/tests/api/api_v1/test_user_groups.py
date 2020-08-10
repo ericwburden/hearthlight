@@ -38,9 +38,7 @@ def test_create_user_group(
     assert "updated_by_id" in content
 
 
-def test_create_user_group_normal_user(
-    client: TestClient, db: Session
-) -> None:
+def test_create_user_group_normal_user(client: TestClient, db: Session) -> None:
     """Successfully create user group with normal user"""
 
     setup = node_permission_setup(
@@ -52,10 +50,7 @@ def test_create_user_group_normal_user(
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
-    data = {
-        "node_id": setup["node"].id,
-        "name": random_lower_string()
-    }
+    data = {"node_id": setup["node"].id, "name": random_lower_string()}
     response = client.post(
         f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers, json=data,
     )
@@ -68,3 +63,24 @@ def test_create_user_group_normal_user(
     assert "updated_at" in content
     assert "created_by_id" in content
     assert "updated_by_id" in content
+
+
+def test_create_user_group_fail_no_permission(client: TestClient, db: Session) -> None:
+    """User Group creation fails without create permission on the node"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test_create_user_group_normal_user",
+        permission_type=PermissionTypeEnum.create,
+        permission_enabled=False,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    data = {"node_id": setup["node"].id, "name": random_lower_string()}
+    response = client.post(
+        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers, json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == "User does not have permission to create this node."

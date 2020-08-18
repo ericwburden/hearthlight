@@ -61,6 +61,35 @@ def get_current_active_superuser(
 
 
 class UserPermissionValidator:
+    """
+    Provides permission validation for access to resources, based on
+    the type of resource and the desired permission. Permissions work
+    according to the following rules:
+
+    ## Nodes
+
+    - **create**: Attempting to create a new node requires create
+    permissions on the parent node.
+    - **read**: Attempting to fetch an existing node or list of nodes
+    requires read permission on each node being fetched.
+    - **update**: Attempting to update a node requires update
+    permissions on the node itself.
+    - **delete**: Attempting to delete a node requires delete 
+    permission on the node itself.
+
+    ## User Groups
+
+    - **create**: Attempting to create a new user group requires create
+    permission on the parent node.
+    - **read**: Attempting to fetch an existing user group or list of 
+    user groups requires read permission on each user group being 
+    fetched.
+    - **update**: Attempted to update a user group requires update 
+    permission on the user group.
+    - **delete**: Attempting to delete a user group requires
+    delete permission on the user group.
+
+    """
     def __init__(
         self,
         resource_type: schemas.ResourceTypeEnum,

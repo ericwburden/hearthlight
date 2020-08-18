@@ -57,5 +57,5 @@ class UserGroupPermission(Permission):
     }
 
 
-uc = UniqueConstraint("resource_id", "permission_type", name="resource_permission_uc")
+uc = UniqueConstraint("resource_type", "resource_id", "permission_type", name="resource_permission_uc")
 Permission.__table__.append_constraint(uc)

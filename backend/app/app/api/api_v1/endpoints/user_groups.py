@@ -10,6 +10,9 @@ router = APIRouter()
 user_group_create_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.create
 )
+user_group_read_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.user_group, schemas.PermissionTypeEnum.read
+)
 
 
 @router.post("/", response_model=schemas.UserGroup)
@@ -76,4 +79,18 @@ def create_user_group(
     user_group = crud.user_group.create(
         db, obj_in=user_group_in, created_by_id=current_user.id
     )
+    return user_group
+
+
+@router.get("/{resource_id}", response_model=schemas.UserGroup)
+def read_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    current_user: models.User = Depends(user_group_read_validator),
+) -> models.UserGroup:
+
+    user_group = crud.user_group.get(db=db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
     return user_group

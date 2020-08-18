@@ -102,7 +102,12 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         for permission in permissions:
             db.add(permission)
         db.commit()
-        return db.query(NodePermission).join(Node).filter(Node.id == node.id).all()
+        return (
+            db.query(NodePermission)
+            .join(Node, NodePermission.resource_id == Node.id)
+            .filter(Node.id == node.id)
+            .all()
+        )
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
         return db.query(NodePermission).join(Node).filter(Node.id == id).all()

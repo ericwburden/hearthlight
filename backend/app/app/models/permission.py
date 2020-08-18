@@ -39,8 +39,8 @@ class Permission(Base):
 
 class NodePermission(Permission):
     @declared_attr
-    def resource_id(cls): # noqa
-        return Permission.__table__.c.get('resource_id', Column(Integer, index=True))
+    def resource_id(cls):  # noqa
+        return Permission.__table__.c.get("resource_id", Column(Integer, index=True))
 
     __mapper_args__ = {
         "polymorphic_identity": "node",
@@ -49,13 +49,15 @@ class NodePermission(Permission):
 
 class UserGroupPermission(Permission):
     @declared_attr
-    def resource_id(cls): # noqa
-        return Permission.__table__.c.get('resource_id', Column(Integer, index=True))
+    def resource_id(cls):  # noqa
+        return Permission.__table__.c.get("resource_id", Column(Integer, index=True))
 
     __mapper_args__ = {
         "polymorphic_identity": "user_group",
     }
 
 
-uc = UniqueConstraint("resource_type", "resource_id", "permission_type", name="resource_permission_uc")
+uc = UniqueConstraint(
+    "resource_type", "resource_id", "permission_type", name="resource_permission_uc"
+)
 Permission.__table__.append_constraint(uc)

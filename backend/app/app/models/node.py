@@ -74,8 +74,8 @@ class Node(Base, Default):
 
     user_groups = relationship("UserGroup", cascade="all, delete")
     permissions = relationship(
-        "NodePermission", 
+        "NodePermission",
         primaryjoin="and_(Node.id==NodePermission.resource_id, NodePermission.resource_type=='node')",
         foreign_keys="NodePermission.resource_id",
-        cascade="all, delete"
+        cascade="all, delete",
     )

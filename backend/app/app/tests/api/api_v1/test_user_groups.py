@@ -140,7 +140,8 @@ def test_read_user_group(
     node = create_random_node(db, created_by_id=1, node_type="test_read_user_group")
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/{user_group.id}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}",
+        headers=superuser_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
@@ -158,7 +159,9 @@ def test_read_user_group_normal_user(
 ) -> None:
     """Successfully read a user group with permissions"""
 
-    node = create_random_node(db, created_by_id = 1, node_type="test_read_user_group_normal_user")
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_read_user_group_normal_user"
+    )
     user = create_random_user(db)
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     crud.user_group.instantiate_permissions(db, user_group=user_group)
@@ -175,7 +178,8 @@ def test_read_user_group_normal_user(
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/{user_group.id}", headers=user_token_headers,
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}",
+        headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()

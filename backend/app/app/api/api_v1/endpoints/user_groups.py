@@ -20,7 +20,7 @@ def create_user_group(
     *,
     db: Session = Depends(deps.get_db),
     user_group_in: schemas.UserGroupCreate,
-    current_user: models.User = Depends(deps.get_current_active_user)
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> models.UserGroup:
     """# Create a new user group.
 

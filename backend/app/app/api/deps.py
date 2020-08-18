@@ -90,6 +90,7 @@ class UserPermissionValidator:
     delete permission on the user group.
 
     """
+
     def __init__(
         self,
         resource_type: schemas.ResourceTypeEnum,

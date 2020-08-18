@@ -49,10 +49,10 @@ class UserGroup(Base, Default):
         "User", secondary=lambda: UserGroupUserRel.__table__, backref="user_groups"
     )
     permissions_in = relationship("UserGroupPermissionRel", cascade="all, delete")
-    
+
     permissions_for = relationship(
-        "UserGroupPermission", 
+        "UserGroupPermission",
         primaryjoin="and_(UserGroup.id==UserGroupPermission.resource_id, UserGroupPermission.resource_type=='user_group')",
         foreign_keys="UserGroupPermission.resource_id",
-        cascade="all, delete"
+        cascade="all, delete",
     )

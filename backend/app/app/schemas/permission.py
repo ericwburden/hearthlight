@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 class ResourceTypeEnum(str, Enum):
     node = "node"
+    user_group = "user_group"
+    interface = "interface"
 
 
 class PermissionTypeEnum(str, Enum):

@@ -40,7 +40,7 @@ class Permission(Base):
 class NodePermission(Permission):
     @declared_attr
     def resource_id(cls): # noqa
-        return Permission.__table__.c.get('resource_id', Column(Integer, ForeignKey("node.id"), index=True))
+        return Permission.__table__.c.get('resource_id', Column(Integer, index=True))
 
     __mapper_args__ = {
         "polymorphic_identity": "node",
@@ -50,7 +50,7 @@ class NodePermission(Permission):
 class UserGroupPermission(Permission):
     @declared_attr
     def resource_id(cls): # noqa
-        return Permission.__table__.c.get('resource_id', Column(Integer, ForeignKey("user_group.id"), index=True))
+        return Permission.__table__.c.get('resource_id', Column(Integer, index=True))
 
     __mapper_args__ = {
         "polymorphic_identity": "user_group",

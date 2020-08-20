@@ -138,7 +138,6 @@ def multi_user_group_permission_setup(
     db: Session,
     *,
     n: int,
-    node_type: str,
     permission_type: PermissionTypeEnum,
     permission_enabled: bool
 ) -> Dict[

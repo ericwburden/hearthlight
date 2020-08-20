@@ -162,10 +162,6 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
     # the previous get_permission() function, which WILL cause problems.
     # Consider moving the permission association CRUD to the crud_permission
     # module
-
-    # I've decided that there's probably no reason to ever need to fetch a single
-    # permission from a UserGroup when you have the permission's ID, just get
-    # the permission directly
     def get_permission(
         self, db: Session, *, id: int, permission_type: PermissionTypeEnum
     ) -> Permission:

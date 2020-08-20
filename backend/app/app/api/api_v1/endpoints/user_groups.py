@@ -89,6 +89,28 @@ def read_user_group(
     resource_id: int,
     current_user: models.User = Depends(user_group_read_validator),
 ) -> models.UserGroup:
+    """Endpoint to read a single user group. In order to read a
+    user group, the user group must exist and the user must have read
+    permissions for that user group or be a superuser.
+
+    ##Args:
+
+    - resource_id (int): databaase ID for the user group
+    - db (Session, optional): SQLAlchemy Session. Defaults to Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the
+    authenticated user. Defaults to Depends(user_group_read_validator).
+
+    ##Raises:
+
+    - HTTPException: 404 - When the resource_id refers to a user group
+    that does not exist
+    - HTTPException: 403 - When the user does not have read permissions
+    for the user group
+
+    ## Returns:
+        
+    models.UserGroup: the fetched UserGroup
+    """
 
     user_group = crud.user_group.get(db=db, id=resource_id)
     if not user_group:

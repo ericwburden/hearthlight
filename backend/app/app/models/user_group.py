@@ -22,6 +22,7 @@ class UserGroupUserRel(Base, Default):
 class UserGroupPermissionRel(Base, Default):
     """Many-to-many association table for Permissions *in* UserGroups
     """
+
     user_group_id = Column(Integer, ForeignKey("user_group.id"), primary_key=True)
     permission_id = Column(Integer, ForeignKey("permission.id"), primary_key=True)
     enabled = Column(Boolean, default=False)

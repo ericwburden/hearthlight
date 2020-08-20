@@ -9,7 +9,7 @@ from app.tests.utils.node import create_random_node
 from app.tests.utils.user import create_random_user
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
-from app.tests.utils.setup import node_permission_setup
+from app.tests.utils.setup import node_permission_setup, user_group_permission_setup
 
 
 # --------------------------------------------------------------------------------------
@@ -159,34 +159,63 @@ def test_read_user_group_normal_user(
 ) -> None:
     """Successfully read a user group with permissions"""
 
-    node = create_random_node(
-        db, created_by_id=1, node_type="test_read_user_group_normal_user"
-    )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
-    crud.user_group.instantiate_permissions(db, user_group=user_group)
-    permission = crud.user_group.get_permission(
-        db, id=user_group.id, permission_type=PermissionTypeEnum.read
-    )
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission_to_user_group(
-        db, user_group=user_group, permission=permission, enabled=True
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.read, permission_enabled=True
     )
 
     user_token_headers = authentication_token_from_email(
-        client=client, email=user.email, db=db
+        client=client, email=setup["user"].email, db=db
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/{user_group.id}",
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}",
         headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["node_id"] == user_group.node_id
-    assert content["name"] == user_group.name
+    assert content["node_id"] == setup["user_group"].node_id
+    assert content["name"] == setup["user_group"].name
     assert "id" in content
     assert "created_at" in content
     assert "updated_at" in content
     assert "created_by_id" in content
     assert "updated_by_id" in content
+
+
+def test_read_user_group_fail_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user group doesn't exist"""
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{-1}", headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_read_user_group_fail_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user has no read permission on the user group"""
+
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.read, permission_enabled=False
+    )
+
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}",
+        headers=user_token_headers,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"User ID {setup['user'].id} does not have "
+        f"read permissions for "
+        f"user_group ID {setup['user_group'].id}"
+    )

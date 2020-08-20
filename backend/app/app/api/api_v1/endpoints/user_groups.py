@@ -93,14 +93,14 @@ def read_user_group(
     user group, the user group must exist and the user must have read
     permissions for that user group or be a superuser.
 
-    ##Args:
+    ## Args:
 
     - resource_id (int): databaase ID for the user group
     - db (Session, optional): SQLAlchemy Session. Defaults to Depends(deps.get_db).
     - current_user (models.User, optional): User object for the
     authenticated user. Defaults to Depends(user_group_read_validator).
 
-    ##Raises:
+    ## Raises:
 
     - HTTPException: 404 - When the resource_id refers to a user group
     that does not exist

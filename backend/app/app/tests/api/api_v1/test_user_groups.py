@@ -9,7 +9,7 @@ from app.tests.utils.node import create_random_node
 from app.tests.utils.user import create_random_user
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
-from app.tests.utils.setup import node_permission_setup, user_group_permission_setup
+from app.tests.utils.setup import node_permission_setup, user_group_permission_setup, multi_user_group_permission_setup
 
 
 # --------------------------------------------------------------------------------------
@@ -245,3 +245,26 @@ def test_read_user_groups(
     stored_user_group_ids = [user_group["id"] for user_group in content]
     assert len(content) >= 10
     assert all([ug.id in stored_user_group_ids for ug in user_groups])
+
+
+def test_read_user_groups_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read user groups with permissions"""
+
+    setup = multi_user_group_permission_setup(
+        db,
+        n=10,
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=True,
+    )
+    user_group_ids = [user_group.id for user_group in setup["user_groups"]]
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+
+    response = client.get(f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,)
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content) == 10
+    assert all([ug["id"] in user_group_ids for ug in content])

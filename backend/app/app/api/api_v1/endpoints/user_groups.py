@@ -116,3 +116,39 @@ def read_user_group(
     if not user_group:
         raise HTTPException(status_code=404, detail="Cannot find user group.")
     return user_group
+
+
+@router.get("/", response_model=List[schemas.UserGroup])
+def read_user_groups(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> List[models.UserGroup]:
+    """# Read a list of nodes
+
+    Returns nodes in descending primary key order by default
+
+    ## Args:
+
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults 
+    to Depends(deps.get_db).
+    - skip (int, optional): Number of records to skip. Defaults to 0.
+    - limit (int, optional): Number of records to retrieve. Defaults 
+    to 100.
+    - current_user (models.User, optional): User object for the user 
+    accessing the endpoint. Defaults to 
+    Depends(deps.get_current_active_user).
+
+    ## Returns:
+    
+    - List[Node]: List of retrieved nodes
+    """
+    if crud.user.is_superuser(current_user):
+        user_groups = crud.user_group.get_multi(db, skip=skip, limit=limit)
+    else:
+        user_groups = crud.user_group.get_multi_with_permissions(
+            db, user=current_user, skip=skip, limit=limit
+        )
+
+    return user_groups

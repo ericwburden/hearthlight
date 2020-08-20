@@ -132,3 +132,51 @@ def user_group_permission_setup(
         "user_group": user_group,
         "user": user,
     }
+
+
+def multi_user_group_permission_setup(
+    db: Session,
+    *,
+    n: int,
+    node_type: str,
+    permission_type: PermissionTypeEnum,
+    permission_enabled: bool
+) -> Dict[
+    str,
+    Union[models.Node, List[models.Permission], List[models.UserGroup], models.User],
+]:
+    """
+    Setup: Create a parent node, create a user, create 'n' user groups,
+    instantiate permission for each user group, add user to all groups,
+    give each user group the specified permission
+
+    Returns a dictionary of the format: {
+        "node": Node,
+        "permissions": [Permission],
+        "user_groups": [UserGroup],
+        "user": User,
+    }
+    """
+
+    node = create_random_node(
+        db, created_by_id=1, node_type="multi_user_group_permission_setup"
+    )
+    user = create_random_user(db)
+    user_groups = [create_random_user_group(db, created_by_id=1, node_id=node.id) for i in range(n)]
+    permissions = []
+    for user_group in user_groups:
+        crud.user_group.instantiate_permissions(db, user_group=user_group)
+        permission = crud.user_group.get_permission(
+            db, id=user_group.id, permission_type=permission_type
+        )
+        permissions.append(permission)
+        crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
+        crud.user_group.add_permission_to_user_group(
+            db, user_group=user_group, permission=permission, enabled=permission_enabled
+        )
+    return {
+        "node": node,
+        "permissions": permissions,
+        "user_groups": user_groups,
+        "user": user,
+    }

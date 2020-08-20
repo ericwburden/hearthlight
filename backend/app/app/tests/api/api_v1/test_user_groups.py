@@ -13,9 +13,7 @@ from app.tests.utils.setup import node_permission_setup, user_group_permission_s
 
 
 # --------------------------------------------------------------------------------------
-# endregion ----------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
-# region Tests for Node create user group endpoint -------------------------------------
+# region Tests for UserGroup create user group endpoint --------------------------------
 # --------------------------------------------------------------------------------------
 
 
@@ -128,7 +126,7 @@ def test_create_user_group_fail_no_permission(client: TestClient, db: Session) -
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-# region Tests for Node create user group endpoint -------------------------------------
+# region Tests for UserGroup create user group endpoint --------------------------------
 # --------------------------------------------------------------------------------------
 
 
@@ -219,3 +217,31 @@ def test_read_user_group_fail_no_permission(
         f"read permissions for "
         f"user_group ID {setup['user_group'].id}"
     )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup read multi user group endpoint ----------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_read_user_groups(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read multiple entered user groups"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_read_user_group")
+    user_groups = [
+        create_random_user_group(db, created_by_id=1, node_id=node.id)
+        for i in range(10)
+    ]
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/", headers=superuser_token_headers,
+    )
+    
+    assert response.status_code == 200
+    content = response.json()
+    stored_user_group_ids = [user_group["id"] for user_group in content]
+    assert len(content) >= 10
+    assert all([ug.id in stored_user_group_ids for ug in user_groups])

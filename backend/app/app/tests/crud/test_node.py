@@ -276,7 +276,7 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
         node_read_permission = crud.node.get_permission(
             db, id=node.id, permission_type=PermissionTypeEnum.read
         )
-        crud.user_group.add_permission(
+        crud.user_group.add_permission_to_user_group(
             db, user_group=user_group, permission=node_read_permission, enabled=True
         )
 
@@ -288,7 +288,7 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     blocked_node_read_permission = crud.node.get_permission(
         db, id=blocked_node.id, permission_type=PermissionTypeEnum.read
     )
-    crud.user_group.add_permission(
+    crud.user_group.add_permission_to_user_group(
         db,
         user_group=user_group,
         permission=blocked_node_read_permission,

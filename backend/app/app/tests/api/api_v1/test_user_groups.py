@@ -169,7 +169,7 @@ def test_read_user_group_normal_user(
         db, id=user_group.id, permission_type=PermissionTypeEnum.read
     )
     crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(
+    crud.user_group.add_permission_to_user_group(
         db, user_group=user_group, permission=permission, enabled=True
     )
 

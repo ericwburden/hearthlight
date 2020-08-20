@@ -38,7 +38,7 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         db.commit()
         return user_group
 
-    def add_permission(
+    def add_permission_to_user_group(
         self,
         db: Session,
         *,
@@ -54,39 +54,12 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         db.refresh(user_group_permission)
         return user_group_permission
 
-    # def get_permission(
-    #     self, db: Session, *, user_group: UserGroup, permission_id: int
-    # ) -> Permission:
-    #     return (
-    #         db.query(Permission)
-    #         .join(UserGroupPermissionRel)
-    #         .join(UserGroup)
-    #         .filter(UserGroup.id == user_group.id)
-    #         .first()
-    #     )
-
-    # TODO: Gonna need a cleaner way to differentiate between permissions *in*
-    # a UserGroup and permissions *for* a UserGroup. For now, I've commented
-    # the previous get_permission() function, which WILL cause problems.
-    # Consider moving the permission association CRUD to the crud_permission
-    # module
-    def get_permission(
-        self, db: Session, *, id: int, permission_type: PermissionTypeEnum
-    ) -> Permission:
-        query = db.query(UserGroupPermission).filter(
-            and_(
-                UserGroupPermission.resource_id == id,
-                UserGroupPermission.permission_type == permission_type,
-            )
-        )
-        return query.first()
-
-    def get_all_permissions(
+    def get_all_permissions_in_user_group(
         self, db: Session, *, user_group: UserGroup
     ) -> List[Permission]:
         return db.query(Permission).join(UserGroupPermissionRel).join(UserGroup).all()
 
-    def delete_permission(
+    def delete_permission_in_user_group(
         self, db: Session, *, user_group: UserGroup, permission: Permission
     ) -> UserGroupPermissionRel:
         user_group_permission = (
@@ -141,10 +114,31 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         db.refresh(user_group_permission)
         return user_group_permission
 
+    # The below functions address permmissions *for* the UserGroup,
+    # i.e., user permissions to do CRUD operations on the UserGroup
+    # itself
+
     # TODO: Need to figure out how to make this a mixin
     def instantiate_permissions(
         self, db: Session, *, user_group: UserGroup
     ) -> List[Permission]:
+        """Create permissions *for* the UserGroup
+
+        Permissions *for* the UserGroup are permissions to perform CRUD
+        operations on the UserGroup, not permissions being related to
+        Users
+
+        ## Args:
+
+        - db (Session): SQLAlchemy Session
+        - user_group (UserGroup): The UserGroup to create permissions for
+
+        ## Returns:
+        
+        - List[Permission]: The created Permissions, one each of
+        'create', 'read', 'update', and 'delete'
+        """
+
         permissions = [
             UserGroupPermission(
                 resource_id=user_group.id,
@@ -162,6 +156,26 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
             .filter(UserGroup.id == user_group.id)
             .all()
         )
+
+    # TODO: Gonna need a cleaner way to differentiate between permissions *in*
+    # a UserGroup and permissions *for* a UserGroup. For now, I've commented
+    # the previous get_permission() function, which WILL cause problems.
+    # Consider moving the permission association CRUD to the crud_permission
+    # module
+
+    # I've decided that there's probably no reason to ever need to fetch a single
+    # permission from a UserGroup when you have the permission's ID, just get
+    # the permission directly
+    def get_permission(
+        self, db: Session, *, id: int, permission_type: PermissionTypeEnum
+    ) -> Permission:
+        query = db.query(UserGroupPermission).filter(
+            and_(
+                UserGroupPermission.resource_id == id,
+                UserGroupPermission.permission_type == permission_type,
+            )
+        )
+        return query.first()
 
 
 user_group = CRUDUserGroup(UserGroup)

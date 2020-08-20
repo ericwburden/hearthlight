@@ -37,7 +37,7 @@ def node_permission_setup(
     user = create_random_user(db)
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission(
+    crud.user_group.add_permission_to_user_group(
         db, user_group=user_group, permission=permission, enabled=permission_enabled
     )
     return {
@@ -85,7 +85,7 @@ def multi_node_permission_setup(
             db, id=node.id, permission_type=permission_type
         )
         permissions.append(permission)
-        crud.user_group.add_permission(
+        crud.user_group.add_permission_to_user_group(
             db, user_group=user_group, permission=permission, enabled=permission_enabled
         )
     return {

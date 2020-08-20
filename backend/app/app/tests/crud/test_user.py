@@ -136,7 +136,7 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
     crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
 
     permission = create_random_permission(db, node_id=node.id)
-    crud.user_group.add_permission(
+    crud.user_group.add_permission_to_user_group(
         db, user_group=user_group, permission=permission, enabled=True
     )
     has_permission = crud.user.has_permission(

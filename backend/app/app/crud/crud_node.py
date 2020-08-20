@@ -19,7 +19,7 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
     ) -> List[Node]:
         return (
             db.query(self.model)
-            .join(NodePermission)
+            .join(NodePermission, NodePermission.resource_id == Node.id)
             .join(UserGroupPermissionRel)
             .join(UserGroup)
             .join(UserGroupUserRel)

@@ -14,6 +14,30 @@ from app.schemas.permission import PermissionTypeEnum
 
 
 class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]):
+    def get_multi_with_permissions(
+        self, db: Session, *, user: User, skip: int = 0, limit: int = 100
+    ) -> List[UserGroup]:
+
+        # Need to alias the first instance of UserGroup since it's in
+        # the query twice
+        user_group_result = aliased(self.model)
+        return (
+            db.query(user_group_result)
+            .join(UserGroupPermission, UserGroupPermission.resource_id == user_group_result.id)
+            .join(UserGroupPermissionRel)
+            .join(UserGroup)
+            .join(UserGroupUserRel)
+            .join(User)
+            .filter(
+                and_(
+                    User.id == user.id,
+                    UserGroupPermission.permission_type == PermissionTypeEnum.read,
+                    UserGroupPermissionRel.enabled == True,
+                )
+            )
+            .all()
+        )
+
     def add_user_to_group(
         self, db: Session, *, user_group: UserGroup, user_id: int
     ) -> UserGroupUserRel:

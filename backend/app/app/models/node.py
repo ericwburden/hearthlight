@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, ForeignKey, Integer, DateTime, Boolean, String
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.base_class import Base, Default
@@ -13,15 +13,15 @@ if TYPE_CHECKING:
 
 class Node(Base, Default):
     """Class representing Node objects
-    
+
     Nodes represent the basic organizational structure of Hearthlight. All nodes
-    are represented in the node table and are organized into a tree-like structure 
+    are represented in the node table and are organized into a tree-like structure
     through recursive association by the parent_id attribute, which represents the
-    node id of the node's 'parent'. This is a flexible structure which allows for 
-    arbitrarily complex organizational structures. All nodes have a parent, with the 
+    node id of the node's 'parent'. This is a flexible structure which allows for
+    arbitrarily complex organizational structures. All nodes have a parent, with the
     exception of 'network' nodes, which represent the root of each organizational
-    structure. While 'network' is a reserved node_type, any other name can be given to 
-    a node to identify the node's purpose in the hierarchy. For example, node types 
+    structure. While 'network' is a reserved node_type, any other name can be given to
+    a node to identify the node's purpose in the hierarchy. For example, node types
     could form the following hierarchy: network(1) > organization(n) > division(n) >
     department(n) > program(n) > team(n). The node table contains the following
     fields:
@@ -53,7 +53,7 @@ class Node(Base, Default):
     updated_at = Column(DateTime, server_default=func.now(), server_onupdate=func.now())
     created_by_id = Column(
         Integer,
-        ForeignKey("user.id", name=f"fk_node_created_by_id", use_alter=True),
+        ForeignKey("user.id", name="fk_node_created_by_id", use_alter=True),
         nullable=False,
     )
     created_by_user = relationship(
@@ -61,7 +61,7 @@ class Node(Base, Default):
     )
     updated_by_id = Column(
         Integer,
-        ForeignKey("user.id", name=f"fk_node_updated_by_id", use_alter=True),
+        ForeignKey("user.id", name="fk_node_updated_by_id", use_alter=True),
         nullable=False,
     )
     updated_by_user = relationship(
@@ -75,7 +75,10 @@ class Node(Base, Default):
     user_groups = relationship("UserGroup", cascade="all, delete")
     permissions = relationship(
         "NodePermission",
-        primaryjoin="and_(Node.id==NodePermission.resource_id, NodePermission.resource_type=='node')",
+        primaryjoin=(
+            "and_(Node.id==NodePermission.resource_id, "
+            "NodePermission.resource_type=='node')"
+        ),
         foreign_keys="NodePermission.resource_id",
         cascade="all, delete",
     )

@@ -25,7 +25,7 @@ def create_user_group(
     """# Create a new user group.
 
     UserGroups are the mechanism by which Users and their Permissions
-    are related to Nodes and other structural objects. The validation 
+    are related to Nodes and other structural objects. The validation
     rule in place are:
     - A new UserGroup must be attached to an existing Node
     - The parent Node must be active
@@ -36,9 +36,9 @@ def create_user_group(
 
     - user_group_in (schemas.UserGroupCreate): Object specifying the
     attributes of the user group to create.
-    - db (Session, optional): SQLAlchemy session. Defaults to 
+    - db (Session, optional): SQLAlchemy session. Defaults to
     Depends(deps.get_db).
-    - current_user (models.User, optional): User object for the 
+    - current_user (models.User, optional): User object for the
     authenticated user. Defaults to Depends(deps.get_current_active_user).
 
     ##Raises:
@@ -50,7 +50,7 @@ def create_user_group(
     on the parent node.
 
     ##Returns:
-        
+
     - models.UserGroup: the created UserGroup
     """
     # Fail if the node for node_id doesn't exist
@@ -108,7 +108,7 @@ def read_user_group(
     for the user group
 
     ## Returns:
-        
+
     models.UserGroup: the fetched UserGroup
     """
 
@@ -131,17 +131,17 @@ def read_user_groups(
 
     ## Args:
 
-    - db (Session, optional): SQLAlchemy Session, injected. Defaults 
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults
     to Depends(deps.get_db).
     - skip (int, optional): Number of records to skip. Defaults to 0.
-    - limit (int, optional): Number of records to retrieve. Defaults 
+    - limit (int, optional): Number of records to retrieve. Defaults
     to 100.
-    - current_user (models.User, optional): User object for the user 
-    accessing the endpoint. Defaults to 
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
 
     ## Returns:
-    
+
     - List[Node]: List of retrieved nodes
     """
     if crud.user.is_superuser(current_user):

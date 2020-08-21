@@ -18,7 +18,7 @@ def node_permission_setup(
 ) -> Dict[str, Union[models.Node, models.Permission, models.UserGroup, models.User]]:
     """
     Setup: Create the node, instantiate permissions, get create
-    permission, create user, create user group, add user to user group, 
+    permission, create user, create user group, add user to user group,
     give user group specified permission on the node
 
     Returns a dictionary of the format: {
@@ -61,7 +61,7 @@ def multi_node_permission_setup(
 ]:
     """
     Setup: Create 'n' nodes, instantiate permissions, get create
-    permissions, create user, create user group, add user to user group, 
+    permissions, create user, create user group, add user to user group,
     give user group specified permission on all nodes
 
     Returns a dictionary of the format: {

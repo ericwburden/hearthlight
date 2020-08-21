@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app import crud
 from app.core.config import settings
 from app.schemas import PermissionTypeEnum
 from app.tests.utils.user import authentication_token_from_email
@@ -281,10 +280,7 @@ def test_read_user_groups_fail_no_permission(
     node = create_random_node(
         db, created_by_id=1, node_type="test_read_user_groups_fail_no_permission"
     )
-    user_groups = [
-        create_random_user_group(db, created_by_id=1, node_id=node.id)
-        for i in range(10)
-    ]
+    [create_random_user_group(db, created_by_id=1, node_id=node.id) for i in range(10)]
     user = create_random_user(db)
     user_token_headers = authentication_token_from_email(
         client=client, email=user.email, db=db

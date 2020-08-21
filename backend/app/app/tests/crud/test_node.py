@@ -4,15 +4,12 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.models.user import User
 from app.schemas.node import NodeCreate, NodeUpdate
-from app.schemas.permission import (
-    PermissionCreate,
-    PermissionTypeEnum,
-    ResourceTypeEnum,
-)
+from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user_group import UserGroupCreate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
 from app.tests.utils.utils import random_lower_string
+
 
 # --------------------------------------------------------------------------------------
 # region Tests for basic CRUD fuctions by superuser ------------------------------------
@@ -44,7 +41,7 @@ def test_get_node(db: Session, superuser: User) -> None:
 def test_get_multi_node(db: Session, superuser: User) -> None:
     names = [random_lower_string() for n in range(10)]
     new_nodes_in = [NodeCreate(name=name, node_type="node") for name in names]
-    new_nodes = [
+    [
         crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
         for node_in in new_nodes_in
     ]

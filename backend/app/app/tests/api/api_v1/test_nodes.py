@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.config import settings
-from app.schemas import NodeCreate, PermissionTypeEnum
+from app.schemas import PermissionTypeEnum
 from app.tests.utils.user import authentication_token_from_email, create_random_user
-from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.node import create_random_node
 from app.tests.utils.setup import node_permission_setup, multi_node_permission_setup
@@ -232,7 +231,10 @@ def test_create_node_fail_permission_false(
 def test_create_node_fail_permission_missing(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Node creation fails when user does not have a permission associate with the resource"""
+    """
+    Node creation fails when user does not have a permission associate
+    with the resource
+    """
     # Setup: Create the parent node, create a user. Importantly, no permission setup
     # for the user and the parent node
     parent_node = create_random_node(db, created_by_id=1, node_type="network")
@@ -410,7 +412,7 @@ def test_read_nodes_fail_no_permission(
 ) -> None:
     """A normal user with no permissions should fetch no nodes"""
 
-    nodes = [
+    [
         create_random_node(
             db, created_by_id=1, node_type="test_read_nodes_fail_no_permission"
         )
@@ -585,9 +587,9 @@ def test_update_node_fail_user_no_parent_permission(
     )
     assert response.status_code == 403
     content = response.json()
-    assert (
-        content["detail"]
-        == f"User does not have permission to assign resources to node {data['parent_id']}."
+    assert content["detail"] == (
+        "User does not have permission to assign resources to node "
+        f"{data['parent_id']}."
     )
 
 

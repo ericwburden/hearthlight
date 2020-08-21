@@ -159,9 +159,9 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
         permission_type=permission_type,
         enabled=False,
     )
-    permission_not_granted = crud.node_permission.create(db=db, obj_in=permission_in)
+    crud.node_permission.create(db=db, obj_in=permission_in)
 
-    assert has_permission == True
+    assert has_permission == True  # noqa E712
     for png in permissions_not_granted:
         has_permission = crud.user.has_permission(
             db,
@@ -170,4 +170,4 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
             resource_id=node.id,
             permission_type=png,
         )
-        assert has_permission == False
+        assert has_permission == False  # noqa E712

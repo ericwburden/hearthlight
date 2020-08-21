@@ -82,7 +82,9 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: Session, *, obj_in: CreateSchemaType, created_by_id: int
     ) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, created_by_id=created_by_id, updated_by_id=created_by_id)  # type: ignore
+        db_obj = self.model(
+            **obj_in_data, created_by_id=created_by_id, updated_by_id=created_by_id
+        )  # type: ignore
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

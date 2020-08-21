@@ -1,5 +1,4 @@
-import logging
-from typing import Generator, List
+from typing import Generator
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -74,17 +73,17 @@ class UserPermissionValidator:
     requires read permission on each node being fetched.
     - **update**: Attempting to update a node requires update
     permissions on the node itself.
-    - **delete**: Attempting to delete a node requires delete 
+    - **delete**: Attempting to delete a node requires delete
     permission on the node itself.
 
     ## User Groups
 
     - **create**: Attempting to create a new user group requires create
     permission on the parent node.
-    - **read**: Attempting to fetch an existing user group or list of 
-    user groups requires read permission on each user group being 
+    - **read**: Attempting to fetch an existing user group or list of
+    user groups requires read permission on each user group being
     fetched.
-    - **update**: Attempted to update a user group requires update 
+    - **update**: Attempted to update a user group requires update
     permission on the user group.
     - **delete**: Attempting to delete a user group requires
     delete permission on the user group.

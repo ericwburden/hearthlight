@@ -6,7 +6,6 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 
 from app import crud
 from app.models.user import User
-from app.models.user_group import UserGroupPermissionRel
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
@@ -46,7 +45,7 @@ def test_get_multi_user_group(db: Session, normal_user: User) -> None:
     )
     names = [random_lower_string() for n in range(10)]
     new_user_groups_in = [UserGroupCreate(name=name, node_id=node.id) for name in names]
-    new_user_groups = [
+    [
         crud.user_group.create(
             db=db, obj_in=user_group_in, created_by_id=normal_user.id
         )
@@ -175,7 +174,7 @@ def test_add_permission_to_user_group(db: Session, normal_user: User) -> None:
     )
     assert association.user_group_id == user_group.id
     assert association.permission_id == permission.id
-    assert association.enabled == True
+    assert association.enabled == True  # noqa E712
 
 
 def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> None:
@@ -224,7 +223,7 @@ def test_delete_permission_from_user_group(db: Session, normal_user: User) -> No
     )
     permission = create_random_permission(db, node_id=node.id)
 
-    association = crud.user_group.add_permission_to_user_group(
+    crud.user_group.add_permission_to_user_group(
         db=db, user_group=user_group, permission=permission, enabled=True
     )
     deleted_user_group_permission = crud.user_group.delete_permission_in_user_group(
@@ -259,7 +258,7 @@ def test_grant_permission_to_user_group(db: Session, normal_user: User) -> None:
     )
     assert association.user_group_id == user_group.id
     assert association.permission_id == permission.id
-    assert association.enabled == True
+    assert association.enabled == True  # noqa E712
 
 
 def test_revoke_permission_for_user_group(db: Session, normal_user: User) -> None:
@@ -283,4 +282,4 @@ def test_revoke_permission_for_user_group(db: Session, normal_user: User) -> Non
     )
     assert association.user_group_id == user_group.id
     assert association.permission_id == permission.id
-    assert association.enabled == False
+    assert association.enabled == False  # noqa E712

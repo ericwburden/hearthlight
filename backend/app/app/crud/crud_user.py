@@ -6,7 +6,6 @@ from sqlalchemy.sql.expression import literal_column
 
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
-from app.models.node import Node
 from app.models.permission import Permission
 from app.models.user import User
 from app.models.user_group import UserGroup, UserGroupPermissionRel, UserGroupUserRel

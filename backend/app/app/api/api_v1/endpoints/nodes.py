@@ -28,11 +28,11 @@ def create_node(
     node_in: schemas.NodeCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> models.Node:
-    """# Create a new node. 
-    
+    """# Create a new node.
+
     Nodes are the basic organizational structure and are organized in a
-    tree-like hierarchy, with a 'network' node forming the root node 
-    for a grouping of nodes. This provides a flexible organizational 
+    tree-like hierarchy, with a 'network' node forming the root node
+    for a grouping of nodes. This provides a flexible organizational
     structure where nodes can be nested arbitrarily deeply. There are a
     number of validation rules in place, including:
     - A 'network' node must have a node_type='network'
@@ -41,31 +41,31 @@ def create_node(
     - Any 'non-network' node (i.e. node_type!='network') must have a
     parent_id specified
     - The parent_id must refer to an existing node in the database
-    - The node indicated by parent_id must be active (i.e., 
+    - The node indicated by parent_id must be active (i.e.,
     is_active=True)
-    - The user must belong to a user group with create permissions on 
+    - The user must belong to a user group with create permissions on
     the parent node
 
     ## Args:
 
     - node_in (schemas.NodeCreate): Object specifying the attributes of
     the node to create
-    - db (Session, optional): SQLAlchemy session. Defaults to 
+    - db (Session, optional): SQLAlchemy session. Defaults to
     Depends(deps.get_db).
-    - current_user (models.User, optional): User object for the 
+    - current_user (models.User, optional): User object for the
     authenticated user. Defaults to Depends(deps.get_current_active_user).
 
     ## Raises:
 
-    - HTTPException: 400 - When a 'network' node has a parent_id 
+    - HTTPException: 400 - When a 'network' node has a parent_id
     specified
-    - HTTPException: 403 - When a normal user attempts to create a 
+    - HTTPException: 403 - When a normal user attempts to create a
     'network' node
-    - HTTPException: 400 - When attempting to create a 'non-network' 
+    - HTTPException: 400 - When attempting to create a 'non-network'
     node without a parent_id specified
-    - HTTPException: 404 - When the parent_id doesn't match a node 
+    - HTTPException: 404 - When the parent_id doesn't match a node
     in the database
-    - HTTPException: 403 - When the node indicated by parent_id is 
+    - HTTPException: 403 - When the node indicated by parent_id is
     inactive
     - HTTPException: 403 - When a normal user attempts to create a node
     without create permissions on the parent
@@ -136,7 +136,7 @@ def read_node(
     ## Args:
 
     - resource_id (int): Primary key ID for the node
-    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    - db (Session, optional): SQLAlchemy Session. Defaults to
     Depends(deps.get_db).
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to Depends(node_read_validator).
@@ -171,17 +171,17 @@ def read_nodes(
 
     ## Args:
 
-    - db (Session, optional): SQLAlchemy Session, injected. Defaults 
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults
     to Depends(deps.get_db).
     - skip (int, optional): Number of records to skip. Defaults to 0.
-    - limit (int, optional): Number of records to retrieve. Defaults 
+    - limit (int, optional): Number of records to retrieve. Defaults
     to 100.
-    - current_user (models.User, optional): User object for the user 
-    accessing the endpoint. Defaults to 
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
 
     ## Returns:
-    
+
     - List[Node]: List of retrieved nodes
     """
     if crud.user.is_superuser(current_user):
@@ -208,8 +208,8 @@ def update_node(
     - The target node to be updated must exist
     - The user must have update permissions on the node to be updated,
     or be a superuser
-    - If attempting to update the node's parent_id, i.e., reassign the 
-    node as the child of another parent node, the target parent node 
+    - If attempting to update the node's parent_id, i.e., reassign the
+    node as the child of another parent node, the target parent node
     must exist
     - If attempting to update the node's parent_id, the user must have
     update permissions on the target parent
@@ -217,22 +217,22 @@ def update_node(
     ## Args:
 
     - resource_id (int): Primary key ID for the node to update
-    - node_in (schemas.NodeUpdate): Object specifying the attributes 
+    - node_in (schemas.NodeUpdate): Object specifying the attributes
     of the node to update
-    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    - db (Session, optional): SQLAlchemy Session. Defaults to
     Depends(deps.get_db).
-    - current_user (models.User, optional): User object for the user 
+    - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to Depends(node_update_validator).
 
     ## Raises:
 
-    - HTTPException: 404 - When the node identified by 'resource_id' 
+    - HTTPException: 404 - When the node identified by 'resource_id'
     does not exist
-    - HTTPException: 404 - When the parent_id in node_in refers to a 
+    - HTTPException: 404 - When the parent_id in node_in refers to a
     node that does not exist
-    - HTTPException: 403 - When the user does not have update 
+    - HTTPException: 403 - When the user does not have update
     permissions on the node
-    - HTTPException: 403 - When the user does not have update 
+    - HTTPException: 403 - When the user does not have update
     permission on the parent node when attempting to reassign parent_id
 
     ## Returns:
@@ -254,7 +254,10 @@ def update_node(
         if not user_has_permission and not current_user.is_superuser:
             raise HTTPException(
                 status_code=403,
-                detail=f"User does not have permission to assign resources to node {node_in.parent_id}.",
+                detail=(
+                    f"User does not have permission to assign"
+                    f" resources to node {node_in.parent_id}"
+                ),
             )
     node = crud.node.update(
         db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id
@@ -278,18 +281,19 @@ def delete_node(
     ## Args:
 
     - resource_id (int): Primary key ID for the node to delete.
-    - db (Session, optional): SQLAlchemy Session. Defaults to 
+    - db (Session, optional): SQLAlchemy Session. Defaults to
     Depends(deps.get_db).
-    - current_user (models.User, optional): User object for the user 
+    - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to Depends(node_delete_validator).
 
     ## Raises:
 
     - HTTPException: 404 - When the target node is not in the database.
-    - HTTPExceptoin: 403- When a normal user does not have delete permissions for the node.
+    - HTTPExceptoin: 403- When a normal user does not have delete permissions for the
+    node.
 
     ## Returns:
-    
+
     - Node: The deleted Node
     """
     node = crud.node.get(db=db, id=resource_id)

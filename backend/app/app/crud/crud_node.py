@@ -10,7 +10,7 @@ from app.models.permission import Permission, NodePermission
 from app.models.user import User
 from app.models.user_group import UserGroup, UserGroupPermissionRel, UserGroupUserRel
 from app.schemas.node import NodeCreate, NodeUpdate
-from app.schemas.permission import PermissionTypeEnum, ResourceTypeEnum
+from app.schemas.permission import PermissionTypeEnum
 
 
 class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
@@ -28,7 +28,7 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
                 and_(
                     User.id == user.id,
                     NodePermission.permission_type == PermissionTypeEnum.read,
-                    UserGroupPermissionRel.enabled == True,
+                    UserGroupPermissionRel.enabled == True,  # noqa E712
                 )
             )
             .all()
@@ -52,7 +52,9 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
         if obj_in_data["parent_id"]:
             parent = self.get(db, obj_in_data["parent_id"])
             obj_in_data["depth"] = parent.depth + 1
-        db_obj = self.model(**obj_in_data, created_by_id=created_by_id, updated_by_id=created_by_id)  # type: ignore
+        db_obj = self.model(
+            **obj_in_data, created_by_id=created_by_id, updated_by_id=created_by_id
+        )  # type: ignore
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

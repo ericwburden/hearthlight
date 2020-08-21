@@ -2,17 +2,12 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Column,
-    ForeignKey,
     Integer,
-    DateTime,
-    Boolean,
     String,
-    Table,
     UniqueConstraint,
 )
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from app.db.base_class import Base
 

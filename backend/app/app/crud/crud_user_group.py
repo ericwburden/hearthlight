@@ -1,9 +1,8 @@
-from typing import List, Union, Dict, Any
+from typing import List
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql.expression import literal, literal_column
+from sqlalchemy.sql.expression import literal_column
 
 from app.crud.base import CRUDBaseLogging
 from app.models.user import User
@@ -35,7 +34,7 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
                 and_(
                     User.id == user.id,
                     UserGroupPermission.permission_type == PermissionTypeEnum.read,
-                    UserGroupPermissionRel.enabled == True,
+                    UserGroupPermissionRel.enabled == True,  # noqa E712
                 )
             )
             .all()
@@ -161,7 +160,7 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         - user_group (UserGroup): The UserGroup to create permissions for
 
         ## Returns:
-        
+
         - List[Permission]: The created Permissions, one each of
         'create', 'read', 'update', and 'delete'
         """

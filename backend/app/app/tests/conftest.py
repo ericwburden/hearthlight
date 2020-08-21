@@ -65,7 +65,7 @@ def clear_db():
     ]
     for model in models:
         try:
-            n = db.query(model).delete()
+            db.query(model).delete()
             # print(f'Deleted {n} {model.__name__}s')
             db.commit()
         except Exception as e:

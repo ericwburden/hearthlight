@@ -10,7 +10,6 @@ from app.schemas.permission import (
     ResourceTypeEnum,
 )
 from app.tests.utils.node import create_random_node
-from app.tests.utils.utils import random_lower_string
 
 
 def test_create_node_permission(db: Session, normal_user: User) -> None:
@@ -59,7 +58,7 @@ def test_get_multi_node_permission(db: Session, normal_user: User) -> None:
         )
         for pt in permission_types
     ]
-    new_permissions = [
+    [
         crud.node_permission.create(db=db, obj_in=permission_in)
         for permission_in in new_permissions_in
     ]

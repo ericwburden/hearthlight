@@ -1,16 +1,14 @@
-from typing import List, Union, Dict, Any
+from typing import Union, Dict, Any
 
-from fastapi.encoders import jsonable_encoder
 from psycopg2.errors import UniqueViolation
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, aliased, with_polymorphic
-from sqlalchemy.sql.expression import literal, literal_column
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import literal_column
 
 from app.crud.base import CRUDBase
-from app.models.user import User
 from app.models.permission import Permission, NodePermission
-from app.schemas.permission import PermissionCreate, PermissionUpdate, ResourceTypeEnum
+from app.schemas.permission import PermissionCreate, PermissionUpdate
 
 
 class CRUDPermission(

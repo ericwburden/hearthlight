@@ -23,7 +23,10 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         user_group_result = aliased(self.model)
         return (
             db.query(user_group_result)
-            .join(UserGroupPermission, UserGroupPermission.resource_id == user_group_result.id)
+            .join(
+                UserGroupPermission,
+                UserGroupPermission.resource_id == user_group_result.id,
+            )
             .join(UserGroupPermissionRel)
             .join(UserGroup)
             .join(UserGroupUserRel)

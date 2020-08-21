@@ -161,7 +161,9 @@ def multi_user_group_permission_setup(
         db, created_by_id=1, node_type="multi_user_group_permission_setup"
     )
     user = create_random_user(db)
-    user_groups = [create_random_user_group(db, created_by_id=1, node_id=node.id) for i in range(n)]
+    user_groups = [
+        create_random_user_group(db, created_by_id=1, node_id=node.id) for i in range(n)
+    ]
     permissions = []
     for user_group in user_groups:
         crud.user_group.instantiate_permissions(db, user_group=user_group)

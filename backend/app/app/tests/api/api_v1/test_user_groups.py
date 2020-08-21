@@ -9,7 +9,11 @@ from app.tests.utils.node import create_random_node
 from app.tests.utils.user import create_random_user
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
-from app.tests.utils.setup import node_permission_setup, user_group_permission_setup, multi_user_group_permission_setup
+from app.tests.utils.setup import (
+    node_permission_setup,
+    user_group_permission_setup,
+    multi_user_group_permission_setup,
+)
 
 
 # --------------------------------------------------------------------------------------
@@ -239,7 +243,7 @@ def test_read_user_groups(
     response = client.get(
         f"{settings.API_V1_STR}/user_groups/", headers=superuser_token_headers,
     )
-    
+
     assert response.status_code == 200
     content = response.json()
     stored_user_group_ids = [user_group["id"] for user_group in content]
@@ -253,17 +257,16 @@ def test_read_user_groups_normal_user(
     """Successfully read user groups with permissions"""
 
     setup = multi_user_group_permission_setup(
-        db,
-        n=10,
-        permission_type=PermissionTypeEnum.read,
-        permission_enabled=True,
+        db, n=10, permission_type=PermissionTypeEnum.read, permission_enabled=True,
     )
     user_group_ids = [user_group.id for user_group in setup["user_groups"]]
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
 
-    response = client.get(f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,)
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,
+    )
     assert response.status_code == 200
     content = response.json()
     assert len(content) == 10
@@ -275,7 +278,9 @@ def test_read_user_groups_fail_no_permission(
 ) -> None:
     """A normal user with no permissions should fetch no user groups"""
 
-    node = create_random_node(db, created_by_id=1, node_type="test_read_user_groups_fail_no_permission")
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_read_user_groups_fail_no_permission"
+    )
     user_groups = [
         create_random_user_group(db, created_by_id=1, node_id=node.id)
         for i in range(10)
@@ -285,7 +290,9 @@ def test_read_user_groups_fail_no_permission(
         client=client, email=user.email, db=db
     )
 
-    response = client.get(f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,)
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,
+    )
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 0

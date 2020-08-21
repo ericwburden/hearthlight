@@ -268,3 +268,24 @@ def test_read_user_groups_normal_user(
     content = response.json()
     assert len(content) == 10
     assert all([ug["id"] in user_group_ids for ug in content])
+
+
+def test_read_user_groups_fail_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """A normal user with no permissions should fetch no user groups"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_read_user_groups_fail_no_permission")
+    user_groups = [
+        create_random_user_group(db, created_by_id=1, node_id=node.id)
+        for i in range(10)
+    ]
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,)
+    content = response.json()
+    assert response.status_code == 200
+    assert len(content) == 0

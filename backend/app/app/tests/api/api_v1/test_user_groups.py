@@ -292,3 +292,34 @@ def test_read_user_groups_fail_no_permission(
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 0
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup update endpoint -------------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_update_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully update a user_group"""
+    node = create_random_node(db, created_by_id=1, node_type="test_update_user_group")
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    data = {"name": random_lower_string()}
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == data["name"]
+    assert content["node_id"] == user_group.node_id
+    assert "id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content
+

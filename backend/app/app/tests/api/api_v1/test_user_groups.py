@@ -351,3 +351,86 @@ def test_update_user_group_normal_user(
     assert "created_by_id" in content
     assert "updated_by_id" in content
 
+
+def test_update_user_group_fail_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the specified user group doesn't exist in the database"""
+
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{-1}", headers=superuser_token_headers, json={}
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_update_user_group_fail_parent_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the node indicated by node_id doesn't exist in the database"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_update_user_group_fail_parent_not_exists")
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}",
+        headers=superuser_token_headers,
+        json={"node_id": -1},
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find input parent node."
+
+
+def test_update_user_group_fail_user_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user doesn't have update permissions on the target user group"""
+
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=False
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}",
+        headers=user_token_headers,
+        json={"name": "no matter"},
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"User ID {setup['user'].id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {setup['user_group'].id}"
+    )
+
+
+def test_update_user_group_fail_user_no_parent_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user doesn't have update permissions on the new parent node"""
+
+    new_parent_node = create_random_node(
+        db, created_by_id=1, node_type="new_parent_node"
+    )
+    data = {"node_id": new_parent_node.id}
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}",
+        headers=user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        "User does not have permission to assign resources to node "
+        f"{data['node_id']}"
+    )
+

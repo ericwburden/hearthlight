@@ -344,7 +344,7 @@ def test_update_user_group_normal_user(
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == data["name"]
-    assert content["node_id"] == setup['user_group'].node_id
+    assert content["node_id"] == setup["user_group"].node_id
     assert "id" in content
     assert "created_at" in content
     assert "updated_at" in content
@@ -358,7 +358,9 @@ def test_update_user_group_fail_not_exists(
     """Fails if the specified user group doesn't exist in the database"""
 
     response = client.put(
-        f"{settings.API_V1_STR}/user_groups/{-1}", headers=superuser_token_headers, json={}
+        f"{settings.API_V1_STR}/user_groups/{-1}",
+        headers=superuser_token_headers,
+        json={},
     )
     assert response.status_code == 404
     content = response.json()
@@ -370,7 +372,9 @@ def test_update_user_group_fail_parent_not_exists(
 ) -> None:
     """Fails if the node indicated by node_id doesn't exist in the database"""
 
-    node = create_random_node(db, created_by_id=1, node_type="test_update_user_group_fail_parent_not_exists")
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_update_user_group_fail_parent_not_exists"
+    )
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     response = client.put(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}",
@@ -433,4 +437,3 @@ def test_update_user_group_fail_user_no_parent_permission(
         "User does not have permission to assign resources to node "
         f"{data['node_id']}"
     )
-

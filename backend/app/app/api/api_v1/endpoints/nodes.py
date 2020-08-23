@@ -250,7 +250,7 @@ def update_node(
 
         # This checks update permissions on the proposed new parent node,
         # which is required to reassign the parent. Update checks on
-        # the node being updated are handled by the injected current_user 
+        # the node being updated are handled by the injected current_user
         user_has_parent_permission = node_update_validator.check_permission(
             node_in.parent_id, db, current_user
         )

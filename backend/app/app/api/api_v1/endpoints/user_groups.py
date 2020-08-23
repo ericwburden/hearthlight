@@ -172,7 +172,7 @@ def update_user_group(
     """# Update a user group
 
     ## Args:
-    
+
     - resource_id (int): Primary key ID for the user group to update
     - user_group_in (schemas.UserGroupUpdate): Object specifying the attributes
     of the user group to update.
@@ -183,7 +183,7 @@ def update_user_group(
     Depends(user_group_update_validator).
 
     ## Raises:
-    
+
     - HTTPException: 404 - When the user group identified by
     'resource_id' does not exist.
     - HTTPException: 404 - When the node_id in user_group_in refers to
@@ -195,7 +195,7 @@ def update_user_group(
     node_id
 
     ## Returns:
-    
+
     - models.UserGroup: the updated UserGroup
     """
 
@@ -205,11 +205,13 @@ def update_user_group(
     if user_group_in.node_id:
         parent_node = crud.node.get(db=db, id=user_group_in.node_id)
         if not parent_node:
-            raise HTTPException(status_code=404, detail="Cannot find input parent node.")
+            raise HTTPException(
+                status_code=404, detail="Cannot find input parent node."
+            )
 
         # This checks update permissions on the proposed new parent node,
         # which is required to reassign the parent. Update checks on
-        # the node being updated are handled by the injected current_user 
+        # the node being updated are handled by the injected current_user
         user_has_parent_permission = node_update_validator.check_permission(
             user_group_in.node_id, db, current_user
         )

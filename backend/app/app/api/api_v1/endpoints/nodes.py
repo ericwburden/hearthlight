@@ -248,10 +248,13 @@ def update_node(
         if not parent_node:
             raise HTTPException(status_code=404, detail="Cannot find parent node.")
 
-        user_has_permission = node_update_validator.check_permission(
+        # This checks update permissions on the proposed new parent node,
+        # which is required to reassign the parent. Update checks on
+        # the node being updated are handled by the injected current_user 
+        user_has_parent_permission = node_update_validator.check_permission(
             node_in.parent_id, db, current_user
         )
-        if not user_has_permission and not current_user.is_superuser:
+        if not user_has_parent_permission and not current_user.is_superuser:
             raise HTTPException(
                 status_code=403,
                 detail=(
@@ -259,6 +262,7 @@ def update_node(
                     f" resources to node {node_in.parent_id}"
                 ),
             )
+
     node = crud.node.update(
         db=db, db_obj=node, obj_in=node_in, updated_by_id=current_user.id
     )

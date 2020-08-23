@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -19,6 +19,9 @@ user_group_read_validator = deps.UserPermissionValidator(
 )
 user_group_update_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.user_group, schemas.PermissionTypeEnum.update
+)
+user_group_delete_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.user_group, schemas.PermissionTypeEnum.delete
 )
 
 
@@ -226,4 +229,43 @@ def update_user_group(
     user_group = crud.user_group.update(
         db=db, db_obj=user_group, obj_in=user_group_in, updated_by_id=current_user.id
     )
+    return user_group
+
+
+@router.delete("/{resource_id}", response_model=schemas.UserGroup)
+def delete_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    current_user: models.User = Depends(user_group_delete_validator),
+) -> Any:
+    """# Delete a user group
+
+    When deleting a user group, any permissions *for* that user group
+    are also deleted, along with any association table entries. The
+    user must either have delete permissions on the user group or be
+    a superuser.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the user group to delete.
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(user_group_delete_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the target user group is not in the database.
+    - HTTPExceptoin: 403- When a normal user does not have delete permissions for the
+    user_group.
+
+    ## Returns:
+
+    - UserGroup: The deleted UserGroup
+    """
+    user_group = crud.user_group.get(db=db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+    user_group = crud.user_group.remove(db=db, id=resource_id)
     return user_group

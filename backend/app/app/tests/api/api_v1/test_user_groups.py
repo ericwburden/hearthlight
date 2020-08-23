@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app import crud
 from app.core.config import settings
 from app.schemas import PermissionTypeEnum
 from app.tests.utils.user import authentication_token_from_email
@@ -437,3 +438,95 @@ def test_update_user_group_fail_user_no_parent_permission(
         "User does not have permission to assign resources to node "
         f"{data['node_id']}"
     )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup delete endpoint -------------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_delete_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully delete a user group"""
+
+    node = create_random_node(db, created_by_id=1, node_type="test_delete_user_group")
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}", headers=superuser_token_headers
+    )
+    stored_user_group = crud.user_group.get(db, id=user_group.id)
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == user_group.name
+    assert stored_user_group is None
+
+
+def test_delete_user_group_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully delete a user group as a normal user"""
+
+    setup = user_group_permission_setup(
+        db,
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=True,
+    )
+    breakpoint()
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}", headers=user_token_headers
+    )
+    stored_user_group = crud.user_group.get(db, id=setup["user_group"].id)
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == setup["user_group"].name
+    assert stored_user_group is None
+
+
+def test_delete_user_group_fail_user_group_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the specified user group doesn't exist in the database"""
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{-1}", headers=superuser_token_headers, json={}
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_delete_user_group_fail_user_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fails if the user doesn't have delete permissions on the target user group"""
+
+    setup = user_group_permission_setup(
+        db,
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=False,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}", headers=user_token_headers
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"User ID {setup['user'].id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {setup['user_group'].id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+

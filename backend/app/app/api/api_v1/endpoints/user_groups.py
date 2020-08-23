@@ -169,6 +169,35 @@ def update_node(
     user_group_in: schemas.UserGroupUpdate,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> models.UserGroup:
+    """# Update a user group
+
+    ## Args:
+    
+    - resource_id (int): Primary key ID for the user group to update
+    - user_group_in (schemas.UserGroupUpdate): Object specifying the attributes
+    of the user group to update.
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_update_validator).
+
+    ## Raises:
+    
+    - HTTPException: 404 - When the user group identified by
+    'resource_id' does not exist.
+    - HTTPException: 404 - When the node_id in user_group_in refers to
+    a user group that does not exist.
+    - HTTPException: 403 - When the user does not have update
+    permissions on the user group.
+    - HTTPException: 403 - When the user does not have update
+    permission on the new parent node when attempting to reassign
+    node_id
+
+    ## Returns:
+    
+    - models.UserGroup: the updated UserGroup
+    """
 
     user_group = crud.user_group.get(db=db, id=resource_id)
     if not user_group:

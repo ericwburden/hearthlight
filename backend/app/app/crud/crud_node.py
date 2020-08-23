@@ -2,6 +2,7 @@ from typing import List, Union, Dict, Any
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import literal, and_
 
 from app.crud.base import CRUDBaseLogging
@@ -123,7 +124,14 @@ class CRUDNode(CRUDBaseLogging[Node, NodeCreate, NodeUpdate]):
                 NodePermission.permission_type == permission_type,
             )
         )
-        return query.first()
+        permission = query.first()
+        if not permission:
+            msg = (
+                f"Could not find {permission_type.value} permission "
+                f"for Node {id}"
+            )
+            raise NoResultFound(msg)
+        return permission
 
     def get_child_permissions(self, db: Session, *, id: int):
         node_ids = self.child_node_ids(db, id=id)

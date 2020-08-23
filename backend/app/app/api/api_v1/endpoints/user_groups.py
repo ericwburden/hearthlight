@@ -162,7 +162,7 @@ def read_user_groups(
 
 
 @router.put("/{resource_id}", response_model=schemas.UserGroup)
-def update_node(
+def update_user_group(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,

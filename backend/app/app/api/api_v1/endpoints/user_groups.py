@@ -167,7 +167,7 @@ def update_node(
     db: Session = Depends(deps.get_db),
     resource_id: int,
     user_group_in: schemas.UserGroupUpdate,
-    current_user: models.User = Depends(node_update_validator),
+    current_user: models.User = Depends(user_group_update_validator),
 ) -> models.UserGroup:
 
     user_group = crud.user_group.get(db=db, id=resource_id)

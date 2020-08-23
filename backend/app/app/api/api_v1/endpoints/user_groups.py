@@ -182,14 +182,14 @@ def update_node(
         # which is required to reassign the parent. Update checks on
         # the node being updated are handled by the injected current_user 
         user_has_parent_permission = node_update_validator.check_permission(
-            node_in.parent_id, db, current_user
+            user_group_in.node_id, db, current_user
         )
         if not user_has_parent_permission and not current_user.is_superuser:
             raise HTTPException(
                 status_code=403,
                 detail=(
                     f"User does not have permission to assign"
-                    f" resources to node {node_in.parent_id}"
+                    f" resources to node {user_group_in.node_id}"
                 ),
             )
     user_group = crud.user_group.update(

@@ -7,11 +7,18 @@ from app import crud, models, schemas
 from app.api import deps
 
 router = APIRouter()
+node_update_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.update
+)
+
 user_group_create_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.node, schemas.PermissionTypeEnum.create
 )
 user_group_read_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.user_group, schemas.PermissionTypeEnum.read
+)
+user_group_update_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.user_group, schemas.PermissionTypeEnum.update
 )
 
 
@@ -152,3 +159,40 @@ def read_user_groups(
         )
 
     return user_groups
+
+
+@router.put("/{resource_id}", response_model=schemas.UserGroup)
+def update_node(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    user_group_in: schemas.UserGroupUpdate,
+    current_user: models.User = Depends(node_update_validator),
+) -> models.UserGroup:
+
+    user_group = crud.user_group.get(db=db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+    if user_group_in.node_id:
+        parent_node = crud.node.get(db=db, id=user_group_in.node_id)
+        if not parent_node:
+            raise HTTPException(status_code=404, detail="Cannot find input parent node.")
+
+        # This checks update permissions on the proposed new parent node,
+        # which is required to reassign the parent. Update checks on
+        # the node being updated are handled by the injected current_user 
+        user_has_parent_permission = node_update_validator.check_permission(
+            node_in.parent_id, db, current_user
+        )
+        if not user_has_parent_permission and not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"User does not have permission to assign"
+                    f" resources to node {node_in.parent_id}"
+                ),
+            )
+    user_group = crud.user_group.update(
+        db=db, db_obj=user_group, obj_in=user_group_in, updated_by_id=current_user.id
+    )
+    return user_group

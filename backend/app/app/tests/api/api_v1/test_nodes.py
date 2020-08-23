@@ -589,7 +589,7 @@ def test_update_node_fail_user_no_parent_permission(
     content = response.json()
     assert content["detail"] == (
         "User does not have permission to assign resources to node "
-        f"{data['parent_id']}."
+        f"{data['parent_id']}"
     )
 
 

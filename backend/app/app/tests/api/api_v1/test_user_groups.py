@@ -323,3 +323,31 @@ def test_update_user_group(
     assert "created_by_id" in content
     assert "updated_by_id" in content
 
+
+def test_update_user_group_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully update a user group as a normal user"""
+
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
+    )
+    data = {"name": random_lower_string()}
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}",
+        headers=user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["name"] == data["name"]
+    assert content["node_id"] == setup['user_group'].node_id
+    assert "id" in content
+    assert "created_at" in content
+    assert "updated_at" in content
+    assert "created_by_id" in content
+    assert "updated_by_id" in content
+

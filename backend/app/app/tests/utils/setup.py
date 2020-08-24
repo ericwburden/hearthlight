@@ -17,9 +17,9 @@ def node_permission_setup(
     permission_enabled: bool
 ) -> Dict[str, Union[models.Node, models.Permission, models.UserGroup, models.User]]:
     """
-    Setup: Create the node, instantiate permissions, get create
-    permission, create user, create user group, add user to user group,
-    give user group specified permission on the node
+    Setup: Create the node, get create permission, create user, create
+    user group, add user to user group, give user group specified
+    permission on the node
 
     Returns a dictionary of the format: {
         "node": Node,
@@ -30,7 +30,6 @@ def node_permission_setup(
     """
 
     node = create_random_node(db, created_by_id=1, node_type=node_type)
-    crud.node.instantiate_permissions(db, node=node)
     permission = crud.node.get_permission(
         db, id=node.id, permission_type=permission_type
     )
@@ -60,9 +59,9 @@ def multi_node_permission_setup(
     Union[List[models.Node], List[models.Permission], models.UserGroup, models.User],
 ]:
     """
-    Setup: Create 'n' nodes, instantiate permissions, get create
-    permissions, create user, create user group, add user to user group,
-    give user group specified permission on all nodes
+    Setup: Create 'n' nodes, get create permissions, create user, create
+    user group, add user to user group, give user group specified
+    permission on all nodes
 
     Returns a dictionary of the format: {
         "nodes": [Node],
@@ -80,7 +79,6 @@ def multi_node_permission_setup(
     crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
     permissions = []
     for node in nodes:
-        crud.node.instantiate_permissions(db, node=node)
         permission = crud.node.get_permission(
             db, id=node.id, permission_type=permission_type
         )
@@ -100,10 +98,9 @@ def user_group_permission_setup(
     db: Session, *, permission_type: PermissionTypeEnum, permission_enabled: bool
 ) -> Dict[str, Union[models.Node, models.Permission, models.UserGroup, models.User]]:
     """
-    Setup: Create a node, create a user, create a user group, instantiate
-    permissions *for* the user group, get the specified permission, add
-    the user to the user group, grant the user group the specified
-    permission (to itself)
+    Setup: Create a node, create a user, create a user group, get the
+    specified permission, add the user to the user group, grant the
+    user group the specified permission (to itself)
 
     Returns a dictionary of the format: {
         "node": Node,
@@ -118,7 +115,6 @@ def user_group_permission_setup(
     )
     user = create_random_user(db)
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
-    crud.user_group.instantiate_permissions(db, user_group=user_group)
     permission = crud.user_group.get_permission(
         db, id=user_group.id, permission_type=permission_type
     )
@@ -146,8 +142,8 @@ def multi_user_group_permission_setup(
 ]:
     """
     Setup: Create a parent node, create a user, create 'n' user groups,
-    instantiate permission for each user group, add user to all groups,
-    give each user group the specified permission
+    add user to all groups, give each user group the specified
+    permission.
 
     Returns a dictionary of the format: {
         "node": Node,
@@ -166,7 +162,6 @@ def multi_user_group_permission_setup(
     ]
     permissions = []
     for user_group in user_groups:
-        crud.user_group.instantiate_permissions(db, user_group=user_group)
         permission = crud.user_group.get_permission(
             db, id=user_group.id, permission_type=permission_type
         )

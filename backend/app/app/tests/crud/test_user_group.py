@@ -191,9 +191,7 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
     user_group = crud.user_group.create(
         db=db, obj_in=user_group_in, created_by_id=normal_user.id
     )
-    permissions = chain(
-        *[crud.node.instantiate_permissions(db, node=node) for node in nodes]
-    )
+    permissions = chain(*[crud.node.get_permissions(db, id=node.id) for node in nodes])
     for permission in permissions:
         crud.user_group.add_permission_to_user_group(
             db=db, user_group=user_group, permission=permission, enabled=True

@@ -20,15 +20,6 @@ def test_create_node(db: Session, superuser: User) -> None:
     assert node.created_by_id == superuser.id
 
 
-def test_node_instantiate_permissions(db: Session, superuser: User) -> None:
-    node_in = NodeCreate(name=random_lower_string(), node_type="node")
-    node = crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
-    permissions = crud.node.instantiate_permissions(db, node=node)
-    node_permission_types = [p.permission_type for p in permissions]
-    for pt in list(PermissionTypeEnum):
-        assert pt in node_permission_types
-
-
 def test_get_node(db: Session, superuser: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
@@ -166,13 +157,12 @@ def test_get_node_descendants(db: Session, superuser: User) -> None:
 def test_node_get_permissions(db: Session, superuser: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
-    permissions = crud.node.instantiate_permissions(db, node=node)
     stored_permissions = [
         crud.node.get_permission(db, id=node.id, permission_type=pt)
         for pt in list(PermissionTypeEnum)
     ]
-    for permission in permissions:
-        assert permission.id in [sp.id for sp in stored_permissions]
+    for pt in list(PermissionTypeEnum):
+        assert pt in [p.permission_type for p in stored_permissions]
 
 
 def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
@@ -180,7 +170,7 @@ def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
     parent_node = crud.node.create(
         db=db, obj_in=parent_node_in, created_by_id=superuser.id
     )
-    parent_node_permissions = crud.node.instantiate_permissions(db, node=parent_node)
+    parent_node_permissions = crud.node.get_permissions(db, id=parent_node.id)
 
     # Child of parent_node
     child_node1_in = NodeCreate(
@@ -189,7 +179,7 @@ def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
     child_node1 = crud.node.create(
         db=db, obj_in=child_node1_in, created_by_id=superuser.id
     )
-    child_node1_permissions = crud.node.instantiate_permissions(db, node=child_node1)
+    child_node1_permissions = crud.node.get_permissions(db, id=child_node1.id)
 
     # Child of parent_node
     child_node2_in = NodeCreate(
@@ -198,7 +188,7 @@ def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
     child_node2 = crud.node.create(
         db=db, obj_in=child_node2_in, created_by_id=superuser.id
     )
-    child_node2_permissions = crud.node.instantiate_permissions(db, node=child_node2)
+    child_node2_permissions = crud.node.get_permissions(db, id=child_node2.id)
 
     # Child of child_node2
     child_node3_in = NodeCreate(
@@ -207,7 +197,7 @@ def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
     child_node3 = crud.node.create(
         db=db, obj_in=child_node3_in, created_by_id=superuser.id
     )
-    child_node3_permissions = crud.node.instantiate_permissions(db, node=child_node3)
+    child_node3_permissions = crud.node.get_permissions(db, id=child_node3.id)
 
     combined_permissions = [
         *parent_node_permissions,
@@ -269,7 +259,6 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     # For each node, instantiate permissions, get the read permission, then add it to
     # the user group, enabled
     for node in new_nodes:
-        crud.node.instantiate_permissions(db, node=node)
         node_read_permission = crud.node.get_permission(
             db, id=node.id, permission_type=PermissionTypeEnum.read
         )
@@ -281,7 +270,6 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     blocked_node = create_random_node(
         db, created_by_id=superuser.id, node_type="blocked", parent_id=parent_node.id
     )
-    crud.node.instantiate_permissions(db, node=blocked_node)
     blocked_node_read_permission = crud.node.get_permission(
         db, id=blocked_node.id, permission_type=PermissionTypeEnum.read
     )

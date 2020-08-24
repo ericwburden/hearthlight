@@ -2,7 +2,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_
 
@@ -111,7 +111,9 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
         updated_by_id: int,
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
+        obj_data = {
+            col.name: getattr(db_obj, col.name) for col in db_obj.__table__.columns
+        }
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -150,11 +152,12 @@ class AccessControl(Generic[ModelType, PermissionType]):
     def get_multi_with_permissions(
         self, db: Session, *, user: User, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
+        result_model = aliased(self.model)
         return (
-            db.query(self.model)
+            db.query(result_model)
             .join(
                 self.permission_model,
-                self.permission_model.resource_id == self.model.id,
+                self.permission_model.resource_id == result_model.id,
             )
             .join(UserGroupPermissionRel)
             .join(UserGroup)
@@ -173,7 +176,7 @@ class AccessControl(Generic[ModelType, PermissionType]):
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
         return (
             db.query(self.permission_model)
-            .join(self.model)
+            .join(self.model, self.permission_model.resource_id == self.model.id)
             .filter(self.model.id == id)
             .all()
         )

@@ -269,3 +269,22 @@ def delete_user_group(
         raise HTTPException(status_code=404, detail="Cannot find user group.")
     user_group = crud.user_group.remove(db=db, id=resource_id)
     return user_group
+
+
+@router.put("/{resource_id}/permissions/{permission_id}", response_model=schemas.Msg)
+def grant_permission_to_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    permission_id: int,
+    current_user: models.User = Depends(user_group_update_validator),
+) -> schemas.Msg:
+    crud.permission.grant(
+        db, user_group_id=resource_id, permission_id=permission_id
+    )
+    permission = crud.permission.get(db, permission_id)
+    msg = (
+        f"Granted UserGroup {resource_id} '{permission.permission_type}'"
+        f"permission on {permission.resource_type} {permission.resource_id}"
+    )
+    return schemas.Msg(msg=msg)

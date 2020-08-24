@@ -571,7 +571,7 @@ def test_user_group_grant_permission(
 def test_user_group_grant_permission_normal_user(
     client: TestClient, db: Session
 ) -> None:
-    
+    """Successfully add a permission to a user group as a normal user"""
     setup = user_group_permission_setup(
         db,
         permission_type=PermissionTypeEnum.update,
@@ -585,7 +585,7 @@ def test_user_group_grant_permission_normal_user(
     )
     response = client.put(
         (
-            f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
+            f"{settings.API_V1_STR}/user_groups/{setup['node'].id}"
             f"/permissions/{delete_permission.id}"
         ),
         headers=user_token_headers,
@@ -595,5 +595,25 @@ def test_user_group_grant_permission_normal_user(
     assert content["msg"] == (
         f"Granted UserGroup {setup['user_group'].id} "
         f"'{delete_permission.permission_type}'"
-        f"permission on {delete_permission.resource_type} {setup['user_group'].id}"
+        f"permission on {delete_permission.resource_type} {setup['node'].id}"
     )
+
+
+def test_user_group_grant_permission_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db, 
+        created_by_id=1, 
+        node_type="test_user_group_grant_permission_fail_no_user_group"
+    )
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{-1}/permissions/{permission.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Could not find user group"

@@ -566,3 +566,34 @@ def test_user_group_grant_permission(
         f"Granted UserGroup {user_group.id} '{permission.permission_type}'"
         f"permission on {permission.resource_type} {node.id}"
     )
+
+
+def test_user_group_grant_permission_normal_user(
+    client: TestClient, db: Session
+) -> None:
+    
+    setup = user_group_permission_setup(
+        db,
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True
+    )
+    delete_permission = crud.user_group.get_permission(
+        db, id=setup['user_group'].id, permission_type=PermissionTypeEnum.delete
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        (
+            f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
+            f"/permissions/{delete_permission.id}"
+        ),
+        headers=user_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Granted UserGroup {setup['user_group'].id} "
+        f"'{delete_permission.permission_type}'"
+        f"permission on {delete_permission.resource_type} {setup['user_group'].id}"
+    )

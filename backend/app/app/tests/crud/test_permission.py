@@ -5,7 +5,6 @@ from app import crud
 from app.models.user import User
 from app.schemas.permission import (
     PermissionCreate,
-    PermissionUpdate,
     PermissionTypeEnum,
     ResourceTypeEnum,
 )
@@ -69,36 +68,6 @@ def test_get_multi_node_permission(db: Session, normal_user: User) -> None:
 
     for pt in permission_types:
         assert pt in stored_permission_permission_types
-
-
-def test_update_node_permission(db: Session, normal_user: User) -> None:
-    node1 = create_random_node(
-        db, created_by_id=normal_user.id, node_type="test_update_permission"
-    )
-    permission_type1 = random.choice(list(PermissionTypeEnum))
-    permission_in = PermissionCreate(
-        resource_id=node1.id,
-        resource_type=ResourceTypeEnum.node,
-        permission_type=permission_type1,
-    )
-    permission = crud.node_permission.create(db=db, obj_in=permission_in)
-
-    node2 = create_random_node(
-        db, created_by_id=normal_user.id, node_type="test_update_permission"
-    )
-    remaining_choices = [i for i in list(PermissionTypeEnum) if i != permission_type1]
-    permission_type2 = random.choice(remaining_choices)
-    permission_update = PermissionUpdate(
-        resource_id=node2.id, permission_type=permission_type2
-    )
-    permission2 = crud.node_permission.update(
-        db=db, db_obj=permission, obj_in=permission_update
-    )
-    assert permission.id == permission2.id
-    assert permission.resource_id == node2.id
-    assert permission2.resource_id == node2.id
-    assert permission.resource_type == permission2.resource_type
-    assert permission2.permission_type != permission_type1
 
 
 def test_delete_node_permission(db: Session, normal_user: User) -> None:

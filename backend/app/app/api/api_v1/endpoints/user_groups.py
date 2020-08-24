@@ -279,6 +279,9 @@ def grant_permission_to_user_group(
     permission_id: int,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> schemas.Msg:
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
     crud.permission.grant(
         db, user_group_id=resource_id, permission_id=permission_id
     )

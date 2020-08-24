@@ -577,15 +577,15 @@ def test_user_group_grant_permission_normal_user(
         permission_type=PermissionTypeEnum.update,
         permission_enabled=True
     )
-    delete_permission = crud.user_group.get_permission(
-        db, id=setup['user_group'].id, permission_type=PermissionTypeEnum.delete
+    delete_permission = crud.node.get_permission(
+        db, id=setup['node'].id, permission_type=PermissionTypeEnum.delete
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
     response = client.put(
         (
-            f"{settings.API_V1_STR}/user_groups/{setup['node'].id}"
+            f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
             f"/permissions/{delete_permission.id}"
         ),
         headers=user_token_headers,
@@ -616,4 +616,4 @@ def test_user_group_grant_permission_fail_no_user_group(
     )
     assert response.status_code == 404
     content = response.json()
-    assert content["detail"] == "Could not find user group"
+    assert content["detail"] == "Cannot find user group."

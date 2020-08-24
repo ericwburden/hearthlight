@@ -1,10 +1,10 @@
 from typing import List
 
 from sqlalchemy import and_
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import literal_column
 
-from app.crud.base import CRUDBaseLogging
+from app.crud.base import CRUDBaseLogging, AccessControl
 from app.models.user import User
 from app.models.permission import Permission, UserGroupPermission
 from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
@@ -12,33 +12,36 @@ from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 from app.schemas.permission import PermissionTypeEnum
 
 
-class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]):
-    def get_multi_with_permissions(
-        self, db: Session, *, user: User, skip: int = 0, limit: int = 100
-    ) -> List[UserGroup]:
+class CRUDUserGroup(
+    AccessControl[UserGroup, UserGroupPermission],
+    CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate],
+):
+    # def get_multi_with_permissions(
+    #     self, db: Session, *, user: User, skip: int = 0, limit: int = 100
+    # ) -> List[UserGroup]:
 
-        # Need to alias the first instance of UserGroup since it's in
-        # the query twice
-        user_group_result = aliased(self.model)
-        return (
-            db.query(user_group_result)
-            .join(
-                UserGroupPermission,
-                UserGroupPermission.resource_id == user_group_result.id,
-            )
-            .join(UserGroupPermissionRel)
-            .join(UserGroup)
-            .join(UserGroupUserRel)
-            .join(User)
-            .filter(
-                and_(
-                    User.id == user.id,
-                    UserGroupPermission.permission_type == PermissionTypeEnum.read,
-                    UserGroupPermissionRel.enabled == True,  # noqa E712
-                )
-            )
-            .all()
-        )
+    #     # Need to alias the first instance of UserGroup since it's in
+    #     # the query twice
+    #     user_group_result = aliased(self.model)
+    #     return (
+    #         db.query(user_group_result)
+    #         .join(
+    #             UserGroupPermission,
+    #             UserGroupPermission.resource_id == user_group_result.id,
+    #         )
+    #         .join(UserGroupPermissionRel)
+    #         .join(UserGroup)
+    #         .join(UserGroupUserRel)
+    #         .join(User)
+    #         .filter(
+    #             and_(
+    #                 User.id == user.id,
+    #                 UserGroupPermission.permission_type == PermissionTypeEnum.read,
+    #                 UserGroupPermissionRel.enabled == True,  # noqa E712
+    #             )
+    #         )
+    #         .all()
+    #     )
 
     def add_user_to_group(
         self, db: Session, *, user_group: UserGroup, user_id: int
@@ -145,43 +148,43 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
     # itself
 
     # TODO: Need to figure out how to make this a mixin
-    def instantiate_permissions(
-        self, db: Session, *, user_group: UserGroup
-    ) -> List[Permission]:
-        """Create permissions *for* the UserGroup
+    # def instantiate_permissions(
+    #     self, db: Session, *, user_group: UserGroup
+    # ) -> List[Permission]:
+    #     """Create permissions *for* the UserGroup
 
-        Permissions *for* the UserGroup are permissions to perform CRUD
-        operations on the UserGroup, not permissions being related to
-        Users
+    #     Permissions *for* the UserGroup are permissions to perform CRUD
+    #     operations on the UserGroup, not permissions being related to
+    #     Users
 
-        ## Args:
+    #     ## Args:
 
-        - db (Session): SQLAlchemy Session
-        - user_group (UserGroup): The UserGroup to create permissions for
+    #     - db (Session): SQLAlchemy Session
+    #     - user_group (UserGroup): The UserGroup to create permissions for
 
-        ## Returns:
+    #     ## Returns:
 
-        - List[Permission]: The created Permissions, one each of
-        'create', 'read', 'update', and 'delete'
-        """
+    #     - List[Permission]: The created Permissions, one each of
+    #     'create', 'read', 'update', and 'delete'
+    #     """
 
-        permissions = [
-            UserGroupPermission(
-                resource_id=user_group.id,
-                resource_type="user_group",
-                permission_type=permission_type,
-            )
-            for permission_type in list(PermissionTypeEnum)
-        ]
-        for permission in permissions:
-            db.add(permission)
-        db.commit()
-        return (
-            db.query(UserGroupPermission)
-            .join(UserGroup, UserGroupPermission.resource_id == UserGroup.id)
-            .filter(UserGroup.id == user_group.id)
-            .all()
-        )
+    #     permissions = [
+    #         UserGroupPermission(
+    #             resource_id=user_group.id,
+    #             resource_type="user_group",
+    #             permission_type=permission_type,
+    #         )
+    #         for permission_type in list(PermissionTypeEnum)
+    #     ]
+    #     for permission in permissions:
+    #         db.add(permission)
+    #     db.commit()
+    #     return (
+    #         db.query(UserGroupPermission)
+    #         .join(UserGroup, UserGroupPermission.resource_id == UserGroup.id)
+    #         .filter(UserGroup.id == user_group.id)
+    #         .all()
+    #     )
 
     # TODO: Gonna need a cleaner way to differentiate between permissions *in*
     # a UserGroup and permissions *for* a UserGroup. For now, I've commented
@@ -200,4 +203,4 @@ class CRUDUserGroup(CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate]
         return query.first()
 
 
-user_group = CRUDUserGroup(UserGroup)
+user_group = CRUDUserGroup(UserGroup, UserGroupPermission)

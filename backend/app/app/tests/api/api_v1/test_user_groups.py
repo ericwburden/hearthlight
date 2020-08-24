@@ -15,6 +15,9 @@ from app.tests.utils.setup import (
     multi_user_group_permission_setup,
 )
 
+# ======================================================================================
+# Tests for CRUD endpoints on the UserGroup itself =====================================
+# ======================================================================================
 
 # --------------------------------------------------------------------------------------
 # region Tests for UserGroup create user group endpoint --------------------------------
@@ -473,7 +476,6 @@ def test_delete_user_group_normal_user(
     setup = user_group_permission_setup(
         db, permission_type=PermissionTypeEnum.delete, permission_enabled=True,
     )
-    breakpoint()
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
@@ -530,3 +532,37 @@ def test_delete_user_group_fail_user_no_permission(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+
+# ======================================================================================
+# Tests for endpoints to administer Permissions *in* UserGroups ========================
+# ======================================================================================
+
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup grant permission endpoint ---------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_grant_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully grant a permission to a user group"""
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_user_group_grant_permission"
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    response = client.put(
+        (
+            f"{settings.API_V1_STR}/user_groups/{user_group.id}"
+            f"/permissions/{permission.id}"
+        ),
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Granted UserGroup {user_group.id} '{permission.permission_type}'"
+        f"permission on {permission.resource_type} {node.id}"
+    )

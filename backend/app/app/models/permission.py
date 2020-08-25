@@ -13,7 +13,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
-    from .user_group import UserGroupPermissionRel  # noqa
+    from .user_group import UserGroupPermissionRel  # noqa: F401
 
 
 class Permission(Base):

@@ -4,10 +4,11 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.expression import and_, literal
 
 from app.db.base_class import Base
 from app.models import (
+    Node,
     User,
     UserGroup,
     UserGroupPermissionRel,
@@ -20,6 +21,28 @@ ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 PermissionType = TypeVar("PermissionType", bound=BaseModel)
+
+
+def node_tree_ids(db: Session, *, id: int) -> List[int]:
+    """Fetch a list of node descendant ids, where the root node
+    is the node with the given id.
+
+    Args:
+        db (Session): SQLAlchemy Session
+        id (int): Primary key ID for the root node
+
+    Returns:
+        List[int]: List of node ids
+    """
+    rec = db.query(literal(id).label("id")).cte(
+        recursive=True, name="recursive_node_children"
+    )
+    ralias = aliased(rec, name="R")
+    lalias = aliased(Node, name="L")
+    rec = rec.union_all(
+        db.query(lalias.id).join(ralias, ralias.c.id == lalias.parent_id)
+    )
+    return db.query(rec).all()
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
@@ -198,3 +221,32 @@ class AccessControl(Generic[ModelType, PermissionType]):
             )
             raise NoResultFound(msg)
         return permission
+
+    def get_node_descendants(self, db: Session, *, node_id: int) -> List[ModelType]:
+        """Fetch all resources of the same ModelType that are in the
+        list of descendants from the indicated root node, meaning, the
+        resource is attached to a node descended from the root node.
+
+        Args:
+            db (Session): SQLAlchemy Session
+            node_id (int): Primary key ID for the root node
+
+        Returns:
+            List[ModelType]: List of databse objects
+        """
+        node_ids = node_tree_ids(db, node_id=node_id)
+        return db.query(self.model).filter(self.model.node_id.in_(node_ids)).all()
+
+    def is_descended_from(self, db: Session, *, node_id: int) -> bool:
+        """Determine whether the resource is in the descendant tree for
+        a node indicated by node_id. Must be implemented on each
+        subclass of AccessControl
+
+        Args:
+            db (Session): SQLAlchemy Session
+            node_id (int): Primary key id for root node
+
+        Returns:
+            bool: Is the resource descended from the root node?
+        """
+        raise NotImplementedError

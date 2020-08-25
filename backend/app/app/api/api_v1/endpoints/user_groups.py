@@ -282,10 +282,27 @@ def grant_permission_to_user_group(
     user_group = crud.user_group.get(db, id=resource_id)
     if not user_group:
         raise HTTPException(status_code=404, detail="Cannot find user group.")
-    crud.permission.grant(
-        db, user_group_id=resource_id, permission_id=permission_id
-    )
+
     permission = crud.permission.get(db, permission_id)
+    if not permission:
+        raise HTTPException(status_code=404, detail="Cannot find permission.")
+
+    # Check to be sure the permission is for a resource that the user
+    # group has access to in the node tree
+    # resource = crud.permission.get_resource(db, permission=permission)
+    is_descendant = getattr(crud, permission.resource_type).is_descended_from(
+        db, root_id=user_group.node_id, target_id=permission.resource_id
+    )
+    if not is_descendant:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                f"{permission.resource_type} {permission.resource_id} is not descended "
+                f"from node {user_group.node_id}"
+            ),
+        )
+
+    crud.permission.grant(db, user_group_id=resource_id, permission_id=permission_id)
     msg = (
         f"Granted UserGroup {resource_id} '{permission.permission_type}'"
         f"permission on {permission.resource_type} {permission.resource_id}"

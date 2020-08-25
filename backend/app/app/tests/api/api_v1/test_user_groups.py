@@ -573,12 +573,10 @@ def test_user_group_grant_permission_normal_user(
 ) -> None:
     """Successfully add a permission to a user group as a normal user"""
     setup = user_group_permission_setup(
-        db,
-        permission_type=PermissionTypeEnum.update,
-        permission_enabled=True
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
     )
     delete_permission = crud.node.get_permission(
-        db, id=setup['node'].id, permission_type=PermissionTypeEnum.delete
+        db, id=setup["node"].id, permission_type=PermissionTypeEnum.delete
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
@@ -603,9 +601,9 @@ def test_user_group_grant_permission_fail_no_user_group(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     node = create_random_node(
-        db, 
-        created_by_id=1, 
-        node_type="test_user_group_grant_permission_fail_no_user_group"
+        db,
+        created_by_id=1,
+        node_type="test_user_group_grant_permission_fail_no_user_group",
     )
     permission = crud.node.get_permission(
         db, id=node.id, permission_type=PermissionTypeEnum.read
@@ -617,3 +615,45 @@ def test_user_group_grant_permission_fail_no_user_group(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_grant_permission_fail_no_permission_in_db(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="test_user_group_grant_permission_fail_no_user_group",
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/{-1}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find permission."
+
+
+def test_user_group_grant_permission_fail_depth_mismatch(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    other_node = create_random_node(db, created_by_id=1, node_type="not_descended")
+    root_node = create_random_node(db, created_by_id=1, node_type="root_node")
+    user_group = create_random_user_group(db, created_by_id=1, node_id=root_node.id)
+    permission = crud.node.get_permission(
+        db, id=other_node.id, permission_type=PermissionTypeEnum.update
+    )
+    response = client.put(
+        (
+            f"{settings.API_V1_STR}/user_groups/{user_group.id}"
+            f"/permissions/{permission.id}"
+        ),
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    assert content["detail"] == (
+        f"{permission.resource_type} {other_node.id} is not descended from node "
+        f"{root_node.id}"
+    )

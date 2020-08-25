@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.expression import literal
 
-from app.crud.base import CRUDBaseLogging, AccessControl
+from app.crud.base import CRUDBaseLogging, AccessControl, node_tree_ids
 from app.models.node import Node
 from app.models.permission import NodePermission
 from app.schemas.node import NodeCreate, NodeUpdate
@@ -68,46 +68,6 @@ class CRUDNode(
         node_ids = self.child_node_ids(db, id=id)
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
 
-    # def instantiate_permissions(self, db: Session, *, node: Node) -> List[Permission]:
-    #     permissions = [
-    #         NodePermission(
-    #             resource_id=node.id,
-    #             resource_type="node",
-    #             permission_type=permission_type,
-    #         )
-    #         for permission_type in list(PermissionTypeEnum)
-    #     ]
-    #     for permission in permissions:
-    #         db.add(permission)
-    #     db.commit()
-    #     return (
-    #         db.query(NodePermission)
-    #         .join(Node, NodePermission.resource_id == Node.id)
-    #         .filter(Node.id == node.id)
-    #         .all()
-    #     )
-
-    # def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
-    #     return db.query(NodePermission).join(Node).filter(Node.id == id).all()
-
-    # def get_permission(
-    #     self, db: Session, *, id: int, permission_type: PermissionTypeEnum
-    # ) -> Permission:
-    #     query = db.query(NodePermission).filter(
-    #         and_(
-    #             NodePermission.resource_id == id,
-    #             NodePermission.permission_type == permission_type,
-    #         )
-    #     )
-    #     permission = query.first()
-    #     if not permission:
-    #         msg = (
-    #             f"Could not find {permission_type.value} permission "
-    #             f"for {self.model.__name__} {id}"
-    #         )
-    #         raise NoResultFound(msg)
-    #     return permission
-
     def get_child_permissions(self, db: Session, *, id: int):
         node_ids = self.child_node_ids(db, id=id)
         return (
@@ -115,6 +75,21 @@ class CRUDNode(
             .filter(NodePermission.resource_id.in_(node_ids))
             .all()
         )
+
+    def is_descended_from(self, db: Session, *, root_id: int, target_id: int) -> bool:
+        """Determine whether the target node is in the descendant tree
+        for a parent node indicated by root_id.
+
+        Args:
+            db (Session): SQLAlchemy Session
+            root_id (int): Primary key id for root node
+            target_id (int): Primiary key id for the node to be tested
+
+        Returns:
+            bool: Is the target node descended from the root node?
+        """
+        descendant_ids = node_tree_ids(db, id=root_id)
+        return target_id in descendant_ids
 
 
 node = CRUDNode(Node, NodePermission)

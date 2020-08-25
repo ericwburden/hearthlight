@@ -9,7 +9,6 @@ from app.models.user import User
 from app.models.permission import Permission, UserGroupPermission
 from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
-from app.schemas.permission import PermissionTypeEnum
 
 
 class CRUDUserGroup(

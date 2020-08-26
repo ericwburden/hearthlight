@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -538,6 +539,8 @@ def test_delete_user_group_fail_user_no_permission(
 # ======================================================================================
 
 # --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 # region Tests for UserGroup grant permission endpoint ---------------------------------
 # --------------------------------------------------------------------------------------
 
@@ -659,6 +662,37 @@ def test_user_group_grant_permission_fail_depth_mismatch(
     )
 
 
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup bulk grant permission endpoint ----------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_grant_bulk_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully grant multiple permissions to a user group"""
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_user_group_grant_bulk_permission"
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    permissions = crud.node.get_permissions(db, id=node.id)
+    data = [jsonable_encoder(p) for p in permissions]
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Granted {len(permissions)} permissions to UserGroup {user_group.id}."
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 # region Tests for UserGroup revoke permission endpoint --------------------------------
 # --------------------------------------------------------------------------------------
@@ -787,3 +821,7 @@ def test_user_group_revoke_permission_fail_not_in_user_group(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Permission not in user group."
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

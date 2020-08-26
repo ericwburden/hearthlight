@@ -40,10 +40,6 @@ class PermissionUpdate(PermissionBase):
 # Properties shared by models stored in DB
 class PermissionInDBBase(PermissionBase):
     id: int
-    created_at: datetime
-    updated_at: datetime
-    created_by_id: int
-    updated_by_id: int
 
     class Config:
         orm_mode = True

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from psycopg2.errors import UniqueViolation
 from sqlalchemy import and_
@@ -49,6 +49,22 @@ class CRUDPermission(
         db.commit()
         db.refresh(user_group_permission)
         return user_group_permission
+
+    # TODO: Need a CRUD tests for this function, there's a known issue with
+    # attempting to grant permissions that already exist.
+    def grant_multiple(
+        self, db: Session, *, user_group_id: int, permission_ids: List[int]
+    ) -> int:
+        user_group_permissions = [
+            UserGroupPermissionRel(
+                user_group_id=user_group_id, permission_id=pid, enabled=True
+            )
+            for pid in permission_ids
+        ]
+        result = db.bulk_save_objects(user_group_permissions)
+        breakpoint()
+        db.commit()
+        return len(permission_ids)
 
     def revoke(
         self, db: Session, *, user_group_id: int, permission_id: int

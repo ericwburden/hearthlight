@@ -406,3 +406,18 @@ def revoke_permission_for_user_group(
         f"UserGroup {resource_id}"
     )
     return schemas.Msg(msg=msg)
+
+
+@router.put("/{resource_id}/permissions/", response_model=schemas.Msg)
+def grant_bulk_permissions_to_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    permissions: List[schemas.Permission],
+    current_user: models.User = Depends(user_group_update_validator),
+) -> schemas.Msg:
+    permission_ids = [p.id for p in permissions]
+    crud.permission.grant_multiple(db, user_group_id=resource_id, permission_ids=permission_ids)
+
+    msg = f"Granted {len(permissions)} permissions to UserGroup {resource_id}."
+    return schemas.Msg(msg=msg)

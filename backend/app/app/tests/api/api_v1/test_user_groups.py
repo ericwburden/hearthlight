@@ -658,6 +658,7 @@ def test_user_group_grant_permission_fail_depth_mismatch(
         f"{root_node.id}"
     )
 
+
 # --------------------------------------------------------------------------------------
 # region Tests for UserGroup revoke permission endpoint --------------------------------
 # --------------------------------------------------------------------------------------
@@ -668,10 +669,10 @@ def test_user_group_revoke_permission(
 ) -> None:
     """Successfully revoke a permission from a user group"""
     setup = node_permission_setup(
-        db, 
-        node_type="test_user_group_revoke_permission", 
+        db,
+        node_type="test_user_group_revoke_permission",
         permission_type=PermissionTypeEnum.update,
-        permission_enabled=True
+        permission_enabled=True,
     )
     response = client.delete(
         (
@@ -697,18 +698,18 @@ def test_user_group_revoke_permission_normal_user(
     user
     """
     setup = node_permission_setup(
-        db, 
-        node_type="test_user_group_revoke_permission", 
+        db,
+        node_type="test_user_group_revoke_permission",
         permission_type=PermissionTypeEnum.update,
-        permission_enabled=True
+        permission_enabled=True,
     )
     user_group_update_permission = crud.user_group.get_permission(
-        db, id=setup['user_group'].id, permission_type=PermissionTypeEnum.update
+        db, id=setup["user_group"].id, permission_type=PermissionTypeEnum.update
     )
     crud.permission.grant(
-        db, 
-        user_group_id=setup['user_group'].id, 
-        permission_id=user_group_update_permission.id
+        db,
+        user_group_id=setup["user_group"].id,
+        permission_id=user_group_update_permission.id,
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
@@ -718,7 +719,7 @@ def test_user_group_revoke_permission_normal_user(
             f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
             f"/permissions/{setup['permission'].id}"
         ),
-        headers=superuser_token_headers,
+        headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
@@ -780,7 +781,7 @@ def test_user_group_revoke_permission_fail_not_in_user_group(
         db, id=node.id, permission_type=PermissionTypeEnum.read
     )
     response = client.delete(
-        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/{permission.id}",
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/{permission.id}",  # noqa: E501
         headers=superuser_token_headers,
     )
     assert response.status_code == 404

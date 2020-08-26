@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any
+from typing import Union
 
 from psycopg2.errors import UniqueViolation
 from sqlalchemy import and_
@@ -56,8 +56,8 @@ class CRUDPermission(
         user_group_permission = (
             db.query(UserGroupPermissionRel)
             .filter(
-                UserGroupPermissionRel.user_group_id == user_group_id, 
-                UserGroupPermissionRel.permission_id == permission_id
+                UserGroupPermissionRel.user_group_id == user_group_id,
+                UserGroupPermissionRel.permission_id == permission_id,
             )
             .one()
         )

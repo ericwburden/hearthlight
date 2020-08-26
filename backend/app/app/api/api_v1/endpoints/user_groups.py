@@ -280,6 +280,41 @@ def grant_permission_to_user_group(
     permission_id: int,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> schemas.Msg:
+    """# Grant a permission to a user group
+
+    In order to grant a permission to a user group, the permission must
+    be for a resource that is attached to a node at or lower in the
+    node hierarchy than the parent node for the user group. This
+    prevents a user group from having permissions to perform CRUD
+    operations on a parent resource, enforcing permissions to follow
+    the node hierarchy.
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - permission_id (int): Primary key id for the permission to grant to
+    the user group
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the indicated user group is not in the
+    database
+    - HTTPException: 404 - When the indicated permission is not in the
+    database
+    - HTTPException: 403 - When the indicated permission is for a
+    resource that is not connected to a descendant of the user group's
+    - HTTPException: 403 - When the user doesn't have update permission
+    for the user group.
+
+    ## Returns:
+
+    - schemas.Msg: A success message
+    """
+
     user_group = crud.user_group.get(db, id=resource_id)
     if not user_group:
         raise HTTPException(status_code=404, detail="Cannot find user group.")
@@ -319,6 +354,37 @@ def revoke_permission_for_user_group(
     permission_id: int,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> schemas.Msg:
+    """# Revoke a permission in a user group
+
+    The only requirements to revoke a permission in a user group are
+    that the user group and permission indicated must both be in the
+    database and the permission needs to be in the user group already.
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - permission_id (int): Primary key id for the permission to revoke in
+    the user group
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the indicated user group is not in the
+    database
+    - HTTPException: 404 - When the indicated permission is not in the
+    database
+    - HTTPException: 4040 - When the indicated permission is not in the
+    indicated user group
+    - HTTPException: 403 - When the user doesn't have update permission
+    for the user group.
+
+    ## Returns:
+
+    - schemas.Msg: A success message
+    """
     user_group = crud.user_group.get(db, id=resource_id)
     if not user_group:
         raise HTTPException(status_code=404, detail="Cannot find user group.")
@@ -333,7 +399,7 @@ def revoke_permission_for_user_group(
         )
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Permission not in user group.")
-    
+
     msg = (
         f"Revoked '{permission.permission_type}' permission for "
         f"{permission.resource_type} {permission.resource_id} in "

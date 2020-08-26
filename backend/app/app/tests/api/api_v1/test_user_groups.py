@@ -715,6 +715,69 @@ def test_user_group_grant_bulk_permissions_normal_user(
     )
 
 
+def test_user_group_grant_multiple_permissions_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db, created_by_id=1, node_type="test_user_group_grant_bulk_permission"
+    )
+    permissions = crud.node.get_permissions(db, id=node.id)
+    data = [jsonable_encoder(p) for p in permissions]
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{-1}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_grant_multiple_permissions_fail_missing_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="grant_multiple_permissions_fail_missing_permission",
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    permissions = crud.node.get_permissions(db, id=node.id)
+    data = [jsonable_encoder(p) for p in permissions]
+    for p in permissions:
+        crud.permission.remove(db, id=p.id)
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find one or more permissions."
+
+
+def test_user_group_grant_multiple_permissions_fail_depth_mismatch(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    other_node1 = create_random_node(db, created_by_id=1, node_type="not_descended")
+    other_node2 = create_random_node(db, created_by_id=1, node_type="not_descended")
+    root_node = create_random_node(db, created_by_id=1, node_type="root_node")
+    user_group = create_random_user_group(db, created_by_id=1, node_id=root_node.id)
+    permissions = [
+        *crud.node.get_permissions(db, id=other_node1.id),
+        *crud.node.get_permissions(db, id=other_node2.id),
+    ]
+    data = [jsonable_encoder(p) for p in permissions]
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 403
+    content = response.json()
+    expected_detail = f"One or more permissions not descended from node {root_node.id}"
+    assert content["detail"] == expected_detail
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------

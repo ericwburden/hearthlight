@@ -42,7 +42,8 @@ def node_tree_ids(db: Session, *, id: int) -> List[int]:
     rec = rec.union_all(
         db.query(lalias.id).join(ralias, ralias.c.id == lalias.parent_id)
     )
-    return db.query(rec).all()
+    query = db.query(rec)
+    return [v for v, in query.all()]
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):

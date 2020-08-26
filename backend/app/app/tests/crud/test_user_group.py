@@ -9,7 +9,6 @@ from app.models.user import User
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
-from app.tests.utils.permission import create_random_permission
 from app.tests.utils.utils import random_lower_string
 
 

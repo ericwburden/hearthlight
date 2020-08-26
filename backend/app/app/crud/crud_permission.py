@@ -61,7 +61,7 @@ class CRUDPermission(
             )
             for pid in permission_ids
         ]
-        result = db.bulk_save_objects(user_group_permissions)
+        db.bulk_save_objects(user_group_permissions)
         db.commit()
         return len(permission_ids)
 
@@ -81,9 +81,7 @@ class CRUDPermission(
         db.refresh(user_group_permission)
         return user_group_permission
 
-    def all_in_database(
-        self, db: Session, *, permission_ids: List[int]
-    ) -> bool:
+    def all_in_database(self, db: Session, *, permission_ids: List[int]) -> bool:
         """Asserts whether all the given permission ids are for
         permissions in the database
 
@@ -121,11 +119,11 @@ class CRUDPermission(
             bool: Is this permission a descendant of the node?
         """
         descendant_ids = node_tree_ids(db, id=node_id)
-        if permission.resource_type == 'node':
+        if permission.resource_type == "node":
             return permission.resource_id in descendant_ids
 
-        if permission.resource_type == 'user_group':
-            node_id = db.query('UserGroup.node_id').get(permission.resource_id)
+        if permission.resource_type == "user_group":
+            node_id = db.query("UserGroup.node_id").get(permission.resource_id)
             return node_id in descendant_ids
 
         # If checking for a type not yet covered, raise this error
@@ -151,19 +149,21 @@ class CRUDPermission(
         Returns:
             bool: Are all the permissions desceneded from the root node?
         """
-        implemented_types = ['node', 'user_group']
+        implemented_types = ["node", "user_group"]
         for p in permissions:
             if p.resource_type not in implemented_types:
                 msg = f"Descendant check not implemented for {p.resource_type}."
                 raise NotImplementedError(msg)
 
         descendant_ids = node_tree_ids(db, id=node_id)
-        node_permissions = [p for p in permissions if p.resource_type == 'node']
+        node_permissions = [p for p in permissions if p.resource_type == "node"]
         for np in node_permissions:
             if np.resource_id not in descendant_ids:
                 return False
 
-        user_group_ids = [p.resource_id for p in permissions if p.resource_type == 'user_group']
+        user_group_ids = [
+            p.resource_id for p in permissions if p.resource_type == "user_group"
+        ]
         user_groups = db.query(UserGroup).filter(UserGroup.id.in_(user_group_ids))
         user_group_node_ids = [ug.node_id for ug in user_groups]
         for ugni in user_group_node_ids:

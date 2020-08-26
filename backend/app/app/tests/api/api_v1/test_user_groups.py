@@ -698,7 +698,7 @@ def test_user_group_grant_bulk_permissions_normal_user(
     setup = user_group_permission_setup(
         db, permission_type=PermissionTypeEnum.update, permission_enabled=True
     )
-    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    permissions = crud.node.get_permissions(db, id=setup["node"].id)
     data = [jsonable_encoder(p) for p in permissions]
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
@@ -777,6 +777,7 @@ def test_user_group_grant_multiple_permissions_fail_depth_mismatch(
     content = response.json()
     expected_detail = f"One or more permissions not descended from node {root_node.id}"
     assert content["detail"] == expected_detail
+
 
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
@@ -908,6 +909,7 @@ def test_user_group_revoke_permission_fail_not_in_user_group(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Permission not in user group."
+
 
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------

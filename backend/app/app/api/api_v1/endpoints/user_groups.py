@@ -325,8 +325,8 @@ def grant_permission_to_user_group(
 
     # Check to be sure the permission is for a resource that the user
     # group has access to in the node tree
-    is_descendant = getattr(crud, permission.resource_type).is_descended_from(
-        db, root_id=user_group.node_id, target_id=permission.resource_id
+    is_descendant = crud.permission.in_node_descendants(
+        db, node_id=user_group.node_id, permission=permission
     )
     if not is_descendant:
         raise HTTPException(
@@ -434,6 +434,8 @@ def grant_bulk_permissions_to_user_group(
         detail = f"One or more permissions not descended from node {user_group.node_id}"
         raise HTTPException(status_code=403, detail=detail)
 
-    crud.permission.grant_multiple(db, user_group_id=resource_id, permission_ids=permission_ids)
+    crud.permission.grant_multiple(
+        db, user_group_id=resource_id, permission_ids=permission_ids
+    )
     msg = f"Granted {len(permissions)} permissions to UserGroup {resource_id}."
     return schemas.Msg(msg=msg)

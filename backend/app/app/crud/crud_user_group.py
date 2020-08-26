@@ -45,7 +45,8 @@ class CRUDUserGroup(
         return (
             db.query(Permission)
             .join(UserGroupPermissionRel)
-            .join(UserGroup).filter(UserGroup.id == user_group_id)
+            .join(UserGroup)
+            .filter(UserGroup.id == user_group_id)
             .all()
         )
 

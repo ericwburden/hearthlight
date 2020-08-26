@@ -669,7 +669,7 @@ def test_user_group_grant_permission_fail_depth_mismatch(
 # --------------------------------------------------------------------------------------
 
 
-def test_user_group_grant_bulk_permission(
+def test_user_group_grant_bulk_permissions(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully grant multiple permissions to a user group"""
@@ -688,6 +688,30 @@ def test_user_group_grant_bulk_permission(
     content = response.json()
     assert content["msg"] == (
         f"Granted {len(permissions)} permissions to UserGroup {user_group.id}."
+    )
+
+
+def test_user_group_grant_bulk_permissions_normal_user(
+    client: TestClient, db: Session
+) -> None:
+    """Successfully add multiple permissions to a user group as a normal user"""
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
+    )
+    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    data = [jsonable_encoder(p) for p in permissions]
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
+        headers=user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Granted {len(permissions)} permissions to UserGroup {setup['user_group'].id}."
     )
 
 

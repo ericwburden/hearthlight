@@ -62,7 +62,6 @@ class CRUDPermission(
             for pid in permission_ids
         ]
         result = db.bulk_save_objects(user_group_permissions)
-        breakpoint()
         db.commit()
         return len(permission_ids)
 

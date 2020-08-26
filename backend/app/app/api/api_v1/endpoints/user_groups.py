@@ -308,3 +308,21 @@ def grant_permission_to_user_group(
         f"permission on {permission.resource_type} {permission.resource_id}"
     )
     return schemas.Msg(msg=msg)
+
+
+@router.delete("/{resource_id}/permissions/{permission_id}", response_model=schemas.Msg)
+def revoke_permission_for_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    permission_id: int,
+    current_user: models.User = Depends(user_group_update_validator),
+) -> schemas.Msg:
+    permission = crud.permission.get(db, permission_id)
+    crud.permission.revoke(db, user_group_id=resource_id, permission_id=permission_id)
+    msg = (
+        f"Revoked '{permission.permission_type}' permission for "
+        f"{permission.resource_type} {permission.resource_id} in "
+        f"UserGroup {resource_id}"
+    )
+    return schemas.Msg(msg=msg)

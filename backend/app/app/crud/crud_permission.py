@@ -50,6 +50,22 @@ class CRUDPermission(
         db.refresh(user_group_permission)
         return user_group_permission
 
+    def revoke(
+        self, db: Session, *, user_group_id: int, permission_id: int
+    ) -> UserGroupPermissionRel:
+        user_group_permission = (
+            db.query(UserGroupPermissionRel)
+            .filter(
+                UserGroupPermissionRel.user_group_id == user_group_id, 
+                UserGroupPermissionRel.permission_id == permission_id
+            )
+            .one()
+        )
+        user_group_permission.enabled = False
+        db.commit()
+        db.refresh(user_group_permission)
+        return user_group_permission
+
 
 permission = CRUDPermission(Permission)
 node_permission = CRUDPermission(NodePermission)

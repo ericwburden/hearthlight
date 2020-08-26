@@ -657,3 +657,73 @@ def test_user_group_grant_permission_fail_depth_mismatch(
         f"{permission.resource_type} {other_node.id} is not descended from node "
         f"{root_node.id}"
     )
+
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup revoke permission endpoint --------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_revoke_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully revoke a permission from a user group"""
+    setup = node_permission_setup(
+        db, 
+        node_type="test_user_group_revoke_permission", 
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True
+    )
+    response = client.delete(
+        (
+            f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
+            f"/permissions/{setup['permission'].id}"
+        ),
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Revoked '{setup['permission'].permission_type}' permission for "
+        f"{setup['permission'].resource_type} {setup['node'].id} in "
+        f"UserGroup {setup['user_group'].id}"
+    )
+
+
+def test_user_group_revoke_permission_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """
+    Successfully revoke a permission from a user group with a normal
+    user
+    """
+    setup = node_permission_setup(
+        db, 
+        node_type="test_user_group_revoke_permission", 
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True
+    )
+    user_group_update_permission = crud.user_group.get_permission(
+        db, id=setup['user_group'].id, permission_type=PermissionTypeEnum.update
+    )
+    crud.permission.grant(
+        db, 
+        user_group_id=setup['user_group'].id, 
+        permission_id=user_group_update_permission.id
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        (
+            f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}"
+            f"/permissions/{setup['permission'].id}"
+        ),
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Revoked '{setup['permission'].permission_type}' permission for "
+        f"{setup['permission'].resource_type} {setup['node'].id} in "
+        f"UserGroup {setup['user_group'].id}"
+    )

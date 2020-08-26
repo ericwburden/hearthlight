@@ -15,7 +15,7 @@ class CRUDUserGroup(
     AccessControl[UserGroup, UserGroupPermission],
     CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate],
 ):
-    def add_user_to_group(
+    def add_user(
         self, db: Session, *, user_group: UserGroup, user_id: int
     ) -> UserGroupUserRel:
         user = db.query(User).get(user_id)
@@ -32,88 +32,22 @@ class CRUDUserGroup(
     def get_users(self, db: Session, *, user_group: UserGroup) -> List[User]:
         return user_group.users
 
-    def remove_user_from_group(
+    def remove_user(
         self, db: Session, *, user_group: UserGroup, user: User
     ) -> UserGroup:
         user_group.users.remove(user)
         db.commit()
         return user_group
 
-    def add_permission_to_user_group(
-        self,
-        db: Session,
-        *,
-        user_group: UserGroup,
-        permission: Permission,
-        enabled: bool
-    ) -> UserGroupPermissionRel:
-        user_group_permission = UserGroupPermissionRel(
-            user_group_id=user_group.id, permission_id=permission.id, enabled=enabled
-        )
-        db.add(user_group_permission)
-        db.commit()
-        db.refresh(user_group_permission)
-        return user_group_permission
-
-    def get_all_permissions_in_user_group(
-        self, db: Session, *, user_group: UserGroup
+    def all_permissions_in_user_group(
+        self, db: Session, *, user_group_id: int
     ) -> List[Permission]:
-        return db.query(Permission).join(UserGroupPermissionRel).join(UserGroup).all()
-
-    def delete_permission_in_user_group(
-        self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermissionRel:
-        user_group_permission = (
-            db.query(UserGroupPermissionRel)
-            .filter(
-                and_(
-                    literal_column("user_group_id") == user_group.id,
-                    literal_column("permission_id") == permission.id,
-                )
-            )
-            .first()
+        return (
+            db.query(Permission)
+            .join(UserGroupPermissionRel)
+            .join(UserGroup).filter(UserGroup.id == user_group_id)
+            .all()
         )
-        db.delete(user_group_permission)
-        db.commit()
-        return user_group_permission
-
-    def grant_permission(
-        self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermissionRel:
-        user_group_permission = (
-            db.query(UserGroupPermissionRel)
-            .filter(
-                and_(
-                    literal_column("user_group_id") == user_group.id,
-                    literal_column("permission_id") == permission.id,
-                )
-            )
-            .first()
-        )
-        user_group_permission.enabled = True
-        db.add(user_group_permission)
-        db.commit()
-        db.refresh(user_group_permission)
-        return user_group_permission
-
-    def revoke_permission(
-        self, db: Session, *, user_group: UserGroup, permission: Permission
-    ) -> UserGroupPermissionRel:
-        user_group_permission = (
-            db.query(UserGroupPermissionRel)
-            .filter(
-                and_(
-                    literal_column("user_group_id") == user_group.id,
-                    literal_column("permission_id") == permission.id,
-                )
-            )
-            .first()
-        )
-        user_group_permission.enabled = False
-        db.add(user_group_permission)
-        db.commit()
-        db.refresh(user_group_permission)
-        return user_group_permission
 
 
 user_group = CRUDUserGroup(UserGroup, UserGroupPermission)

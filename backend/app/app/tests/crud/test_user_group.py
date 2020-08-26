@@ -105,7 +105,7 @@ def test_add_user_to_user_group(db: Session, normal_user: User) -> None:
     )
     user = create_random_user(db)
 
-    association = crud.user_group.add_user_to_group(
+    association = crud.user_group.add_user(
         db=db, user_group=user_group, user_id=user.id
     )
     assert association.user_group_id == user_group.id
@@ -125,8 +125,8 @@ def test_get_user_group_users(db: Session, normal_user: User) -> None:
     user1 = create_random_user(db)
     user2 = create_random_user(db)
     user3 = create_random_user(db)
-    crud.user_group.add_user_to_group(db=db, user_group=user_group, user_id=user1.id)
-    crud.user_group.add_user_to_group(db=db, user_group=user_group, user_id=user2.id)
+    crud.user_group.add_user(db=db, user_group=user_group, user_id=user1.id)
+    crud.user_group.add_user(db=db, user_group=user_group, user_id=user2.id)
     group_users = crud.user_group.get_users(db, user_group=user_group)
 
     for user in group_users:
@@ -145,10 +145,10 @@ def test_remove_user_from_user_group(db: Session, normal_user: User) -> None:
     )
 
     user = create_random_user(db)
-    association = crud.user_group.add_user_to_group(
+    association = crud.user_group.add_user(
         db=db, user_group=user_group, user_id=user.id
     )
-    crud.user_group.remove_user_from_group(db=db, user_group=user_group, user=user)
+    crud.user_group.remove_user(db=db, user_group=user_group, user=user)
     group_users = crud.user_group.get_users(db, user_group=user_group)
 
     with pytest.raises(ObjectDeletedError):
@@ -156,25 +156,6 @@ def test_remove_user_from_user_group(db: Session, normal_user: User) -> None:
 
     for group_user in group_users:
         assert group_user.id != user.id
-
-
-def test_add_permission_to_user_group(db: Session, normal_user: User) -> None:
-    node = create_random_node(
-        db, created_by_id=normal_user.id, node_type="test_add_permission_to_user_group"
-    )
-    name = random_lower_string()
-    user_group_in = UserGroupCreate(name=name, node_id=node.id)
-    user_group = crud.user_group.create(
-        db=db, obj_in=user_group_in, created_by_id=normal_user.id
-    )
-    permission = create_random_permission(db, node_id=node.id)
-
-    association = crud.user_group.add_permission_to_user_group(
-        db=db, user_group=user_group, permission=permission, enabled=True
-    )
-    assert association.user_group_id == user_group.id
-    assert association.permission_id == permission.id
-    assert association.enabled == True  # noqa E712
 
 
 def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> None:
@@ -193,11 +174,11 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
     )
     permissions = chain(*[crud.node.get_permissions(db, id=node.id) for node in nodes])
     for permission in permissions:
-        crud.user_group.add_permission_to_user_group(
-            db=db, user_group=user_group, permission=permission, enabled=True
+        crud.permission.grant(
+            db, user_group_id=user_group.id, permission_id=permission.id
         )
-    stored_permissions = crud.user_group.get_all_permissions_in_user_group(
-        db=db, user_group=user_group
+    stored_permissions = crud.user_group.all_permissions_in_user_group(
+        db=db, user_group_id=user_group.id
     )
 
     for permission in permissions:
@@ -206,78 +187,3 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
         assert permission.permission_type in [
             sp.permission_type for sp in stored_permissions
         ]
-
-
-def test_delete_permission_from_user_group(db: Session, normal_user: User) -> None:
-    node = create_random_node(
-        db,
-        created_by_id=normal_user.id,
-        node_type="test_delete_permission_from_user_group",
-    )
-    name = random_lower_string()
-    user_group_in = UserGroupCreate(name=name, node_id=node.id)
-    user_group = crud.user_group.create(
-        db=db, obj_in=user_group_in, created_by_id=normal_user.id
-    )
-    permission = create_random_permission(db, node_id=node.id)
-
-    crud.user_group.add_permission_to_user_group(
-        db=db, user_group=user_group, permission=permission, enabled=True
-    )
-    deleted_user_group_permission = crud.user_group.delete_permission_in_user_group(
-        db=db, user_group=user_group, permission=permission
-    )
-    user_group_permissions = crud.user_group.get_all_permissions_in_user_group(
-        db, user_group=user_group
-    )
-
-    assert deleted_user_group_permission.permission_id == permission.id
-    assert permission.id not in [ugp.id for ugp in user_group_permissions]
-
-
-def test_grant_permission_to_user_group(db: Session, normal_user: User) -> None:
-    node = create_random_node(
-        db,
-        created_by_id=normal_user.id,
-        node_type="test_grant_permission_to_user_group",
-    )
-    name = random_lower_string()
-    user_group_in = UserGroupCreate(name=name, node_id=node.id)
-    user_group = crud.user_group.create(
-        db=db, obj_in=user_group_in, created_by_id=normal_user.id
-    )
-    permission = create_random_permission(db, node_id=node.id)
-    crud.user_group.add_permission_to_user_group(
-        db=db, user_group=user_group, permission=permission, enabled=False
-    )
-
-    association = crud.user_group.grant_permission(
-        db=db, user_group=user_group, permission=permission
-    )
-    assert association.user_group_id == user_group.id
-    assert association.permission_id == permission.id
-    assert association.enabled == True  # noqa E712
-
-
-def test_revoke_permission_for_user_group(db: Session, normal_user: User) -> None:
-    node = create_random_node(
-        db,
-        created_by_id=normal_user.id,
-        node_type="test_revoke_permission_for_user_group",
-    )
-    name = random_lower_string()
-    user_group_in = UserGroupCreate(name=name, node_id=node.id)
-    user_group = crud.user_group.create(
-        db=db, obj_in=user_group_in, created_by_id=normal_user.id
-    )
-    permission = create_random_permission(db, node_id=node.id)
-    crud.user_group.add_permission_to_user_group(
-        db=db, user_group=user_group, permission=permission, enabled=True
-    )
-
-    association = crud.user_group.revoke_permission(
-        db=db, user_group=user_group, permission=permission
-    )
-    assert association.user_group_id == user_group.id
-    assert association.permission_id == permission.id
-    assert association.enabled == False  # noqa E712

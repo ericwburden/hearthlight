@@ -238,7 +238,7 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
 
     # Create a normal user and add that user to the user group
     normal_user = create_random_user(db)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=normal_user.id)
+    crud.user_group.add_user(db, user_group=user_group, user_id=normal_user.id)
 
     # Create a bunch of child nodes (it doesn't matter whether or not they're attached
     # to the parent node)
@@ -262,8 +262,8 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
         node_read_permission = crud.node.get_permission(
             db, id=node.id, permission_type=PermissionTypeEnum.read
         )
-        crud.user_group.add_permission_to_user_group(
-            db, user_group=user_group, permission=node_read_permission, enabled=True
+        crud.permission.grant(
+            db, user_group_id=user_group.id, permission_id=node_read_permission.id
         )
 
     # Create a new node, instantiate permissions, add it to the user group, disabled
@@ -273,11 +273,11 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     blocked_node_read_permission = crud.node.get_permission(
         db, id=blocked_node.id, permission_type=PermissionTypeEnum.read
     )
-    crud.user_group.add_permission_to_user_group(
-        db,
-        user_group=user_group,
-        permission=blocked_node_read_permission,
-        enabled=False,
+    crud.permission.grant(
+        db, user_group_id=user_group.id, permission_id=blocked_node_read_permission.id
+    )
+    crud.permission.revoke(
+        db, user_group_id=user_group.id, permission_id=blocked_node_read_permission.id
     )
 
     # Get the nodes back with permission requirements and ensure that you get back

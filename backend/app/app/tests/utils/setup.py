@@ -35,10 +35,12 @@ def node_permission_setup(
     )
     user = create_random_user(db)
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission_to_user_group(
-        db, user_group=user_group, permission=permission, enabled=permission_enabled
-    )
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+    crud.permission.grant(db, user_group_id=user_group.id, permission_id=permission.id)
+    if not permission_enabled:
+        crud.permission.revoke(
+            db, user_group_id=user_group.id, permission_id=permission.id
+        )
     return {
         "node": node,
         "permission": permission,
@@ -76,16 +78,20 @@ def multi_node_permission_setup(
     ]
     user = create_random_user(db)
     user_group = create_random_user_group(db, created_by_id=1, node_id=nodes[0].id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
     permissions = []
     for node in nodes:
         permission = crud.node.get_permission(
             db, id=node.id, permission_type=permission_type
         )
         permissions.append(permission)
-        crud.user_group.add_permission_to_user_group(
-            db, user_group=user_group, permission=permission, enabled=permission_enabled
+        crud.permission.grant(
+            db, user_group_id=user_group.id, permission_id=permission.id
         )
+        if not permission_enabled:
+            crud.permission.revoke(
+                db, user_group_id=user_group.id, permission_id=permission.id
+            )
     return {
         "nodes": nodes,
         "permissions": permissions,
@@ -118,10 +124,12 @@ def user_group_permission_setup(
     permission = crud.user_group.get_permission(
         db, id=user_group.id, permission_type=permission_type
     )
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-    crud.user_group.add_permission_to_user_group(
-        db, user_group=user_group, permission=permission, enabled=permission_enabled
-    )
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+    crud.permission.grant(db, user_group_id=user_group.id, permission_id=permission.id)
+    if not permission_enabled:
+        crud.permission.revoke(
+            db, user_group_id=user_group.id, permission_id=permission.id
+        )
     return {
         "node": node,
         "permission": permission,
@@ -166,10 +174,14 @@ def multi_user_group_permission_setup(
             db, id=user_group.id, permission_type=permission_type
         )
         permissions.append(permission)
-        crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
-        crud.user_group.add_permission_to_user_group(
-            db, user_group=user_group, permission=permission, enabled=permission_enabled
+        crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+        crud.permission.grant(
+            db, user_group_id=user_group.id, permission_id=permission.id
         )
+        if not permission_enabled:
+            crud.permission.revoke(
+                db, user_group_id=user_group.id, permission_id=permission.id
+            )
     return {
         "node": node,
         "permissions": permissions,

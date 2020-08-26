@@ -114,8 +114,8 @@ def test_get_user_groups_for_user(db: Session) -> None:
     user_group2 = create_random_user_group(db, created_by_id=user.id)
     user_group3 = create_random_user_group(db, created_by_id=user.id)
 
-    crud.user_group.add_user_to_group(db, user_group=user_group1, user_id=user.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group2, user_id=user.id)
+    crud.user_group.add_user(db, user_group=user_group1, user_id=user.id)
+    crud.user_group.add_user(db, user_group=user_group2, user_id=user.id)
 
     user_user_groups = crud.user.get_user_groups(db, user=user)
 
@@ -133,12 +133,10 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
         db, created_by_id=normal_user.id, node_type="verify_user_node_permission"
     )
     user_group = create_random_user_group(db, created_by_id=normal_user.id)
-    crud.user_group.add_user_to_group(db, user_group=user_group, user_id=user.id)
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
 
     permission = create_random_permission(db, node_id=node.id)
-    crud.user_group.add_permission_to_user_group(
-        db, user_group=user_group, permission=permission, enabled=True
-    )
+    crud.permission.grant(db, user_group_id=user_group.id, permission_id=permission.id)
     has_permission = crud.user.has_permission(
         db,
         user=user,
@@ -170,4 +168,4 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
             resource_id=node.id,
             permission_type=png,
         )
-        assert has_permission == False  # noqa E712
+        assert has_permission == False  # noqa: E712

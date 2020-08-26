@@ -2,6 +2,7 @@ from typing import List, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import NoResultFound
 
 from app import crud, models, schemas
 from app.api import deps
@@ -318,8 +319,21 @@ def revoke_permission_for_user_group(
     permission_id: int,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> schemas.Msg:
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+
     permission = crud.permission.get(db, permission_id)
-    crud.permission.revoke(db, user_group_id=resource_id, permission_id=permission_id)
+    if not permission:
+        raise HTTPException(status_code=404, detail="Cannot find permission.")
+
+    try:
+        crud.permission.revoke(
+            db, user_group_id=resource_id, permission_id=permission_id
+        )
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Permission not in user group.")
+    
     msg = (
         f"Revoked '{permission.permission_type}' permission for "
         f"{permission.resource_type} {permission.resource_id} in "

@@ -727,3 +727,62 @@ def test_user_group_revoke_permission_normal_user(
         f"{setup['permission'].resource_type} {setup['node'].id} in "
         f"UserGroup {setup['user_group'].id}"
     )
+
+
+def test_user_group_revoke_permission_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="test_user_group_grant_permission_fail_no_user_group",
+    )
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{-1}/permissions/{permission.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_revoke_permission_fail_no_permission_in_db(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="test_user_group_revoke_permission_fail_no_permission_in_db",
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/{-1}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find permission."
+
+
+def test_user_group_revoke_permission_fail_not_in_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db,
+        created_by_id=1,
+        node_type="test_user_group_grant_permission_fail_no_user_group",
+    )
+    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    permission = crud.node.get_permission(
+        db, id=node.id, permission_type=PermissionTypeEnum.read
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/{permission.id}",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Permission not in user group."

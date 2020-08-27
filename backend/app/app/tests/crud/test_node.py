@@ -157,10 +157,7 @@ def test_get_node_descendants(db: Session, superuser: User) -> None:
 def test_node_get_permissions(db: Session, superuser: User) -> None:
     node_in = NodeCreate(name=random_lower_string(), node_type="node")
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
-    stored_permissions = [
-        crud.node.get_permission(db, id=node.id, permission_type=pt)
-        for pt in list(PermissionTypeEnum)
-    ]
+    stored_permissions = crud.node.get_permissions(db, id=node.id)
     for pt in list(PermissionTypeEnum):
         assert pt in [p.permission_type for p in stored_permissions]
 

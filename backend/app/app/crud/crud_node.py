@@ -1,36 +1,27 @@
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, List
 
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.expression import literal
 
-from app.crud.base import CRUDBaseLogging, AccessControl
+from app.crud.base import CRUDBaseLogging, AccessControl, node_tree_ids
 from app.crud.utils import model_encoder
 from app.models.node import Node
-from app.models.permission import NodePermission
+from app.models.permission import NodePermission, Permission
 from app.schemas.node import NodeCreate, NodeUpdate
 
 
 class CRUDNode(
     AccessControl[Node, NodePermission], CRUDBaseLogging[Node, NodeCreate, NodeUpdate]
 ):
-    def child_node_ids(self, db: Session, *, id: int):
-        rec = db.query(literal(id).label("id")).cte(
-            recursive=True, name="recursive_node_children"
-        )
-        ralias = aliased(rec, name="R")
-        lalias = aliased(self.model, name="L")
-        rec = rec.union_all(
-            db.query(lalias.id).join(ralias, ralias.c.id == lalias.parent_id)
-        )
-        return db.query(rec).all()
 
     # Modify create function to ensure validation on node.depth
     def create(self, db: Session, *, obj_in: NodeCreate, created_by_id: int) -> Node:
-        obj_in_data = model_encoder(obj_in)
-        obj_in_data["depth"] = 0
-        if obj_in_data["parent_id"]:
-            parent = self.get(db, obj_in_data["parent_id"])
-            obj_in_data["depth"] = parent.depth + 1
+        depth = 0
+        if getattr(obj_in, "parent_id", None):
+            parent = self.get(db, obj_in.parent_id)
+            depth = parent.depth + 1
+        obj_in_data = obj_in.dict(exclude_unset=True)
+        obj_in_data["depth"] = depth
         return super().create(db, obj_in=obj_in_data, created_by_id=created_by_id)
 
     def update(
@@ -66,12 +57,12 @@ class CRUDNode(
             db, db_obj=db_obj, obj_in=obj_in, updated_by_id=updated_by_id
         )
 
-    def get_children(self, db: Session, *, id: int):
-        node_ids = self.child_node_ids(db, id=id)
+    def get_children(self, db: Session, *, id: int) -> List[Node]:
+        node_ids = node_tree_ids(db, id=id)
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
 
-    def get_child_permissions(self, db: Session, *, id: int):
-        node_ids = self.child_node_ids(db, id=id)
+    def get_child_permissions(self, db: Session, *, id: int) -> List[Permission]:
+        node_ids = node_tree_ids(db, id=id)
         return (
             db.query(NodePermission)
             .filter(NodePermission.resource_id.in_(node_ids))

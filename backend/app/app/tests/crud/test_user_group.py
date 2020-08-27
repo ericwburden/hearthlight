@@ -176,8 +176,8 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
         crud.permission.grant(
             db, user_group_id=user_group.id, permission_id=permission.id
         )
-    stored_permissions = crud.user_group.all_permissions_in_user_group(
-        db=db, user_group_id=user_group.id
+    stored_permissions = crud.user_group.permissions_in_user_group(
+        db=db, id=user_group.id
     )
 
     for permission in permissions:

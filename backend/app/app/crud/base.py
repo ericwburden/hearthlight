@@ -1,12 +1,12 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, literal
 
 from app.db.base_class import Base
+from app.crud.utils import model_encoder
 from app.models import (
     Node,
     User,
@@ -78,7 +78,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if isinstance(obj_in, dict):
             create_data = obj_in
         else:
-            create_data = jsonable_encoder(obj_in)
+            create_data = model_encoder(obj_in)
         db_obj = self.model(**create_data)  # type: ignore
         db.add(db_obj)
         db.commit()
@@ -92,7 +92,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
+        obj_data = model_encoder(db_obj)
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -121,7 +121,7 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
     def create(
         self, db: Session, *, obj_in: CreateSchemaType, created_by_id: int
     ) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
+        obj_in_data = model_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
         setattr(db_obj, "created_by_id", created_by_id)
         setattr(db_obj, "updated_by_id", created_by_id)
@@ -132,25 +132,12 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: Session,
         *,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
+        obj_in: UpdateSchemaType,
         updated_by_id: int,
     ) -> ModelType:
-        obj_data = {
-            col.name: getattr(db_obj, col.name) for col in db_obj.__table__.columns
-        }
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-
-        update_data["updated_by_id"] = updated_by_id
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        obj_in_data = obj_in.dict(exclude_unset=True)
+        obj_in_data["updatedy_by_id"] = updated_by_id
+        return super().update(db, db_obj=db_obj, obj_in=obj_in_data)
 
 
 class AccessControl(Generic[ModelType, PermissionType]):

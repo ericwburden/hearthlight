@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import literal_column
 
+from .errors import MissingRecordsError
 from app.crud.base import CRUDBase, node_tree_ids
 from app.models import Permission, NodePermission, UserGroupPermissionRel, UserGroup
 from app.schemas.permission import PermissionCreate, PermissionUpdate
@@ -96,6 +97,9 @@ class CRUDPermission(
             )
             .all()
         )
+        if not len(permission_ids) == len(user_group_permissions):
+            msg = "One or more permissions not associated with user group."
+            raise MissingRecordsError(msg)
         for ugp in user_group_permissions:
             ugp.enabled = False
         db.commit()

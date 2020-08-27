@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.errors import MissingRecordsError
 
 router = APIRouter()
 node_update_validator = deps.UserPermissionValidator(
@@ -449,9 +450,23 @@ def revoke_multiple_permission_for_user_group(
     permissions: List[schemas.Permission],
     current_user: models.User = Depends(user_group_update_validator),
 ) -> schemas.Msg:
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+    
     permission_ids = [p.id for p in permissions]
-    crud.permission.revoke_multiple(
-        db, user_group_id=resource_id, permission_ids=permission_ids
-    )
+    if not crud.permission.all_in_database(db, permission_ids=permission_ids):
+        raise HTTPException(
+            status_code=404, detail="Cannot find one or more permissions."
+        )
+    try:
+        crud.permission.revoke_multiple(
+            db, user_group_id=resource_id, permission_ids=permission_ids
+        )
+    except MissingRecordsError:
+        raise HTTPException(
+            status_code=404, 
+            detail="One or more permissions not in user group."
+        )
     msg = f"Revoked {len(permissions)} permissions in UserGroup {resource_id}."
     return schemas.Msg(msg=msg)

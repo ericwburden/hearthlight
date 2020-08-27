@@ -968,6 +968,56 @@ def test_user_group_revoke_bulk_permissions_normal_user(
     )
 
 
+def test_user_group_revoke_multiple_permissions_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    setup = node_all_permissions_setup(db)
+    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    data = [model_encoder(p) for p in permissions]
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{-1}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_revoke_multiple_permissions_fail_no_permission_in_db(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    setup = node_all_permissions_setup(db)
+    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    data = [model_encoder(p) for p in permissions]
+    [crud.permission.remove(db, id=p.id) for p in permissions]
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "Cannot find one or more permissions."
+
+
+def test_user_group_revoke_multiple_permissions_fail_not_in_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    setup = node_all_permissions_setup(db)
+    node = create_random_node(db, created_by_id=-1, node_type="not_related")
+    permissions = crud.node.get_permissions(db, id=node.id)
+    data = [model_encoder(p) for p in permissions]
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 404
+    content = response.json()
+    assert content["detail"] == "One or more permissions not in user group."
+
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------

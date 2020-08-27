@@ -15,6 +15,24 @@ class CRUDUserGroup(
     AccessControl[UserGroup, UserGroupPermission],
     CRUDBaseLogging[UserGroup, UserGroupCreate, UserGroupUpdate],
 ):
+    def update(
+        self,
+        db: Session,
+        *,
+        db_obj: UserGroup,
+        obj_in: UserGroupUpdate,
+        updated_by_id: int,
+    ) -> UserGroup:
+        # If the incoming update object doesn't have a node_id
+        # specified, then replace it with the default node_id.
+        # Otherwise, the base update will try to update the object node
+        # id to NULL, which isn't allowed
+        if not obj_in.node_id:
+            obj_in.node_id = db_obj.node_id
+        return super().update(
+            db, db_obj=db_obj, obj_in=obj_in, updated_by_id=updated_by_id
+        )
+
     def add_user(
         self, db: Session, *, user_group: UserGroup, user_id: int
     ) -> UserGroupUserRel:

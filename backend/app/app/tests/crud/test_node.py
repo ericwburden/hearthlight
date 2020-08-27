@@ -162,52 +162,6 @@ def test_node_get_permissions(db: Session, superuser: User) -> None:
         assert pt in [p.permission_type for p in stored_permissions]
 
 
-def test_get_node_descendant_permissions(db: Session, superuser: User) -> None:
-    parent_node_in = NodeCreate(name=random_lower_string(), node_type="network")
-    parent_node = crud.node.create(
-        db=db, obj_in=parent_node_in, created_by_id=superuser.id
-    )
-    parent_node_permissions = crud.node.get_permissions(db, id=parent_node.id)
-
-    # Child of parent_node
-    child_node1_in = NodeCreate(
-        name=random_lower_string(), node_type="node", parent_id=parent_node.id
-    )
-    child_node1 = crud.node.create(
-        db=db, obj_in=child_node1_in, created_by_id=superuser.id
-    )
-    child_node1_permissions = crud.node.get_permissions(db, id=child_node1.id)
-
-    # Child of parent_node
-    child_node2_in = NodeCreate(
-        name=random_lower_string(), node_type="node", parent_id=parent_node.id
-    )
-    child_node2 = crud.node.create(
-        db=db, obj_in=child_node2_in, created_by_id=superuser.id
-    )
-    child_node2_permissions = crud.node.get_permissions(db, id=child_node2.id)
-
-    # Child of child_node2
-    child_node3_in = NodeCreate(
-        name=random_lower_string(), node_type="node", parent_id=child_node2.id
-    )
-    child_node3 = crud.node.create(
-        db=db, obj_in=child_node3_in, created_by_id=superuser.id
-    )
-    child_node3_permissions = crud.node.get_permissions(db, id=child_node3.id)
-
-    combined_permissions = [
-        *parent_node_permissions,
-        *child_node1_permissions,
-        *child_node2_permissions,
-        *child_node3_permissions,
-    ]
-    child_permissions = crud.node.get_child_permissions(db, id=parent_node.id)
-
-    for permission in combined_permissions:
-        assert permission in child_permissions
-
-
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------

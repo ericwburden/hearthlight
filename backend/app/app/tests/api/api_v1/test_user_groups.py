@@ -924,7 +924,7 @@ def test_user_group_revoke_bulk_permissions(
 ) -> None:
     """Successfully revoke multiple permissions from a user group"""
     setup = node_all_permissions_setup(db)
-    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    permissions = crud.node.get_permissions(db, id=setup["node"].id)
     data = [model_encoder(p) for p in permissions]
     response = client.delete(
         f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
@@ -943,7 +943,7 @@ def test_user_group_revoke_bulk_permissions_normal_user(
 ) -> None:
     """Successfully revoke multiple permissions from a user group"""
     setup = node_all_permissions_setup(db)
-    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    permissions = crud.node.get_permissions(db, id=setup["node"].id)
     user_group_update_permission = crud.user_group.get_permission(
         db, id=setup["user_group"].id, permission_type=PermissionTypeEnum.update
     )
@@ -972,7 +972,7 @@ def test_user_group_revoke_multiple_permissions_fail_no_user_group(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     setup = node_all_permissions_setup(db)
-    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    permissions = crud.node.get_permissions(db, id=setup["node"].id)
     data = [model_encoder(p) for p in permissions]
     response = client.delete(
         f"{settings.API_V1_STR}/user_groups/{-1}/permissions/",
@@ -988,7 +988,7 @@ def test_user_group_revoke_multiple_permissions_fail_no_permission_in_db(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     setup = node_all_permissions_setup(db)
-    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    permissions = crud.node.get_permissions(db, id=setup["node"].id)
     data = [model_encoder(p) for p in permissions]
     [crud.permission.remove(db, id=p.id) for p in permissions]
     response = client.delete(

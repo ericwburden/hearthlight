@@ -92,7 +92,7 @@ class CRUDPermission(
             .filter(
                 and_(
                     UserGroupPermissionRel.user_group_id == user_group_id,
-                    UserGroupPermissionRel.permission_id.in_(permission_ids)
+                    UserGroupPermissionRel.permission_id.in_(permission_ids),
                 )
             )
             .all()

@@ -12,9 +12,7 @@ from app.models import Permission, NodePermission, UserGroupPermissionRel, UserG
 from app.schemas.permission import PermissionCreate, PermissionUpdate
 
 
-class CRUDPermission(
-    CRUDBase[Union[Permission, NodePermission], PermissionCreate, PermissionUpdate]
-):
+class CRUDPermission(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
     def create(self, db: Session, *, obj_in: PermissionCreate) -> Permission:
         try:
             return super().create(db, obj_in=obj_in)
@@ -42,29 +40,54 @@ class CRUDPermission(
     def grant(
         self, db: Session, *, user_group_id: int, permission_id: int
     ) -> UserGroupPermissionRel:
-        user_group_permission = UserGroupPermissionRel(
-            user_group_id=user_group_id, permission_id=permission_id
+        user_group_permission = (
+            db.query(UserGroupPermissionRel)
+            .get({"user_group_id": user_group_id, "permission_id": permission_id})
         )
+        if not user_group_permission:
+            user_group_permission = UserGroupPermissionRel(
+                user_group_id=user_group_id, permission_id=permission_id
+            )
         user_group_permission.enabled = True
         db.add(user_group_permission)
         db.commit()
         db.refresh(user_group_permission)
         return user_group_permission
 
-    # TODO: Need a CRUD tests for this function, there's a known issue with
-    # attempting to grant permissions that already exist.
     def grant_multiple(
         self, db: Session, *, user_group_id: int, permission_ids: List[int]
-    ) -> int:
-        user_group_permissions = [
+    ) -> List[UserGroupPermissionRel]:
+
+        # Get the existing user group/permission relationships from the
+        # database, then create new relationships where they don't
+        # already exist
+        existing_relationships = (
+            db.query(UserGroupPermissionRel)
+            .filter(
+                and_(
+                    UserGroupPermissionRel.user_group_id == user_group_id,
+                    UserGroupPermissionRel.permission_id.in_(permission_ids)
+                )
+            )
+            .all()
+        )
+        existing_rel_permission_ids = [p.permission_id for p in existing_relationships]
+        new_relationships = [
             UserGroupPermissionRel(
                 user_group_id=user_group_id, permission_id=pid, enabled=True
             )
             for pid in permission_ids
+            if pid not in existing_rel_permission_ids
         ]
-        db.bulk_save_objects(user_group_permissions)
+
+        # Just enable the existing relationships and only create the
+        # new relationships, then return both
+        if existing_relationships:
+            for existing_relationship in existing_relationships:
+                existing_relationship.enabled = True
+        db.bulk_save_objects(new_relationships)
         db.commit()
-        return len(permission_ids)
+        return [*existing_relationships, *new_relationships]
 
     def revoke(
         self, db: Session, *, user_group_id: int, permission_id: int

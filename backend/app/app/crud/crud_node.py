@@ -76,20 +76,5 @@ class CRUDNode(
             .all()
         )
 
-    # def is_descended_from(self, db: Session, *, root_id: int, target_id: int) -> bool:
-    #     """Determine whether the target node is in the descendant tree
-    #     for a parent node indicated by root_id.
-
-    #     Args:
-    #         db (Session): SQLAlchemy Session
-    #         root_id (int): Primary key id for root node
-    #         target_id (int): Primiary key id for the node to be tested
-
-    #     Returns:
-    #         bool: Is the target node descended from the root node?
-    #     """
-    #     descendant_ids = node_tree_ids(db, id=root_id)
-    #     return target_id in descendant_ids
-
 
 node = CRUDNode(Node, NodePermission)

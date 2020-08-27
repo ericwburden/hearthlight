@@ -1,9 +1,9 @@
 from fastapi.testclient import TestClient
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.config import settings
+from app.crud.utils import model_encoder
 from app.schemas import PermissionTypeEnum
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.node import create_random_node
@@ -12,6 +12,7 @@ from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.setup import (
     node_permission_setup,
+    node_all_permissions_setup,
     user_group_permission_setup,
     multi_user_group_permission_setup,
 )
@@ -678,7 +679,7 @@ def test_user_group_grant_bulk_permissions(
     )
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     permissions = crud.node.get_permissions(db, id=node.id)
-    data = [jsonable_encoder(p) for p in permissions]
+    data = [model_encoder(p) for p in permissions]
     response = client.put(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/",
         headers=superuser_token_headers,
@@ -699,7 +700,7 @@ def test_user_group_grant_bulk_permissions_normal_user(
         db, permission_type=PermissionTypeEnum.update, permission_enabled=True
     )
     permissions = crud.node.get_permissions(db, id=setup["node"].id)
-    data = [jsonable_encoder(p) for p in permissions]
+    data = [model_encoder(p) for p in permissions]
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
@@ -722,7 +723,7 @@ def test_user_group_grant_multiple_permissions_fail_no_user_group(
         db, created_by_id=1, node_type="test_user_group_grant_bulk_permission"
     )
     permissions = crud.node.get_permissions(db, id=node.id)
-    data = [jsonable_encoder(p) for p in permissions]
+    data = [model_encoder(p) for p in permissions]
     response = client.put(
         f"{settings.API_V1_STR}/user_groups/{-1}/permissions/",
         headers=superuser_token_headers,
@@ -743,7 +744,7 @@ def test_user_group_grant_multiple_permissions_fail_missing_permission(
     )
     user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
     permissions = crud.node.get_permissions(db, id=node.id)
-    data = [jsonable_encoder(p) for p in permissions]
+    data = [model_encoder(p) for p in permissions]
     for p in permissions:
         crud.permission.remove(db, id=p.id)
     response = client.put(
@@ -767,7 +768,7 @@ def test_user_group_grant_multiple_permissions_fail_depth_mismatch(
         *crud.node.get_permissions(db, id=other_node1.id),
         *crud.node.get_permissions(db, id=other_node2.id),
     ]
-    data = [jsonable_encoder(p) for p in permissions]
+    data = [model_encoder(p) for p in permissions]
     response = client.put(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/permissions/",
         headers=superuser_token_headers,
@@ -909,6 +910,62 @@ def test_user_group_revoke_permission_fail_not_in_user_group(
     assert response.status_code == 404
     content = response.json()
     assert content["detail"] == "Permission not in user group."
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for UserGroup revoke permission endpoint --------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_revoke_bulk_permissions(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully revoke multiple permissions from a user group"""
+    setup = node_all_permissions_setup(db)
+    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    data = [model_encoder(p) for p in permissions]
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Revoked {len(permissions)} permissions in UserGroup {setup['user_group'].id}."
+    )
+
+
+def test_user_group_revoke_bulk_permissions_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully revoke multiple permissions from a user group"""
+    setup = node_all_permissions_setup(db)
+    permissions = crud.node.get_permissions(db, id=setup['node'].id)
+    user_group_update_permission = crud.user_group.get_permission(
+        db, id=setup["user_group"].id, permission_type=PermissionTypeEnum.update
+    )
+    crud.permission.grant(
+        db,
+        user_group_id=setup["user_group"].id,
+        permission_id=user_group_update_permission.id,
+    )
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    data = [model_encoder(p) for p in permissions]
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
+        headers=user_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["msg"] == (
+        f"Revoked {len(permissions)} permissions in UserGroup {setup['user_group'].id}."
+    )
 
 
 # --------------------------------------------------------------------------------------

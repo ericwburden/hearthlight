@@ -81,6 +81,26 @@ class CRUDPermission(
         db.refresh(user_group_permission)
         return user_group_permission
 
+    # TODO: Need a CRUD tests for this function, there's a known issue with
+    # attempting to grant permissions that already exist.
+    def revoke_multiple(
+        self, db: Session, *, user_group_id: int, permission_ids: List[int]
+    ) -> int:
+        user_group_permissions = (
+            db.query(UserGroupPermissionRel)
+            .filter(
+                and_(
+                    UserGroupPermissionRel.user_group_id == user_group_id,
+                    UserGroupPermissionRel.permission_id.in_(permission_ids)
+                )
+            )
+            .all()
+        )
+        for ugp in user_group_permissions:
+            ugp.enabled = False
+        db.commit()
+        return len(permission_ids)
+
     def all_in_database(self, db: Session, *, permission_ids: List[int]) -> bool:
         """Asserts whether all the given permission ids are for
         permissions in the database

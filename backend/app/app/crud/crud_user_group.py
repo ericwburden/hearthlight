@@ -39,13 +39,11 @@ class CRUDUserGroup(
         db.commit()
         return user_group
 
-    def permissions_in_user_group(
-        self, db: Session, *, id: int
-    ) -> List[Permission]:
+    def permissions_in_user_group(self, db: Session, *, id: int) -> List[Permission]:
         return (
             db.query(Permission)
             .join(UserGroupPermissionRel)
-            .filter(UserGroupPermissionRel.enabled == True)
+            .filter(UserGroupPermissionRel.enabled == True)  # noqa: E712
             .join(UserGroup)
             .filter(UserGroup.id == id)
             .all()

@@ -11,4 +11,10 @@ from .permission import (
 )
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
-from .user_group import UserGroup, UserGroupCreate, UserGroupInDB, UserGroupUpdate
+from .user_group import (
+    UserGroup,
+    UserGroupCreate,
+    UserGroupInDB,
+    UserGroupUpdate,
+    UserGroupUser,
+)

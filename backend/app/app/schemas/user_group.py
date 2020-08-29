@@ -42,3 +42,11 @@ class UserGroup(UserGroupInDBBase):
 # Properties properties stored in DB
 class UserGroupInDB(UserGroupInDBBase):
     pass
+
+
+class UserGroupUser(BaseModel):
+    user_group_id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True

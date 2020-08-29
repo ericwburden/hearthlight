@@ -10,7 +10,7 @@ from app.tests.utils.utils import random_lower_string
 
 
 def create_random_user_group(
-    db: Session, *, created_by_id: Optional[int] = None, node_id: Optional[int] = None
+    db: Session, *, created_by_id: Optional[int] = 1, node_id: Optional[int] = None
 ) -> models.Node:
     if created_by_id is None:
         user = create_random_user(db)

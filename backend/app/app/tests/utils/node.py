@@ -11,7 +11,7 @@ from app.tests.utils.utils import random_lower_string
 def create_random_node(
     db: Session,
     *,
-    created_by_id: Optional[int] = None,
+    created_by_id: Optional[int] = 1,
     node_type: Optional[str] = None,
     parent_id: Optional[int] = None,
     is_active: Optional[bool] = True,

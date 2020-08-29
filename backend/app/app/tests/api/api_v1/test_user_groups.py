@@ -550,10 +550,8 @@ def test_user_group_grant_permission(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully grant a permission to a user group"""
-    node = create_random_node(
-        db, created_by_id=1, node_type="test_user_group_grant_permission"
-    )
-    user_group = create_random_user_group(db, created_by_id=1, node_id=node.id)
+    node = create_random_node(db, node_type="test_user_group_grant_permission")
+    user_group = create_random_user_group(db, node_id=node.id)
     permission = crud.node.get_permission(
         db, id=node.id, permission_type=PermissionTypeEnum.read
     )
@@ -1021,3 +1019,49 @@ def test_user_group_revoke_multiple_permissions_fail_not_in_user_group(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+
+# ======================================================================================
+# Tests for endpoints to manage Users in UserGroups ====================================
+# ======================================================================================
+
+
+def test_user_group_add_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_add_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    new_user = create_random_user(db)
+
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{new_user.id}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    assert content["user_group_id"] == user_group.id
+    assert content["user_id"] == new_user.id
+
+
+def test_user_group_add_user_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
+    )
+    user_group = setup["user_group"]
+    new_user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{new_user.id}",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    assert content["user_group_id"] == user_group.id
+    assert content["user_id"] == new_user.id

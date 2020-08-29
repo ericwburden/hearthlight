@@ -536,3 +536,19 @@ def revoke_multiple_permission_for_user_group(
         )
     msg = f"Revoked {len(permissions)} permissions in UserGroup {resource_id}."
     return schemas.Msg(msg=msg)
+
+
+@router.put("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
+def add_user_to_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    user_id: int,
+    current_user: models.User = Depends(user_group_update_validator),
+) -> models.UserGroupUserRel:
+
+    user_group = crud.user_group.get(db, id=resource_id)
+    user_group_user = crud.user_group.add_user(
+        db, user_group=user_group, user_id=user_id
+    )
+    return user_group_user

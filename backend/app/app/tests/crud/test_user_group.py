@@ -217,10 +217,16 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
 
 def test_get_multi_user_groups_with_permission(db: Session, superuser: User) -> None:
     # Create parent node
-    parent_node = create_random_node(db, created_by_id=superuser.id, node_type="test_get_multi_user_groups_with_permission")
+    parent_node = create_random_node(
+        db,
+        created_by_id=superuser.id,
+        node_type="test_get_multi_user_groups_with_permission",
+    )
 
     # Create User Group attached to parent node
-    user_group = create_random_user_group(db, created_by_id=superuser.id, node_id=parent_node.id)
+    user_group = create_random_user_group(
+        db, created_by_id=superuser.id, node_id=parent_node.id
+    )
 
     # Create a normal user and add that user to the user group
     normal_user = create_random_user(db)
@@ -252,16 +258,22 @@ def test_get_multi_user_groups_with_permission(db: Session, superuser: User) -> 
         db, id=blocked_user_group.id, permission_type=PermissionTypeEnum.read
     )
     crud.permission.grant(
-        db, user_group_id=user_group.id, permission_id=blocked_user_group_read_permission.id
+        db,
+        user_group_id=user_group.id,
+        permission_id=blocked_user_group_read_permission.id,
     )
     crud.permission.revoke(
-        db, user_group_id=user_group.id, permission_id=blocked_user_group_read_permission.id
+        db,
+        user_group_id=user_group.id,
+        permission_id=blocked_user_group_read_permission.id,
     )
 
     # Get the nodes back with permission requirements and ensure that you get back
     # all the nodes we just put in with permissions and that you don't get the
     # blocked node
-    stored_user_groups = crud.user_group.get_multi_with_permissions(db=db, user=normal_user)
+    stored_user_groups = crud.user_group.get_multi_with_permissions(
+        db=db, user=normal_user
+    )
     stored_user_group_names = [sn.name for sn in stored_user_groups]
     for n in user_group_names:
         assert n in stored_user_group_names

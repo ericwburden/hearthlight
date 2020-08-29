@@ -546,9 +546,107 @@ def add_user_to_user_group(
     user_id: int,
     current_user: models.User = Depends(user_group_update_validator),
 ) -> models.UserGroupUserRel:
+    """# Add a user to a user group
+
+    Users receive permission to access and perform operations on
+    resources through associate with a user group. In order to be added
+    to a user group, the user must exist in the database, the user
+    group must exist in the database, and the user attempting to add
+    the user to the user group must have update permissions on the
+    user group (or be a superuser).
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - user_id (int): Primary key id for the user
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the user group referenced is not in the
+    database
+    - HTTPException: 404 - When the user referenced is not in the
+    database
+    - HTTPException: 403 - When the user doesn't have update permissions
+    for the user group
+
+    ## Returns:
+
+    - models.UserGroupUserRel: An object representing the relationship
+    between the user and user group
+    """
+
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Can not find user.")
 
     user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Can not find user group.")
     user_group_user = crud.user_group.add_user(
         db, user_group=user_group, user_id=user_id
     )
+    return user_group_user
+
+
+@router.delete("/{resource_id}/users/{user_id}", response_model=schemas.UserGroup)
+def remove_user_from_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    user_id: int,
+    current_user: models.User = Depends(user_group_update_validator),
+) -> models.UserGroup:
+    """# Remove a user from a user group
+
+    Remove the relationship between a user and a user group. In order
+    to perform this operation, the user must exist in the database, the
+    user group must exist in the database, the user must have an active
+    relationship with the user group, and the user attempting to remove
+    the user must have update permissions for the user group.
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - user_id (int): Primary key id for the user
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the user group referenced is not in the
+    database
+    - HTTPException: 404 - When the user referenced is not in the
+    database
+    - HTTPException: 404 - When the user referenced is not associated
+    with the user group
+    - HTTPException: 403 - When the user doesn't have update permissions
+    for the user group
+
+    ## Returns:
+
+    - models.UserGroup: The user group object
+    """
+
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Can not find user.")
+
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Can not find user group.")
+
+    if user not in user_group.users:
+        raise HTTPException(
+            status_code=404, detail=f"User {user.id} not in user group {user_group.id}"
+        )
+
+    user_group_user = crud.user_group.remove_user(db, user_group=user_group, user=user)
     return user_group_user

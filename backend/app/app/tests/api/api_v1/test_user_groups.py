@@ -540,8 +540,6 @@ def test_delete_user_group_fail_user_no_permission(
 # ======================================================================================
 
 # --------------------------------------------------------------------------------------
-# endregion ----------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
 # region Tests for UserGroup grant permission endpoint ---------------------------------
 # --------------------------------------------------------------------------------------
 
@@ -1024,6 +1022,10 @@ def test_user_group_revoke_multiple_permissions_fail_not_in_user_group(
 # Tests for endpoints to manage Users in UserGroups ====================================
 # ======================================================================================
 
+# --------------------------------------------------------------------------------------
+# region | Tests for UserGroup add user endpoint ---------------------------------------
+# --------------------------------------------------------------------------------------
+
 
 def test_user_group_add_user(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -1065,3 +1067,189 @@ def test_user_group_add_user_normal_user(
     assert response_status == 200
     assert content["user_group_id"] == user_group.id
     assert content["user_id"] == new_user.id
+
+
+def test_user_group_add_user_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    new_user = create_random_user(db)
+
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{-1}/users/{new_user.id}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Can not find user group."
+
+
+def test_user_group_add_user_fail_no_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_add_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{-1}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Can not find user."
+
+
+def test_user_group_add_user_normal_user_fail_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db, node_type="test_user_group_add_user_normal_user_fail_no_permission"
+    )
+    user_group = create_random_user_group(db, node_id=node.id)
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    response = client.put(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have update permissions for "
+        f"user_group ID {user_group.id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for UserGroup remove user endpoint ------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_remove_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    user = create_random_user(db)
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    assert content["id"] == user_group.id
+
+
+def test_user_group_remove_user_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=True
+    )
+    user_group = setup["user_group"]
+    user = create_random_user(db)
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+
+    user_token_headers = authentication_token_from_email(
+        client=client, email=setup["user"].email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    assert content["id"] == user_group.id
+
+
+def test_user_group_remove_user_fail_no_user_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    new_user = create_random_user(db)
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{-1}/users/{new_user.id}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Can not find user group."
+
+
+def test_user_group_remove_user_fail_no_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user_fail_no_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{-1}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Can not find user."
+
+
+def test_user_group_remove_user_fail_user_not_in_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db, node_type="test_user_group_remove_user_fail_user_not_in_group"
+    )
+    user_group = create_random_user_group(db, node_id=node.id)
+    user = create_random_user(db)
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == f"User {user.id} not in user group {user_group.id}"
+
+
+def test_user_group_remove_user_normal_user_fail_no_permission(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(
+        db, node_type="test_user_group_remove_user_normal_user_fail_no_permission"
+    )
+    user_group = create_random_user_group(db, node_id=node.id)
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have update permissions for "
+        f"user_group ID {user_group.id}"
+    )

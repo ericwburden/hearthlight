@@ -1,8 +1,6 @@
 from typing import List
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import literal_column
 
 from app.crud.base import CRUDBaseLogging, AccessControl
 from app.models.user import User
@@ -21,13 +19,7 @@ class CRUDUserGroup(
         user = db.query(User).get(user_id)
         user_group.users.append(user)
         db.commit()
-        q = db.query(UserGroupUserRel).filter(
-            and_(
-                literal_column("user_group_id") == user_group.id,
-                literal_column("user_id") == user_id,
-            )
-        )
-        return q.first()
+        return db.query(UserGroupUserRel).get((user_group.id, user.id))
 
     def get_users(self, db: Session, *, user_group: UserGroup) -> List[User]:
         return user_group.users

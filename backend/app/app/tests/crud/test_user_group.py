@@ -6,10 +6,16 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 
 from app import crud
 from app.models.user import User
+from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
+from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
+
+# --------------------------------------------------------------------------------------
+# region | Tests for basic CRUD functions ----------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 def test_create_user_group(db: Session, normal_user: User) -> None:
@@ -93,6 +99,13 @@ def test_delete_user_group(db: Session, normal_user: User) -> None:
     assert user_group2.created_by_id == normal_user.id
 
 
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for managing users in a user group ------------------------------------
+# --------------------------------------------------------------------------------------
+
+
 def test_add_user_to_user_group(db: Session, normal_user: User) -> None:
     node = create_random_node(
         db, created_by_id=normal_user.id, node_type="test_add_user_to_user_group"
@@ -157,6 +170,13 @@ def test_remove_user_from_user_group(db: Session, normal_user: User) -> None:
         assert group_user.id != user.id
 
 
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for managing permissions in a user group ------------------------------
+# --------------------------------------------------------------------------------------
+
+
 def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> None:
     nodes = [
         create_random_node(
@@ -186,3 +206,68 @@ def test_get_all_permissions_for_user_group(db: Session, normal_user: User) -> N
         assert permission.permission_type in [
             sp.permission_type for sp in stored_permissions
         ]
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for fetching user groups based on user permissions --------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_get_multi_user_groups_with_permission(db: Session, superuser: User) -> None:
+    # Create parent node
+    parent_node = create_random_node(db, created_by_id=superuser.id, node_type="test_get_multi_user_groups_with_permission")
+
+    # Create User Group attached to parent node
+    user_group = create_random_user_group(db, created_by_id=superuser.id, node_id=parent_node.id)
+
+    # Create a normal user and add that user to the user group
+    normal_user = create_random_user(db)
+    crud.user_group.add_user(db, user_group=user_group, user_id=normal_user.id)
+
+    # Create a bunch of child nodes (it doesn't matter whether or not they're attached
+    # to the parent node)
+    new_user_groups = [
+        create_random_user_group(db, created_by_id=superuser.id, node_id=parent_node.id)
+        for i in range(10)
+    ]
+
+    # For each node, instantiate permissions, get the read permission, then add it to
+    # the user group, enabled
+    for ug in new_user_groups:
+        read_permission = crud.user_group.get_permission(
+            db, id=ug.id, permission_type=PermissionTypeEnum.read
+        )
+        crud.permission.grant(
+            db, user_group_id=user_group.id, permission_id=read_permission.id
+        )
+    user_group_names = [ug.name for ug in new_user_groups]
+
+    # Create a new node, instantiate permissions, add it to the user group, disabled
+    blocked_user_group = create_random_user_group(
+        db, created_by_id=superuser.id, node_id=parent_node.id
+    )
+    blocked_user_group_read_permission = crud.user_group.get_permission(
+        db, id=blocked_user_group.id, permission_type=PermissionTypeEnum.read
+    )
+    crud.permission.grant(
+        db, user_group_id=user_group.id, permission_id=blocked_user_group_read_permission.id
+    )
+    crud.permission.revoke(
+        db, user_group_id=user_group.id, permission_id=blocked_user_group_read_permission.id
+    )
+
+    # Get the nodes back with permission requirements and ensure that you get back
+    # all the nodes we just put in with permissions and that you don't get the
+    # blocked node
+    stored_user_groups = crud.user_group.get_multi_with_permissions(db=db, user=normal_user)
+    stored_user_group_names = [sn.name for sn in stored_user_groups]
+    for n in user_group_names:
+        assert n in stored_user_group_names
+    assert blocked_user_group.name not in stored_user_group_names
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

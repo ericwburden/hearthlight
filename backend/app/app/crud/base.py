@@ -164,7 +164,7 @@ class AccessControl(Generic[ModelType, PermissionType]):
         self, db: Session, *, user: User, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
         result_model = aliased(self.model)
-        return (
+        query = (
             db.query(result_model)
             .join(
                 self.permission_model,
@@ -181,8 +181,8 @@ class AccessControl(Generic[ModelType, PermissionType]):
                     UserGroupPermissionRel.enabled == True,  # noqa E712
                 )
             )
-            .all()
         )
+        return query.all()
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
         return (

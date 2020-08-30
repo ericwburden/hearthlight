@@ -27,6 +27,11 @@ user_group_delete_validator = deps.UserPermissionValidator(
 )
 
 
+# --------------------------------------------------------------------------------------
+# region | Endpoints for basic CRUD ----------------------------------------------------
+# --------------------------------------------------------------------------------------
+
+
 @router.post("/", response_model=schemas.UserGroup)
 def create_user_group(
     *,
@@ -271,6 +276,13 @@ def delete_user_group(
         raise HTTPException(status_code=404, detail="Cannot find user group.")
     user_group = crud.user_group.remove(db=db, id=resource_id)
     return user_group
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Endpoints for managing user group permissions -------------------------------
+# --------------------------------------------------------------------------------------
 
 
 @router.put("/{resource_id}/permissions/{permission_id}", response_model=schemas.Msg)
@@ -538,6 +550,13 @@ def revoke_multiple_permission_for_user_group(
     return schemas.Msg(msg=msg)
 
 
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Endpoints for managing user group users -------------------------------------
+# --------------------------------------------------------------------------------------
+
+
 @router.put("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
 def add_user_to_user_group(
     *,
@@ -589,6 +608,28 @@ def add_user_to_user_group(
         raise HTTPException(status_code=404, detail="Can not find user group.")
     user_group_user = crud.user_group.add_user(
         db, user_group=user_group, user_id=user_id
+    )
+    return user_group_user
+
+
+@router.put("/{resource_id}/users/", response_model=List[schemas.UserGroupUser])
+def add_multiple_users_to_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    user_ids: List[int],
+    current_user: models.User = Depends(user_group_update_validator),
+) -> List[models.UserGroupUserRel]:
+
+    all_users_in_db = crud.user.all_in_database(db, user_ids=user_ids)
+    if not all_users_in_db:
+        raise HTTPException(status_code=404, detail="Can not find one or more users.")
+
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Can not find user group.")
+    user_group_user = crud.user_group.add_users(
+        db, user_group=user_group, user_ids=user_ids
     )
     return user_group_user
 
@@ -650,3 +691,43 @@ def remove_user_from_user_group(
 
     user_group_user = crud.user_group.remove_user(db, user_group=user_group, user=user)
     return user_group_user
+
+
+@router.delete("/{resource_id}/users/", response_model=schemas.UserGroup)
+def remove_multiple_users_from_user_group(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    user_ids: List[int],
+    current_user: models.User = Depends(user_group_update_validator),
+) -> models.UserGroup:
+
+    user_group = crud.user_group.get(db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Can not find user group.")
+
+    users = crud.user.get_filtered(db, ids=user_ids)
+    stored_user_ids = [user.id for user in users]
+    if set(user_ids) != set(stored_user_ids):
+        raise HTTPException(status_code=404, detail="Can not find one or more users.")
+
+    user_in_user_group_checks = ((user, user in user_group.users) for user in users)
+    for user_in_user_group in user_in_user_group_checks:
+        if not user_in_user_group[1]:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"User {user_in_user_group[0].id} not in user "
+                    f"group {user_group.id}"
+                ),
+            )
+
+    user_group_user = crud.user_group.remove_users(
+        db, user_group=user_group, users=users
+    )
+    return user_group_user
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

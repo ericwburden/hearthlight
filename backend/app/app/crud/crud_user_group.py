@@ -1,5 +1,6 @@
 from typing import List
 
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBaseLogging, AccessControl
@@ -21,6 +22,23 @@ class CRUDUserGroup(
         db.commit()
         return db.query(UserGroupUserRel).get((user_group.id, user.id))
 
+    def add_users(
+        self, db: Session, *, user_group: UserGroup, user_ids: List[int]
+    ) -> List[UserGroupUserRel]:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        [user_group.users.append(user) for user in users]
+        db.commit()
+        return (
+            db.query(UserGroupUserRel)
+            .filter(
+                and_(
+                    UserGroupUserRel.user_id.in_(user_ids),
+                    UserGroupUserRel.user_group_id == user_group.id,
+                )
+            )
+            .all()
+        )
+
     def get_users(self, db: Session, *, user_group: UserGroup) -> List[User]:
         return user_group.users
 
@@ -28,6 +46,13 @@ class CRUDUserGroup(
         self, db: Session, *, user_group: UserGroup, user: User
     ) -> UserGroup:
         user_group.users.remove(user)
+        db.commit()
+        return user_group
+
+    def remove_users(
+        self, db: Session, *, user_group: UserGroup, users: List[User]
+    ) -> UserGroup:
+        [user_group.users.remove(user) for user in users]
         db.commit()
         return user_group
 

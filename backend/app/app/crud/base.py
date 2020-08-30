@@ -72,6 +72,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .all()
         )
 
+    def get_filtered(self, db: Session, *, ids: List[int]) -> List[ModelType]:
+        return db.query(self.model).filter(self.model.id.in_(ids)).all()
+
     def create(
         self, db: Session, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]
     ) -> ModelType:

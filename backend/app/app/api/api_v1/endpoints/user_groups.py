@@ -620,28 +620,61 @@ def add_multiple_users_to_user_group(
     user_ids: List[int],
     current_user: models.User = Depends(user_group_update_validator),
 ) -> List[models.UserGroupUserRel]:
+    """# Add multiple users to a user group
 
-    all_users_in_db = crud.user.all_in_database(db, user_ids=user_ids)
-    if not all_users_in_db:
+    Users receive permission to access and perform operations on
+    resources through associate with a user group. In order to be added
+    to a user group, the user must exist in the database, the user
+    group must exist in the database, and the user attempting to add
+    the user to the user group must have update permissions on the
+    user group (or be a superuser).
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - user_ids (List[int]): Primary key ids for the users to add
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the user group referenced is not in the
+    database
+    - HTTPException: 404 - When the one or more of the users referenced
+    are not in the database
+    - HTTPException: 403 - When the user doesn't have update permissions
+    for the user group
+
+    ## Returns:
+
+    - List[models.UserGroupUserRel]: A list of objects representing the
+    relationships between users and the user group
+    """
+
+    users_in_db = crud.user.get_filtered(db, ids=user_ids)
+    if set(user_ids) != set([u.id for u in users_in_db]):
         raise HTTPException(status_code=404, detail="Can not find one or more users.")
 
     user_group = crud.user_group.get(db, id=resource_id)
     if not user_group:
         raise HTTPException(status_code=404, detail="Can not find user group.")
-    user_group_user = crud.user_group.add_users(
+    user_group_users = crud.user_group.add_users(
         db, user_group=user_group, user_ids=user_ids
     )
-    return user_group_user
+    return user_group_users
 
 
-@router.delete("/{resource_id}/users/{user_id}", response_model=schemas.UserGroup)
+@router.delete("/{resource_id}/users/{user_id}", response_model=schemas.User)
 def remove_user_from_user_group(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,
     user_id: int,
     current_user: models.User = Depends(user_group_update_validator),
-) -> models.UserGroup:
+) -> models.User:
     """# Remove a user from a user group
 
     Remove the relationship between a user and a user group. In order
@@ -693,14 +726,48 @@ def remove_user_from_user_group(
     return user_group_user
 
 
-@router.delete("/{resource_id}/users/", response_model=schemas.UserGroup)
+@router.delete("/{resource_id}/users/", response_model=List[schemas.User])
 def remove_multiple_users_from_user_group(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,
     user_ids: List[int],
     current_user: models.User = Depends(user_group_update_validator),
-) -> models.UserGroup:
+) -> List[models.User]:
+    """# Remove a multiple users from a user group
+
+    Remove the relationship between multiple users and a user group. In
+    order to perform this operation, the user must exist in the
+    database, the user group must exist in the database, the user must
+    have an active relationship with the user group, and the user
+    attempting to remove the user must have update permissions for the
+    user group.
+
+    ## Args:
+
+    - resource_id (int): Primary key id for the user group
+    - user_ids (List[int]): Primary key ids for the users to remove
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the user group referenced is not in the
+    database
+    - HTTPException: 404 - When one or more of the users referenced are
+    not in the database
+    - HTTPException: 404 - When one or more of the users referenced are
+    not associated with the user group
+    - HTTPException: 403 - When the user doesn't have update permissions
+    for the user group
+
+    ## Returns:
+
+    - models.UserGroup: The user group object
+    """
 
     user_group = crud.user_group.get(db, id=resource_id)
     if not user_group:

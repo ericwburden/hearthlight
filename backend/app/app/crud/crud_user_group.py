@@ -44,17 +44,17 @@ class CRUDUserGroup(
 
     def remove_user(
         self, db: Session, *, user_group: UserGroup, user: User
-    ) -> UserGroup:
+    ) -> User:
         user_group.users.remove(user)
         db.commit()
-        return user_group
+        return user
 
     def remove_users(
         self, db: Session, *, user_group: UserGroup, users: List[User]
-    ) -> UserGroup:
+    ) -> List[User]:
         [user_group.users.remove(user) for user in users]
         db.commit()
-        return user_group
+        return users
 
     def permissions_in_user_group(self, db: Session, *, id: int) -> List[Permission]:
         return (

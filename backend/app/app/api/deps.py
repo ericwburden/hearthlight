@@ -1,5 +1,6 @@
 from typing import Generator
 
+from enum import Enum
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -95,6 +96,10 @@ class UserPermissionValidator:
         resource_type: schemas.ResourceTypeEnum,
         permission_type: schemas.PermissionTypeEnum,
     ):
+        if not isinstance(resource_type, Enum):
+            raise TypeError("resource_type must be an Enum")
+        if not isinstance(permission_type, Enum):
+            raise TypeError("permission_type must be an Enum")
         self.resource_type = resource_type
         self.permission_type = permission_type
 

@@ -1398,7 +1398,7 @@ def test_user_group_remove_multiple_users(
     content = response.json()
     assert response_status == 200
     for returned_user in content:
-        assert returned_user['id'] in user_ids
+        assert returned_user["id"] in user_ids
 
 
 def test_user_group_remove_multiple_users_normal_user(
@@ -1425,7 +1425,7 @@ def test_user_group_remove_multiple_users_normal_user(
     content = response.json()
     assert response_status == 200
     for returned_user in content:
-        assert returned_user['id'] in user_ids
+        assert returned_user["id"] in user_ids
 
 
 def test_user_group_remove_multiple_users_fail_no_user_group(

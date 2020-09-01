@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBaseLogging, AccessControl
 from app.models.user import User
 from app.models.permission import Permission, UserGroupPermission
-from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
+from app.models.user_group import UserGroup, UserGroupUserRel
 from app.schemas.user_group import UserGroupCreate, UserGroupUpdate
 
 
@@ -42,9 +42,7 @@ class CRUDUserGroup(
     def get_users(self, db: Session, *, user_group: UserGroup) -> List[User]:
         return user_group.users
 
-    def remove_user(
-        self, db: Session, *, user_group: UserGroup, user: User
-    ) -> User:
+    def remove_user(self, db: Session, *, user_group: UserGroup, user: User) -> User:
         user_group.users.remove(user)
         db.commit()
         return user

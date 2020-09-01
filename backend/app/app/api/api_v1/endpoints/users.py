@@ -9,6 +9,11 @@ from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
+from app.schemas.permission import PermissionTypeEnum, ResourceTypeEnum
+
+user_group_create_validator = deps.UserPermissionValidator(
+    resource_type=ResourceTypeEnum.user_group, permission_type=PermissionTypeEnum.create
+)
 
 router = APIRouter()
 
@@ -32,18 +37,66 @@ def create_user(
     *,
     db: Session = Depends(deps.get_db),
     user_in: schemas.UserCreate,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> models.User:
+    """# Create a new user
+
+    Create a new user in the database. Users are unique by email
+    address (username). In order to create a new user, the username must
+    be unique. Additionally, if the user performing the operation is not
+    a superuser, a user group must be provided as a home for the new
+    user. The indicated user group must exist in the database and the
+    normal user must have create permissions for the user group
+    indicated.
+
+    ## Args:
+
+    - user_in (schemas.UserCreate): Schema for creating a new user
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(deps.get_current_active_user).
+
+    ## Raises:
+
+    - HTTPException: 400 - When attempting to create a user with a
+    username that already exists.
+    - HTTPException: 403 - When a normal user attempts to create a user
+    without providing a user group id.
+    - HTTPException: 404 - When a normal user provides a user group id
+    for a user group that doesn't exist.
+    - HTTPException: 403 - When a normal user attempts to create a user
+    in a user group without create permissions on the user group.
+
+    Returns:
+
+    - models.User: The created user
     """
-    Create new user.
-    """
+    user_group = None
+    if not current_user.is_superuser:
+        if not user_in.user_group_id:
+            raise HTTPException(
+                status_code=403, detail="Non-superuser must provide a user group."
+            )
+        user_group = crud.user_group.get(db, user_in.user_group_id)
+        if not user_group:
+            raise HTTPException(status_code=404, detail="Can not find user group.")
+        user_group_create_validator(
+            resource_id=user_in.user_group_id, db=db, current_user=current_user
+        )
+
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
             detail="The user with this username already exists in the system.",
         )
+
     user = crud.user.create(db, obj_in=user_in)
+    if user_group:
+        crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+
     if settings.EMAILS_ENABLED and user_in.email:
         send_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password

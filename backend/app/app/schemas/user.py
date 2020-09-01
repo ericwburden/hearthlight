@@ -15,6 +15,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     email: EmailStr
     password: str
+    user_group_id: Optional[int] = None
 
 
 # Properties to receive via API on update

@@ -1,4 +1,3 @@
-from .crud_item import item
 from .crud_user import user
 from .crud_user_group import user_group
 from .crud_node import node

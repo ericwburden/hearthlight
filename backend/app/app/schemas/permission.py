@@ -24,14 +24,14 @@ class PermissionBase(BaseModel):
     permission_type: Optional[PermissionTypeEnum]
 
 
-# Properties to receive on item creation
+# Properties to receive on permission creation
 class PermissionCreate(PermissionBase):
     resource_id: int
     resource_type: ResourceTypeEnum
     permission_type: PermissionTypeEnum
 
 
-# Properties to receive on item update
+# Properties to receive on permission update
 class PermissionUpdate(PermissionBase):
     pass
 

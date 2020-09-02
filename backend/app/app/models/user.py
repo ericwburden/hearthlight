@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
-    from .item import Item  # noqa: F401
     from .node import Node  # noqa
     from .user import UserGroup  # noqa
 
@@ -18,7 +17,6 @@ class User(Base, Default):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
-    items = relationship("Item", back_populates="owner")
 
     nodes_created = relationship(
         "Node",

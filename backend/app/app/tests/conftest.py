@@ -8,7 +8,6 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.main import app
 
-from app.models.item import Item
 from app.models.node import Node
 from app.models.user import User
 from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
@@ -55,7 +54,6 @@ def normal_user(client: TestClient) -> User:
 def clear_db():
     db = SessionLocal()
     models = [
-        Item,
         UserGroupPermissionRel,
         NodePermission,
         Permission,

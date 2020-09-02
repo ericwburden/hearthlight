@@ -10,13 +10,13 @@ class UserGroupBase(BaseModel):
     node_id: Optional[int]
 
 
-# Properties to receive on item creation
+# Properties to receive on user group creation
 class UserGroupCreate(UserGroupBase):
     node_id: int
     name: str
 
 
-# Properties to receive on item update
+# Properties to receive on user group update
 class UserGroupUpdate(UserGroupBase):
     pass
 

@@ -12,13 +12,13 @@ class NodeBase(BaseModel):
     is_active: Optional[bool] = True
 
 
-# Properties to receive on item creation
+# Properties to receive on node creation
 class NodeCreate(NodeBase):
     node_type: str
     name: str
 
 
-# Properties to receive on item update
+# Properties to receive on node update
 class NodeUpdate(NodeBase):
     pass
 

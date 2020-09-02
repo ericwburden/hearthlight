@@ -1,4 +1,3 @@
-from .item import Item, ItemCreate, ItemInDB, ItemUpdate
 from .msg import Msg
 from .node import Node, NodeCreate, NodeInDB, NodeUpdate
 from .permission import (

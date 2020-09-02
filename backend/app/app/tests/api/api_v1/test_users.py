@@ -13,7 +13,7 @@ from app.tests.utils.utils import random_email, random_lower_string
 
 
 # --------------------------------------------------------------------------------------
-# region | Tests for UserGroup create user group endpoint ------------------------------
+# region | Tests for User create user endpoint -----------------------------------------
 # --------------------------------------------------------------------------------------
 
 
@@ -162,6 +162,31 @@ def test_create_user_fail_normal_user_no_permission(
     )
 
 
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for User read one user endpoint ---------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_get_existing_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    username = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=username, password=password)
+    user = crud.user.create(db, obj_in=user_in)
+    user_id = user.id
+    r = client.get(
+        f"{settings.API_V1_STR}/users/{user_id}", headers=superuser_token_headers,
+    )
+    assert 200 <= r.status_code < 300
+    api_user = r.json()
+    existing_user = crud.user.get_by_email(db, email=username)
+    assert existing_user
+    assert existing_user.email == api_user["email"]
+
+
 def test_get_users_superuser_me(
     client: TestClient, superuser_token_headers: Dict[str, str]
 ) -> None:
@@ -184,22 +209,11 @@ def test_get_users_normal_user_me(
     assert current_user["email"] == settings.EMAIL_TEST_USER
 
 
-def test_get_existing_user(
-    client: TestClient, superuser_token_headers: dict, db: Session
-) -> None:
-    username = random_email()
-    password = random_lower_string()
-    user_in = UserCreate(email=username, password=password)
-    user = crud.user.create(db, obj_in=user_in)
-    user_id = user.id
-    r = client.get(
-        f"{settings.API_V1_STR}/users/{user_id}", headers=superuser_token_headers,
-    )
-    assert 200 <= r.status_code < 300
-    api_user = r.json()
-    existing_user = crud.user.get_by_email(db, email=username)
-    assert existing_user
-    assert existing_user.email == api_user["email"]
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for User read multiple users endpoint ---------------------------------
+# --------------------------------------------------------------------------------------
 
 
 def test_retrieve_users(
@@ -221,3 +235,107 @@ def test_retrieve_users(
     assert len(all_users) > 1
     for item in all_users:
         assert "email" in item
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for User update user endpoint -----------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_update_user_me_normal_user(client: TestClient, db: Session) -> None:
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    data = {"email": random_email()}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/me", headers=user_token_headers, json=data
+    )
+    content = r.json()
+    assert r.status_code == 200
+    assert content["email"] == data["email"]
+
+
+def test_update_user_me_normal_user_fail_email_exists(
+    client: TestClient, db: Session
+) -> None:
+    user = create_random_user(db)
+    another_user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    data = {"email": another_user.email}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/me", headers=user_token_headers, json=data
+    )
+    content = r.json()
+    assert r.status_code == 400
+    assert (
+        content["detail"] == "A user with this username already exists in the system."
+    )
+
+
+def test_update_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    user = create_random_user(db)
+    data = {"email": random_email()}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/{user.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = r.json()
+    assert r.status_code == 200
+    assert content["email"] == data["email"]
+
+
+def test_update_user_fail_user_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    data = {"email": random_email()}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/{-1}", headers=superuser_token_headers, json=data
+    )
+    content = r.json()
+    assert r.status_code == 404
+    assert content["detail"] == "Can not find user."
+
+
+def test_update_user_fail_normal_user(client: TestClient, db: Session) -> None:
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    data = {"email": random_email()}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/{user.id}", headers=user_token_headers, json=data
+    )
+    content = r.json()
+    assert r.status_code == 400
+    assert content["detail"] == "The user is not a superuser"
+
+
+def test_update_user_fail_email_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    user = create_random_user(db)
+    another_user = create_random_user(db)
+    data = {"email": another_user.email}
+    r = client.put(
+        f"{settings.API_V1_STR}/users/{user.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = r.json()
+    assert r.status_code == 400
+    assert (
+        content["detail"] == "A user with this username already exists in the system."
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

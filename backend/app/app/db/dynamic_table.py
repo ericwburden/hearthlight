@@ -31,7 +31,10 @@ test_table_definition = """{
     ]
 }"""
 
-def json_to_table_def(json_in: Union[Dict[str, Any], str], base_class: Tuple[Any]) -> Base:
+
+def json_to_table_def(
+    json_in: Union[Dict[str, Any], str], base_class: Tuple[Any]
+) -> Base:
     """Convert a JSON schema into a SQLAlchemy table
 
     The JSON schema should be in the form of:
@@ -48,7 +51,7 @@ def json_to_table_def(json_in: Union[Dict[str, Any], str], base_class: Tuple[Any
 
     The "data_type" should be a string representing a valid SQLAlchemy
     data type such as String(256), Integer, Boolean, etc. The "kwargs"
-    are a dict of addtional arguments to pass to Column(), such as 
+    are a dict of addtional arguments to pass to Column(), such as
     primary_key, nullable, index, etc.
 
     Args:
@@ -62,20 +65,21 @@ def json_to_table_def(json_in: Union[Dict[str, Any], str], base_class: Tuple[Any
     base_class = base_class
     table_dict = json_in if isinstance(json_in, dict) else json.loads(json_in)
     table_name = table_dict["table_name"]
-    columns = {c["column_name"]:dict_to_column_def(c) for c in table_dict["columns"]}
+    columns = {c["column_name"]: dict_to_column_def(c) for c in table_dict["columns"]}
     return type(table_name, base_class, columns)
+
 
 def dict_to_column_def(column_dict: Dict[str, str]) -> Column:
     """Given a column def dictionary, return a Column
 
     Args:
-        column_dict (Dict[str, str]): A dictionary from 
+        column_dict (Dict[str, str]): A dictionary from
         json_to_table_def()
 
     Returns:
         Column: The Column
     """
     data_type = column_dict["data_type"]
-    kwargs_str = ", ".join([f"{k}={v}" for k,v in column_dict['kwargs'].items()])
+    kwargs_str = ", ".join([f"{k}={v}" for k, v in column_dict["kwargs"].items()])
     column_str = f"Column({data_type}, {kwargs_str})"
     return eval(column_str)

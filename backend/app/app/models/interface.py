@@ -7,6 +7,7 @@ from app.db.base_class import Base, Default
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
 
+
 class Interface(Base, Default):
     """Class representing a definition for an interface
 
@@ -26,6 +27,7 @@ class Interface(Base, Default):
     - ui_template: JSON specification for the interface UI
     - table_created: Has the table been created in the database?
     """
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(256), nullable=False)
     interface_type = Column(String(64), nullable=False)

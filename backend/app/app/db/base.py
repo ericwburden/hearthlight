@@ -9,3 +9,4 @@ from app.models.user_group import (  # noqa F401
     UserGroupPermissionRel,  # noqa F401
 )
 from app.models.permission import Permission, NodePermission  # noqa F401
+from app.models.interface import Interface  # noqa F401

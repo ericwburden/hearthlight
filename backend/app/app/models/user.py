@@ -8,6 +8,7 @@ from app.db.base_class import Base, Default
 if TYPE_CHECKING:
     from .node import Node  # noqa
     from .user import UserGroup  # noqa
+    from .interface import Interface  # noqa
 
 
 class User(Base, Default):
@@ -38,4 +39,15 @@ class User(Base, Default):
         "UserGroup",
         back_populates="updated_by_user",
         primaryjoin="User.id==UserGroup.updated_by_id",
+    )
+
+    interfaces_created = relationship(
+        "Interface",
+        back_populates="created_by_user",
+        primaryjoin="User.id==Interface.created_by_id",
+    )
+    interfaces_updated = relationship(
+        "Interface",
+        back_populates="updated_by_user",
+        primaryjoin="User.id==Interface.updated_by_id",
     )

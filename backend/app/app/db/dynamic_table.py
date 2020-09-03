@@ -1,5 +1,5 @@
 import json
-from typing import Any, Tuple, Dict
+from typing import Any, Tuple, Dict, Union
 from sqlalchemy import Column
 from app.db.base import Base
 
@@ -31,7 +31,7 @@ test_table_definition = """{
     ]
 }"""
 
-def json_to_table_def(json_string: str, base_class: Tuple[Any]) -> Base:
+def json_to_table_def(json_in: Union[Dict[str, Any], str], base_class: Tuple[Any]) -> Base:
     """Convert a JSON schema into a SQLAlchemy table
 
     The JSON schema should be in the form of:
@@ -60,9 +60,9 @@ def json_to_table_def(json_string: str, base_class: Tuple[Any]) -> Base:
         Base: A SQLAlchemy Table model
     """
     base_class = base_class
-    json_obj = json.loads(json_string)
-    table_name = json_obj["table_name"]
-    columns = {c["column_name"]:dict_to_column_def(c) for c in json_obj["columns"]}
+    table_dict = json_in if isinstance(json_in, dict) else json.loads(json_in)
+    table_name = table_dict["table_name"]
+    columns = {c["column_name"]:dict_to_column_def(c) for c in table_dict["columns"]}
     return type(table_name, base_class, columns)
 
 def dict_to_column_def(column_dict: Dict[str, str]) -> Column:

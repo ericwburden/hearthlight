@@ -293,8 +293,8 @@ def delete_node(
     ## Raises:
 
     - HTTPException: 404 - When the target node is not in the database.
-    - HTTPExceptoin: 403- When a normal user does not have delete permissions for the
-    node.
+    - HTTPExceptoin: 403- When a normal user does not have delete
+    permissions for the node.
 
     ## Returns:
 

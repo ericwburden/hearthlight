@@ -1,9 +1,9 @@
-import json
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.models.user import User
 from app.schemas.interface import InterfaceCreate, InterfaceUpdate
+from app.tests.utils.interface import test_table_template
 from app.tests.utils.utils import random_lower_string
 
 # --------------------------------------------------------------------------------------
@@ -14,19 +14,7 @@ from app.tests.utils.utils import random_lower_string
 def test_create_interface(db: Session, superuser: User) -> None:
     name = random_lower_string()
     interface_type = "test"
-    table_template = """{
-        "table_name": "TestingTable",
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {
-                    "primary_key": true,
-                    "index": true
-                }
-            }
-        ]
-    }"""
+    table_template = test_table_template()
     interface_in = InterfaceCreate(
         name=name, interface_type=interface_type, table_template=table_template
     )
@@ -36,26 +24,14 @@ def test_create_interface(db: Session, superuser: User) -> None:
     assert interface
     assert interface.name == name
     assert interface.interface_type == interface_type
-    assert interface.table_template == json.loads(table_template)
+    assert interface.table_template == table_template
     assert interface.created_by_id == superuser.id
 
 
 def test_get_interface(db: Session, superuser: User) -> None:
     name = random_lower_string()
     interface_type = "test"
-    table_template = """{
-        "table_name": "TestingTable",
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {
-                    "primary_key": true,
-                    "index": true
-                }
-            }
-        ]
-    }"""
+    table_template = test_table_template()
     interface_in = InterfaceCreate(
         name=name, interface_type=interface_type, table_template=table_template
     )
@@ -73,19 +49,7 @@ def test_get_interface(db: Session, superuser: User) -> None:
 def test_get_multi_interface(db: Session, superuser: User) -> None:
     names = [random_lower_string() for i in range(10)]
     interface_type = "test"
-    table_template = """{
-        "table_name": "TestingTable",
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {
-                    "primary_key": true,
-                    "index": true
-                }
-            }
-        ]
-    }"""
+    table_template = test_table_template()
     new_interfaces_in = [
         InterfaceCreate(
             name=n, interface_type=interface_type, table_template=table_template
@@ -112,19 +76,7 @@ def test_get_multi_interface(db: Session, superuser: User) -> None:
 def test_update_interface(db: Session, superuser: User) -> None:
     name = random_lower_string()
     interface_type = "test"
-    table_template = """{
-        "table_name": "TestingTable",
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {
-                    "primary_key": true,
-                    "index": true
-                }
-            }
-        ]
-    }"""
+    table_template = test_table_template()
     interface_in = InterfaceCreate(
         name=name, interface_type=interface_type, table_template=table_template
     )
@@ -145,19 +97,7 @@ def test_update_interface(db: Session, superuser: User) -> None:
 def test_delete_interface(db: Session, superuser: User) -> None:
     name = random_lower_string()
     interface_type = "test"
-    table_template = """{
-        "table_name": "TestingTable",
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {
-                    "primary_key": true,
-                    "index": true
-                }
-            }
-        ]
-    }"""
+    table_template = test_table_template()
     interface_in = InterfaceCreate(
         name=name, interface_type=interface_type, table_template=table_template
     )

@@ -20,6 +20,9 @@ def create_interface(
 ) -> models.Interface:
     """# Create a new interface specification
 
+    This endpoint is only accessible to the superuser. In order to add
+    a new interface, the name of the backing table must be unique.
+
     ## Args:
 
     - interface_in (schemas.InterfaceCreate): Specification for a new
@@ -30,10 +33,30 @@ def create_interface(
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_superuser).
 
+    ## Raises:
+
+    - HTTPException: 400 - When the user attempting to access the
+    endpoint is not a superuser
+    - HTTPException: 400 - When attempting to create a new interface
+    with a database backing table name for a table that already
+    exists.
+
     ## Returns:
 
     - models.Interface: The created Interface
     """
+    template_table_name = interface_in.table_template.table_name
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name=template_table_name
+    )
+    if interface:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "An interface with that table name already exists, "
+                "rename your template table."
+            ),
+        )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=current_user.id
     )
@@ -60,6 +83,8 @@ def read_interface(
 
     ## Raises:
 
+    - HTTPException: 400 - When the user attempting to access the
+    endpoint is not a superuser
     - HTTPException: 404 - When the target interface is not in the
     database
 
@@ -93,6 +118,11 @@ def read_interfaces(
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_superuser).
 
+    ## Raises:
+
+    - HTTPException: 400 - When the user attempting to access the
+    endpoint is not a superuser
+
     ## Returns:
 
     - List[models.Interface]: List of retrieved Interfaces
@@ -124,6 +154,8 @@ def update_interface(
 
     ## Raises:
 
+    - HTTPException: 400 - When the user attempting to access the
+    endpoint is not a superuser
     - HTTPException: 404 - When the interface identified by 'id' does
     not exist in the databaes.
 
@@ -134,13 +166,20 @@ def update_interface(
     interface = crud.interface.get(db=db, id=id)
     if not interface:
         raise HTTPException(status_code=404, detail="Cannot find interface.")
+    if interface_in.table_template and interface.table_created:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Cannot modify the table template, the table has already been created."
+            ),
+        )
     interface = crud.interface.update(
         db=db, db_obj=interface, obj_in=interface_in, updated_by_id=current_user.id
     )
     return interface
 
 
-@router.delete("/{id", response_model=schemas.Interface)
+@router.delete("/{id}", response_model=schemas.Interface)
 def delete_interface(
     *,
     db: Session = Depends(deps.get_db),
@@ -160,6 +199,8 @@ def delete_interface(
 
     ## Raises:
 
+    - HTTPException: 400 - When the user attempting to access the
+    endpoint is not a superuser
     - HTTPException: 404 - When the interface identified by 'id' is not
     in the database.
 

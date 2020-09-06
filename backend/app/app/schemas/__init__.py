@@ -1,4 +1,11 @@
-from .interface import Interface, InterfaceCreate, InterfaceInDB, InterfaceUpdate
+from .interface import (
+    Interface,
+    InterfaceCreate,
+    InterfaceInDB,
+    InterfaceUpdate,
+    TableTemplate,
+    ColumnTemplate,
+)
 from .msg import Msg
 from .node import Node, NodeCreate, NodeInDB, NodeUpdate
 from .permission import (

@@ -1,22 +1,33 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
+
+
+class ColumnTemplate(BaseModel):
+    column_name: str
+    data_type: str
+    kwargs: Dict[str, Any]
+
+
+class TableTemplate(BaseModel):
+    table_name: str
+    columns: List[ColumnTemplate]
 
 
 # Shared properties
 class InterfaceBase(BaseModel):
     name: Optional[str]
     interface_type: Optional[str]
-    table_template: Optional[Json]
-    ui_template: Optional[Json]
+    table_template: Optional[TableTemplate]
+    ui_template: Optional[Dict[str, Any]]
 
 
 # Properties to receive on node creation
 class InterfaceCreate(InterfaceBase):
     name: str
     interface_type: str
-    table_template: Json
+    table_template: TableTemplate
 
 
 # Properties to receive on node update

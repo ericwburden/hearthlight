@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
-from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:

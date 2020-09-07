@@ -233,9 +233,22 @@ def test_update_interface_fail_not_superuser(
     assert content["detail"] == "The user is not a superuser"
 
 
-# TODO: Implement a fail case test for interfaces where the table has already been
-# created once I've implemented the CRUD for creating tables and updating the
-# interface.table_created
+def test_update_interface_fail_table_created(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    interface = create_random_interface(db)
+    crud.interface.create_template_table(db, id=interface.id)
+    data = {"table_template": test_table_template()}
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 400
+    assert content["detail"] == (
+        "Cannot modify the table template, the table has already been created."
+    )
 
 
 # --------------------------------------------------------------------------------------
@@ -265,7 +278,7 @@ def test_delete_interface(
 def test_delete_interface_fail_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully delete an interface"""
+    """Fail if the interface doesn't exist"""
     response = client.delete(
         f"{settings.API_V1_STR}/interfaces/{-1}", headers=superuser_token_headers,
     )
@@ -281,6 +294,55 @@ def test_delete_interface_fail_not_superuser(
     interface = create_random_interface(db)
     response = client.delete(
         f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        headers=normal_user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 400
+    assert content["detail"] == "The user is not a superuser"
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for Interface build table endpoint ------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_build_table_endpoint(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully build an interface's backing table"""
+    interface = create_random_interface(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/build_table",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["name"] == interface.name
+    assert content["table_created"]
+
+
+def test_build_table_fail_interface_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the interface doesn't exist"""
+    response = client.post(
+        f"{settings.API_V1_STR}/interfaces/{-1}/build_table", 
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_build_table_fail_not_superuser(
+    client: TestClient, normal_user_token_headers: dict, db: Session
+) -> None:
+    """Fail if the user is not a superuser"""
+    interface = create_random_interface(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/build_table",
         headers=normal_user_token_headers,
     )
     content = response.json()

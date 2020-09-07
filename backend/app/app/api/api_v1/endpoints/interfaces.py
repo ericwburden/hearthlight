@@ -213,3 +213,44 @@ def delete_interface(
         raise HTTPException(status_code=404, detail="Cannot find interface.")
     interface = crud.interface.remove(db=db, id=id)
     return interface
+
+
+@router.post("/{id}/build_table", response_model=schemas.Interface)
+def build_interface_table(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    current_user: models.User = Depends(deps.get_current_active_superuser)
+) -> models.Interface:
+    """# Build the table from the Interface table_template
+
+    Creates the table defined by table_template  in the database.
+    In order to create the table, the identified interface must
+    exist in the database and there can't be a table in the database
+    with the same name as the table being created.
+
+    ## Args:
+
+    - id (int): Primary key ID for the Interface
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(deps.get_current_active_superuser).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the interface indicated by ID does
+    not exist in the database.
+    - HTTPException: 400 - When attempting to create a table and
+    there is already a table in the database with that name.
+
+    ## Returns:
+
+    - models.Interface: The Interface post table-creation
+    """
+    interface = crud.interface.get(db=db, id=id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+    interface = crud.interface.create_template_table(db=db, id=id)
+    return interface

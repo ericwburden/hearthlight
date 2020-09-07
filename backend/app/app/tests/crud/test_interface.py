@@ -1,4 +1,6 @@
+import pytest
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import InvalidRequestError, SAWarning
 
 from app import crud
 from app.models.user import User
@@ -110,3 +112,40 @@ def test_delete_interface(db: Session, superuser: User) -> None:
     assert interface2.id == interface.id
     assert interface2.name == name
     assert interface2.created_by_id == superuser.id
+
+
+def test_create_table_from_template(db: Session, superuser: User) -> None:
+    name = random_lower_string()
+    interface_type = "test"
+    table_template = test_table_template()
+    interface_in = InterfaceCreate(
+        name=name, interface_type=interface_type, table_template=table_template
+    )
+    interface = crud.interface.create(
+        db=db, obj_in=interface_in, created_by_id=superuser.id
+    )
+    interface_post_create = crud.interface.create_template_table(db=db, id=interface.id)
+    assert interface_post_create
+    assert interface_post_create.table_created
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_create_table_from_template_fail_exists(db: Session, superuser: User) -> None:
+    name = random_lower_string()
+    interface_type = "test"
+    table_template = test_table_template()
+    interface_in = InterfaceCreate(
+        name=name, interface_type=interface_type, table_template=table_template
+    )
+    interface = crud.interface.create(
+        db=db, obj_in=interface_in, created_by_id=superuser.id
+    )
+    crud.interface.create_template_table(db=db, id=interface.id)
+    with pytest.raises(InvalidRequestError) as e:
+        crud.interface.create_template_table(db=db, id=interface.id)
+    assert str(e.value) == (
+        f"Table '{table_template['table_name']}' is already defined for this MetaData"
+        f" instance.  Specify 'extend_existing=True' to redefine options and columns "
+        f"on an existing Table object."
+    )
+    

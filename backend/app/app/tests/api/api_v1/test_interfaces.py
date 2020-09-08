@@ -328,7 +328,7 @@ def test_build_table_fail_interface_not_exists(
 ) -> None:
     """Fail if the interface doesn't exist"""
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/{-1}/build_table", 
+        f"{settings.API_V1_STR}/interfaces/{-1}/build_table",
         headers=superuser_token_headers,
     )
     content = response.json()

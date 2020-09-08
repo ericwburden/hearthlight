@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from sqlalchemy import MetaData
 
+from app import crud
 from app.core.config import settings
 from app.db.session import SessionLocal, engine
 from app.main import app
@@ -15,6 +16,7 @@ from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissi
 from app.models.permission import Permission, NodePermission
 from app.models.interface import Interface
 
+from app.schemas.interface import InterfaceCreate
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import get_superuser_token_headers, get_superuser
 
@@ -67,7 +69,7 @@ def clear_db():
         User,
     ]
     model_table_names = [m.__tablename__ for m in models]
-    model_table_names.append('alembic_version')
+    model_table_names.append("alembic_version")
     # Drop records from the static tables
     for model in models:
         try:
@@ -83,15 +85,50 @@ def clear_db():
             db.rollback()
 
     # Drop the dynamically created interface tables
-    metadata = MetaData(engine, reflect=True)
+    metadata = MetaData()
+    metadata.bind = engine
+    metadata.reflect(bind=engine)
     all_tables = metadata.tables
     for name, table in all_tables.items():
         if name not in model_table_names:
             table.drop()
 
 
+def create_interface_form_input_testing_table():
+    db = SessionLocal()
+    name = "form_input_test_table"
+    interface_type = "test"
+    table_template = {
+        "table_name": name,
+        "columns": [
+            {
+                "column_name": "id",
+                "data_type": "Integer",
+                "kwargs": {"primary_key": True, "index": True},
+            },
+            {
+                "column_name": "name",
+                "data_type": "String(256)",
+                "kwargs": {"unique": True},
+            },
+            {
+                "column_name": "date_created",
+                "data_type": "Date",
+                "kwargs": {"nullable": False},
+            },
+            {"column_name": "an_integer", "data_type": "Integer", "kwargs": {}},
+        ],
+    }
+    interface_in = InterfaceCreate(
+        name=name, interface_type=interface_type, table_template=table_template
+    )
+    interface = crud.interface.create(db=db, obj_in=interface_in, created_by_id=1)
+    crud.interface.create_template_table(db, id=interface.id)
+
+
 def pytest_sessionstart(session):
     clear_db()
+    create_interface_form_input_testing_table()
 
 
 def pytest_sessionfinish(session, exitstatus):

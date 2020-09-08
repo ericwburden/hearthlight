@@ -1,6 +1,6 @@
 from pydantic import BaseModel, create_model
 from sqlalchemy.orm import Session
-from sqlalchemy import (
+from sqlalchemy import (   # noqa: F401
     Column,
     Integer,
     String,
@@ -8,9 +8,9 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Date,
-)  # noqa: F401
+)
 from sqlalchemy.engine import reflection
-from typing import Dict, Any, Tuple, Union, Optional
+from typing import Dict, Any, Tuple, Optional
 
 from app.crud.base import CRUDBaseLogging
 from app.db.base_class import Base, Default

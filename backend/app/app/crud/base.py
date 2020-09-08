@@ -16,6 +16,8 @@ from app.models import (
     Permission,
 )
 from app.schemas import PermissionTypeEnum
+from app.models.generic import get_generic_model
+from app.schemas.generic import get_generic_schema
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -212,3 +214,19 @@ class AccessControl(Generic[ModelType, PermissionType]):
             )
             raise NoResultFound(msg)
         return permission
+
+
+class CRUDInterfaceBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
+    def __init__(self, table_name: str):
+        self.model = get_generic_model(table_name)
+        self.validation_model = get_generic_schema(table_name)
+
+    def create(self, db: Session, *, obj_in: Dict[str, Any]) -> ModelType:
+        self.validation_model(**obj_in)  # Checks for validation errors
+        return super().create(db, obj_in=obj_in)
+
+    def update(
+        self, db: Session, *, db_obj: ModelType, obj_in: Dict[str, Any],
+    ) -> ModelType:
+        self.validation_model(**obj_in)  # Checks for validation errors
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)

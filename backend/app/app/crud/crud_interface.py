@@ -1,6 +1,8 @@
-from typing import Dict, Any, Tuple
+from pydantic import BaseModel, create_model
 from sqlalchemy.orm import Session
-from sqlalchemy import *
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date
+from sqlalchemy.engine import reflection
+from typing import Dict, Any, Tuple, Union, Optional
 
 from app.crud.base import CRUDBaseLogging
 from app.db.base_class import Base, Default
@@ -17,9 +19,18 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         return query.first()
 
     def create_template_table(self, db: Session, *, id: int) -> Interface:
+        """Add a table to the database from an interface template
+
+        Args:
+            db (Session): SQLAlchemy Session
+            id (int): Primary key ID for the interface
+
+        Returns:
+            Interface: The interface housing the table template
+        """
         interface = db.query(Interface).get(id)
         table_template = TableTemplate(**interface.table_template)
-        new_table = self.template_to_table_def(table_template, (Base, Default))
+        new_table = self._template_to_table_def(table_template, (Base, Default))
         new_table.__table__.create(engine)
         interface.table_created = True
         db.add(interface)
@@ -27,7 +38,7 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         db.refresh(interface)
         return interface
 
-    def template_to_table_def(
+    def _template_to_table_def(
         self, template: TableTemplate, base_class: Tuple[Any]
     ) -> Base:
         """Converts a table template to a table object
@@ -44,12 +55,12 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         """
         table_name = template.table_name
         columns = {
-            c.column_name: self.unpack_column_def(c) 
+            c.column_name: self._column_def_to_column(c) 
             for c in template.columns
         }
         return type(table_name, base_class, columns)
 
-    def unpack_column_def(self, template: ColumnTemplate) -> Column:
+    def _column_def_to_column(self, template: ColumnTemplate) -> Column:
         """Given a column def dictionary, return a Column
 
         Args:
@@ -63,6 +74,45 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         kwargs_str = ", ".join([f"{k}={v}" for k, v in template.kwargs.items()])
         column_str = f"Column({data_type}, {kwargs_str})"
         return eval(column_str)
+
+    def get_validation_model(self, db: Session, *, table_name: str) -> BaseModel:
+        """From a given table name, generate a generic Pydantic model
+
+        Args:
+            db (Session): SQLAlchemy Session
+            table_name (str): The name of the database table to model
+
+        Returns:
+            BaseModel: A Pydantic model
+        """
+        inspector = reflection.Inspector.from_engine(engine)
+        table_columns = inspector.get_columns(table_name)
+        column_precursors = [self._column_def_to_field(ct) for ct in table_columns]
+        columns = {cp[0]:cp[1] for cp in column_precursors if cp}
+        return create_model(table_name, **columns)
+
+    def _column_def_to_field(self, template: Dict[str, Any]) -> Optional[Tuple[Any]]:
+        """Transform SQLAlchemy column mapping to Pydantic field
+        definition
+
+        Args:
+            template (Dict[str, Any]): A SQLAlchemy column mapping from
+            Inspector.get_columns('table_name')
+
+        Returns:
+            Optional[Tuple[Any]]: A tuple of (field_name, field_definition)
+        """
+        if template.get("autoincrement"):
+            return None
+        data_type = template.get("type").python_type
+        data_def = (data_type, ...)
+        if template.get("nullable"):
+            data_def = (data_type, None)
+        if template.get("default") and not template.get("autoincrement"):
+            data_def = (data_type, template.get("default"))
+        return (template.get("name"), data_def)
+
+
 
 
 interface = CRUDInterface(Interface)

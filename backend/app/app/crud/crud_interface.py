@@ -1,14 +1,28 @@
 from pydantic import BaseModel, create_model
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Date,
+)  # noqa: F401
 from sqlalchemy.engine import reflection
 from typing import Dict, Any, Tuple, Union, Optional
 
 from app.crud.base import CRUDBaseLogging
 from app.db.base_class import Base, Default
 from app.db.session import engine
+from app.crud.interfaces import CRUDInterfaceFormInput
 from app.models.interface import Interface
-from app.schemas.interface import InterfaceCreate, InterfaceUpdate, TableTemplate, ColumnTemplate
+from app.schemas.interface import (
+    InterfaceCreate,
+    InterfaceUpdate,
+    TableTemplate,
+    ColumnTemplate,
+)
 
 
 class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]):
@@ -17,6 +31,10 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
             Interface.table_template["table_name"].astext == table_name
         )
         return query.first()
+
+    def get_interface_crud(self, db: Session, *, id: int) -> CRUDInterfaceFormInput:
+        interface = db.query(Interface).get(id)
+        return CRUDInterfaceFormInput(interface.table_template["table_name"])
 
     def create_template_table(self, db: Session, *, id: int) -> Interface:
         """Add a table to the database from an interface template
@@ -55,8 +73,7 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         """
         table_name = template.table_name
         columns = {
-            c.column_name: self._column_def_to_column(c) 
-            for c in template.columns
+            c.column_name: self._column_def_to_column(c) for c in template.columns
         }
         return type(table_name, base_class, columns)
 
@@ -88,7 +105,7 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         inspector = reflection.Inspector.from_engine(engine)
         table_columns = inspector.get_columns(table_name)
         column_precursors = [self._column_def_to_field(ct) for ct in table_columns]
-        columns = {cp[0]:cp[1] for cp in column_precursors if cp}
+        columns = {cp[0]: cp[1] for cp in column_precursors if cp}
         return create_model(table_name, **columns)
 
     def _column_def_to_field(self, template: Dict[str, Any]) -> Optional[Tuple[Any]]:
@@ -111,8 +128,6 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         if template.get("default") and not template.get("autoincrement"):
             data_def = (data_type, template.get("default"))
         return (template.get("name"), data_def)
-
-
 
 
 interface = CRUDInterface(Interface)

@@ -219,14 +219,26 @@ class AccessControl(Generic[ModelType, PermissionType]):
 class CRUDInterfaceBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, table_name: str):
         self.model = get_generic_model(table_name)
-        self.validation_model = get_generic_schema(table_name)
+        self.schema = get_generic_schema(table_name)
+
+    def get_model(self):
+        return self.model
+
+    def get_schema(self):
+        return self.schema
 
     def create(self, db: Session, *, obj_in: Dict[str, Any]) -> ModelType:
-        self.validation_model(**obj_in)  # Checks for validation errors
+        self.schema(**obj_in)  # Checks for validation errors
         return super().create(db, obj_in=obj_in)
 
     def update(
         self, db: Session, *, db_obj: ModelType, obj_in: Dict[str, Any],
     ) -> ModelType:
-        self.validation_model(**obj_in)  # Checks for validation errors
+        # For every table column, take either the existing value or the
+        # new value being passed in through 'obj_in'
+        check_data = {
+            attr: obj_in.get(attr) if obj_in.get(attr) else getattr(db_obj, attr)
+            for attr in db_obj.__table__.columns.keys()
+        }
+        self.schema(**check_data)  # Checks for validation errors
         return super().update(db, db_obj=db_obj, obj_in=obj_in)

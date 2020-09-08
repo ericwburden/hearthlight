@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import InvalidRequestError, SAWarning
+from sqlalchemy.exc import InvalidRequestError
 
 from app import crud
 from app.models.user import User
@@ -148,4 +148,3 @@ def test_create_table_from_template_fail_exists(db: Session, superuser: User) ->
         f" instance.  Specify 'extend_existing=True' to redefine options and columns "
         f"on an existing Table object."
     )
-    

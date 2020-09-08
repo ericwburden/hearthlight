@@ -1,7 +1,13 @@
+from enum import Enum
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel
+
+
+class InterfaceTypeEnum(str, Enum):
+    test = "test"
+    form_input = "form_input"
 
 
 class ColumnTemplate(BaseModel):
@@ -18,7 +24,7 @@ class TableTemplate(BaseModel):
 # Shared properties
 class InterfaceBase(BaseModel):
     name: Optional[str]
-    interface_type: Optional[str]
+    interface_type: Optional[InterfaceTypeEnum]
     table_template: Optional[TableTemplate]
     ui_template: Optional[Dict[str, Any]]
 
@@ -26,7 +32,7 @@ class InterfaceBase(BaseModel):
 # Properties to receive on node creation
 class InterfaceCreate(InterfaceBase):
     name: str
-    interface_type: str
+    interface_type: InterfaceTypeEnum
     table_template: TableTemplate
 
 

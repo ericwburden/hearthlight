@@ -18,7 +18,7 @@ def test_create_interface(
     data = {
         "name": random_lower_string(),
         "interface_type": "test",
-        "table_template": test_table_template(),
+        "table_template": test_table_template().dict(),
     }
     response = client.post(
         f"{settings.API_V1_STR}/interfaces/",
@@ -41,7 +41,7 @@ def test_create_interface_fail_duplicate_table_name(
     """
     name = random_lower_string()
     interface_type = "test"
-    table_template = test_table_template()
+    table_template = test_table_template().dict()
     interface_in = schemas.InterfaceCreate(
         name=name, interface_type=interface_type, table_template=table_template
     )
@@ -70,7 +70,7 @@ def test_create_interface_fail_not_superuser(
     data = {
         "name": random_lower_string(),
         "interface_type": "test",
-        "table_template": test_table_template(),
+        "table_template": test_table_template().dict(),
     }
     response = client.post(
         f"{settings.API_V1_STR}/interfaces/",
@@ -238,7 +238,7 @@ def test_update_interface_fail_table_created(
 ) -> None:
     interface = create_random_interface(db)
     crud.interface.create_template_table(db, id=interface.id)
-    data = {"table_template": test_table_template()}
+    data = {"table_template": test_table_template().dict()}
     response = client.put(
         f"{settings.API_V1_STR}/interfaces/{interface.id}",
         headers=superuser_token_headers,

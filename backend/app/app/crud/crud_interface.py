@@ -1,6 +1,6 @@
 from pydantic import BaseModel, create_model
 from sqlalchemy.orm import Session
-from sqlalchemy import (   # noqa: F401
+from sqlalchemy import (  # noqa: F401
     Column,
     Integer,
     String,
@@ -88,8 +88,16 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
             Column: The Column
         """
         data_type = template.data_type
-        kwargs_str = ", ".join([f"{k}={v}" for k, v in template.kwargs.items()])
-        column_str = f"Column({data_type}, {kwargs_str})"
+
+        args = template.args if template.args else []
+        args_str = ", ".join(args)
+        kwargs = template.kwargs if template.kwargs else {}
+        kwargs_str = ", ".join([f"{k}={v}" for k, v in kwargs.items()])
+
+        parts = ", ".join(
+            filter(lambda x: len(x) > 0, (data_type, args_str, kwargs_str))
+        )
+        column_str = f"Column({parts})"
         return eval(column_str)
 
     def get_validation_model(self, db: Session, *, table_name: str) -> BaseModel:

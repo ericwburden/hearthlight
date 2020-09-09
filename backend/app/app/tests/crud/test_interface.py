@@ -144,7 +144,7 @@ def test_create_table_from_template_fail_exists(db: Session, superuser: User) ->
     with pytest.raises(InvalidRequestError) as e:
         crud.interface.create_template_table(db=db, id=interface.id)
     assert str(e.value) == (
-        f"Table '{table_template['table_name']}' is already defined for this MetaData"
+        f"Table '{table_template.table_name}' is already defined for this MetaData"
         f" instance.  Specify 'extend_existing=True' to redefine options and columns "
         f"on an existing Table object."
     )

@@ -1,3 +1,4 @@
+import pytest
 from datetime import date, timedelta
 from random import randint
 from sqlalchemy.orm import Session
@@ -5,16 +6,19 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.models.user import User
 from app.tests.utils.utils import random_lower_string
+from app.tests.utils.node import create_random_node
 
 
 def test_create_form_input(db: Session, superuser: User) -> None:
     name = random_lower_string()
     date_created = date(1985, 1, 1) + timedelta(days=randint(0, 9999))
     an_integer = randint(0, 10000)
+    node = create_random_node(db)
     form_input_create = {
         "name": name,
         "date_created": date_created,
         "an_integer": an_integer,
+        "node_id": node.id
     }
     interface = crud.interface.get_by_template_table_name(
         db, table_name="form_input_test_table"

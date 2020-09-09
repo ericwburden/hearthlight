@@ -13,7 +13,8 @@ class InterfaceTypeEnum(str, Enum):
 class ColumnTemplate(BaseModel):
     column_name: str
     data_type: str
-    kwargs: Dict[str, Any]
+    args: Optional[List[Any]] = None
+    kwargs: Optional[Dict[str, Any]] = None
 
 
 class TableTemplate(BaseModel):

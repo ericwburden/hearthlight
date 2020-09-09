@@ -116,7 +116,13 @@ def create_interface_form_input_testing_table():
                 "data_type": "Date",
                 "kwargs": {"nullable": False},
             },
-            {"column_name": "an_integer", "data_type": "Integer", "kwargs": {}},
+            {"column_name": "an_integer", "data_type": "Integer"},
+            {
+                "column_name": "node_id",
+                "data_type": "Integer",
+                "args": ["ForeignKey('node.id')"],
+                "kwargs": {"nullable": True},
+            },
         ],
     }
     interface_in = InterfaceCreate(

@@ -3,23 +3,23 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.models import Interface
-from app.schemas import InterfaceCreate
+from app.schemas import InterfaceCreate, TableTemplate, ColumnTemplate
 from app.tests.utils.utils import random_lower_string
 
 
 def test_table_template(name: Optional[str] = None) -> Dict[str, Any]:
     if not name:
         name = random_lower_string()
-    return {
-        "table_name": name,
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {"primary_key": True, "index": True},
-            }
+    return TableTemplate(
+        table_name=name,
+        columns=[
+            ColumnTemplate(
+                column_name="id",
+                data_type="Integer",
+                kwargs={"primary_key": True, "index": True},
+            )
         ],
-    }
+    )
 
 
 def create_random_interface(db: Session, table_name: Optional[str] = None) -> Interface:

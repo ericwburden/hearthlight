@@ -12,11 +12,12 @@ from sqlalchemy import (  # noqa: F401
 from sqlalchemy.engine import reflection
 from typing import Dict, Any, Tuple, Optional
 
-from app.crud.base import CRUDBaseLogging
+from app.crud.base import CRUDBaseLogging, AccessControl
 from app.db.base_class import Base, Default
 from app.db.session import engine
 from app.crud.interfaces import CRUDInterfaceFormInput
 from app.models.interface import Interface
+from app.models.permission import InterfacePermission
 from app.schemas.interface import (
     InterfaceCreate,
     InterfaceUpdate,
@@ -25,7 +26,10 @@ from app.schemas.interface import (
 )
 
 
-class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]):
+class CRUDInterface(
+    AccessControl[Interface, InterfacePermission], 
+    CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
+):
     def get_by_template_table_name(self, db: Session, *, table_name: str) -> Interface:
         query = db.query(Interface).filter(
             Interface.table_template["table_name"].astext == table_name
@@ -138,4 +142,4 @@ class CRUDInterface(CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
         return (template.get("name"), data_def)
 
 
-interface = CRUDInterface(Interface)
+interface = CRUDInterface(Interface, InterfacePermission)

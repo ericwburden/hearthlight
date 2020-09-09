@@ -52,6 +52,16 @@ class UserGroupPermission(Permission):
     }
 
 
+class InterfacePermission(Permission):
+    @declared_attr
+    def resource_id(cls):  # noqa
+        return Permission.__table__.c.get("resource_id", Column(Integer, index=True))
+
+    __mapper_args__ = {
+        "polymorphic_identity": "interface",
+    }
+
+
 uc = UniqueConstraint(
     "resource_type", "resource_id", "permission_type", name="resource_permission_uc"
 )

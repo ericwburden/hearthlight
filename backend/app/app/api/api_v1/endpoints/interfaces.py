@@ -1,9 +1,12 @@
-from typing import List
+import logging
+from pydantic import BaseModel
+from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.schemas.generic import get_generic_schema
 
 router = APIRouter()
 
@@ -254,3 +257,50 @@ def build_interface_table(
         raise HTTPException(status_code=404, detail="Cannot find interface.")
     interface = crud.interface.create_template_table(db=db, id=id)
     return interface
+
+
+@router.get("/{id}/schema", response_model=Dict[str, Any])
+def get_interface_schema(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    current_user: models.User = Depends(deps.get_current_active_user)
+) -> Dict[str, Any]:
+    """# Fetch the JSON schema for a interface backing table
+
+    In order for a third-party application to know for sure what's in a
+    backing table for a particular interface, it will need to use this
+    endpoint. Returns a standard Pydantic schema.
+
+    ## Args:
+
+    - id (int): Primary key ID for the interface.
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(deps.get_current_active_superuser).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the interface indicate by the primary
+    key is not represented in the database.
+    - HTTPException: 403 - When the backing table for the indicated
+    interface has not yet been created/finalized.
+
+    ## Returns:
+
+    - Dict[str, Any]: A Pydantic schema
+    ([link](https://pydantic-docs.helpmanual.io/usage/schema/))
+    """
+    interface = crud.interface.get(db, id=id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+    if not interface.table_created:
+        raise HTTPException(
+            status_code=403, 
+            detail="The backing table for this interface has not been created."
+        )
+    table_name = interface.table_template['table_name']
+    schema = get_generic_schema(table_name)
+    return schema.schema()

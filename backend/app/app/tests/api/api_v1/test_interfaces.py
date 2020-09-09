@@ -353,3 +353,58 @@ def test_build_table_fail_not_superuser(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+# region | Tests for Interface read schema endpoint ------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_read_interface_schema(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully retrieve an interface schema"""
+    table_name = 'form_input_test_table'
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name=table_name
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/schema",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["title"] == table_name
+
+
+def test_read_interface_schema_fail_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail when the interface specified isn't in the database"""
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{-1}/schema",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_read_interface_schema_fail_table_not_created(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail when the backing table hasn't been created yet"""
+    interface = create_random_interface(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/schema",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        "The backing table for this interface has not been created."
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+
+

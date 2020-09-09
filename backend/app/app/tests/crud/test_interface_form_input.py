@@ -18,7 +18,7 @@ def test_create_form_input(db: Session, superuser: User) -> None:
         "name": name,
         "date_created": date_created,
         "an_integer": an_integer,
-        "node_id": node.id
+        "node_id": node.id,
     }
     interface = crud.interface.get_by_template_table_name(
         db, table_name="form_input_test_table"

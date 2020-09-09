@@ -109,7 +109,7 @@ def create_interface_form_input_testing_table():
             {
                 "column_name": "name",
                 "data_type": "String(256)",
-                "kwargs": {"unique": True},
+                "kwargs": {"unique": True, "nullable": False},
             },
             {
                 "column_name": "date_created",

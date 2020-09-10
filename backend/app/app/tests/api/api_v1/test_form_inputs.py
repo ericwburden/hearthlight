@@ -4,12 +4,15 @@ from random import randint
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
+from app.schemas import PermissionTypeEnum
 from app.core.config import settings
+from app.tests.utils.form_input import create_random_form_input
 from app.tests.utils.interface import create_random_interface
 from app.tests.utils.node import create_random_node
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.utils import random_lower_string
+from app.tests.utils.setup import interface_permission_setup
 
 # --------------------------------------------------------------------------------------
 # region | Tests for Form Input create endpoint ----------------------------------------
@@ -82,6 +85,9 @@ def test_create_form_input_fail_interface_table_not_created(
 
 def test_create_form_input_normal_user(client: TestClient, db: Session) -> None:
     """Successful form input creation by normal user"""
+    setup = interface_permission_setup(db, permission_type=PermissionTypeEnum.create)
+    user = setup['user']
+    interface = setup['interface']
     node = create_random_node(db)
     data = {
         "name": random_lower_string(),
@@ -91,15 +97,6 @@ def test_create_form_input_normal_user(client: TestClient, db: Session) -> None:
     }
     interface = crud.interface.get_by_template_table_name(
         db, table_name="form_input_test_table"
-    )
-    user = create_random_user(db)
-    user_group = create_random_user_group(db)
-    create_permission = crud.interface.get_permission(
-        db, id=interface.id, permission_type=schemas.PermissionTypeEnum.create
-    )
-    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
-    crud.permission.grant(
-        db, user_group_id=user_group.id, permission_id=create_permission.id
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=user.email, db=db
@@ -155,3 +152,129 @@ def test_create_form_input_normal_user_fail_no_permission(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+# region | Tests for Form Input read one endpoint --------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_read_form_input(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successful form input read one"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    form_input = create_random_form_input(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-input/{form_input.id}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == form_input.name
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+
+
+def test_read_form_input_fail_interface_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the indicated interface doesn't exist"""
+    form_input = create_random_form_input(db)
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{-1}/form-input/{form_input.id}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_read_form_input_fail_interface_table_not_created(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the interface backing table hasn't been created"""
+    interface = create_random_interface(db, table_name="fail_table_not_created2")
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-input/{1}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        "The backing table for this interface has not been created."
+    )
+
+
+def test_read_form_input_fail_form_input_not_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the indicated form_input doesn't exist"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-input/{-1}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find form input."
+
+
+def test_read_form_input_normal_user(client: TestClient, db: Session) -> None:
+    """Successful form input read one normal user"""
+    setup = interface_permission_setup(db, permission_type=PermissionTypeEnum.read)
+    interface = setup['interface']
+    user = setup['user']
+    form_input = create_random_form_input(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-input/{form_input.id}",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == form_input.name
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+
+
+def test_read_form_input_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    """Fail if the normal user doesn't have permissions"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    user = create_random_user(db)
+    form_input = create_random_form_input(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-input/{form_input.id}",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have read permissions for "
+        f"interface ID {interface.id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for Form Input read multi endpoint ------------------------------------
+# --------------------------------------------------------------------------------------
+
+

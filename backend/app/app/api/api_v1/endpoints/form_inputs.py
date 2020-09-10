@@ -37,3 +37,25 @@ def create_form_input(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.message)
     return form_input
+
+@router.get("/{resource_id}/form-input/{form_input_id}")
+def read_form_input(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    form_input_id: int,
+    current_user: models.User = Depends(interface_read_validator)
+) -> BaseModel:
+    interface = crud.interface.get(db, id=resource_id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+    if not interface.table_created:
+        raise HTTPException(
+            status_code=403, 
+            detail="The backing table for this interface has not been created."
+        )
+    form_input_crud = crud.interface.get_interface_crud(db, id=resource_id)
+    form_input = form_input_crud.get(db, id=form_input_id)
+    if not form_input:
+        raise HTTPException(status_code=404, detail="Cannot find form input.")
+    return form_input

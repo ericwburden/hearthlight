@@ -6,6 +6,7 @@ from app import crud
 from app.tests.utils.node import create_random_node
 from app.tests.utils.utils import random_lower_string
 
+
 def create_random_form_input(db: Session):
     node = create_random_node(db)
     data = {

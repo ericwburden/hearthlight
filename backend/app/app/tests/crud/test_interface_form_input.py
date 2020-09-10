@@ -1,4 +1,3 @@
-import pytest
 from datetime import date, timedelta
 from random import randint
 from sqlalchemy.orm import Session

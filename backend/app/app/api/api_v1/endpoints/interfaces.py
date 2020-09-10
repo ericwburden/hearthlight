@@ -1,5 +1,3 @@
-import logging
-from pydantic import BaseModel
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -298,9 +296,9 @@ def get_interface_schema(
         raise HTTPException(status_code=404, detail="Cannot find interface.")
     if not interface.table_created:
         raise HTTPException(
-            status_code=403, 
-            detail="The backing table for this interface has not been created."
+            status_code=403,
+            detail="The backing table for this interface has not been created.",
         )
-    table_name = interface.table_template['table_name']
+    table_name = interface.table_template["table_name"]
     schema = get_generic_schema(table_name)
     return schema.schema()

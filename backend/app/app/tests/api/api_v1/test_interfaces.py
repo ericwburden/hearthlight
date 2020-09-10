@@ -361,10 +361,8 @@ def test_read_interface_schema(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully retrieve an interface schema"""
-    table_name = 'form_input_test_table'
-    interface = crud.interface.get_by_template_table_name(
-        db, table_name=table_name
-    )
+    table_name = "form_input_test_table"
+    interface = crud.interface.get_by_template_table_name(db, table_name=table_name)
     response = client.get(
         f"{settings.API_V1_STR}/interfaces/{interface.id}/schema",
         headers=superuser_token_headers,
@@ -406,5 +404,3 @@ def test_read_interface_schema_fail_table_not_created(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-
-

@@ -15,21 +15,22 @@ interface_create_validator = deps.UserPermissionValidator(
 
 router = APIRouter()
 
-@router.post("/{resource_id}/form-input")
+
+@router.post("/{resource_id}/form-inputs/")
 def create_form_input(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,
     form_input_in: Dict[str, Any] = Body(...),
-    current_user: models.User = Depends(interface_create_validator)
+    current_user: models.User = Depends(interface_create_validator),
 ) -> BaseModel:
     interface = crud.interface.get(db, id=resource_id)
     if not interface:
         raise HTTPException(status_code=404, detail="Cannot find interface.")
     if not interface.table_created:
         raise HTTPException(
-            status_code=403, 
-            detail="The backing table for this interface has not been created."
+            status_code=403,
+            detail="The backing table for this interface has not been created.",
         )
     form_input_crud = crud.interface.get_interface_crud(db, id=resource_id)
     try:
@@ -38,24 +39,47 @@ def create_form_input(
         raise HTTPException(status_code=422, detail=e.message)
     return form_input
 
-@router.get("/{resource_id}/form-input/{form_input_id}")
+
+@router.get("/{resource_id}/form-inputs/{form_input_id}")
 def read_form_input(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,
     form_input_id: int,
-    current_user: models.User = Depends(interface_read_validator)
+    current_user: models.User = Depends(interface_read_validator),
 ) -> BaseModel:
     interface = crud.interface.get(db, id=resource_id)
     if not interface:
         raise HTTPException(status_code=404, detail="Cannot find interface.")
     if not interface.table_created:
         raise HTTPException(
-            status_code=403, 
-            detail="The backing table for this interface has not been created."
+            status_code=403,
+            detail="The backing table for this interface has not been created.",
         )
     form_input_crud = crud.interface.get_interface_crud(db, id=resource_id)
     form_input = form_input_crud.get(db, id=form_input_id)
     if not form_input:
         raise HTTPException(status_code=404, detail="Cannot find form input.")
     return form_input
+
+
+@router.get("/{resource_id}/form-inputs/")
+def read_form_inputs(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(interface_read_validator),
+) -> BaseModel:
+    interface = crud.interface.get(db, id=resource_id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+    if not interface.table_created:
+        raise HTTPException(
+            status_code=403,
+            detail="The backing table for this interface has not been created.",
+        )
+    form_input_crud = crud.interface.get_interface_crud(db, id=resource_id)
+    form_inputs = form_input_crud.get_multi(db, skip=skip, limit=limit)
+    return form_inputs

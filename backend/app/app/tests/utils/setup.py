@@ -225,11 +225,10 @@ def multi_user_group_permission_setup(
 
 
 def interface_permission_setup(
-    db: Session,
-    *,
-    permission_type: PermissionTypeEnum,
-    permission_enabled: bool = True
-) -> Dict[str, Union[models.Interface, models.Permission, models.UserGroup, models.User]]:
+    db: Session, *, permission_type: PermissionTypeEnum, permission_enabled: bool = True
+) -> Dict[
+    str, Union[models.Interface, models.Permission, models.UserGroup, models.User]
+]:
     interface = crud.interface.get_by_template_table_name(
         db, table_name="form_input_test_table"
     )
@@ -239,9 +238,7 @@ def interface_permission_setup(
         db, id=interface.id, permission_type=permission_type
     )
     crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
-    crud.permission.grant(
-        db, user_group_id=user_group.id, permission_id=permission.id
-    )
+    crud.permission.grant(db, user_group_id=user_group.id, permission_id=permission.id)
     if not permission_enabled:
         crud.permission.revoke(
             db, user_group_id=user_group.id, permission_id=permission.id
@@ -250,5 +247,5 @@ def interface_permission_setup(
         "interface": interface,
         "permission": permission,
         "user_group": user_group,
-        "user": user
+        "user": user,
     }

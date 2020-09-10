@@ -27,8 +27,8 @@ from app.schemas.interface import (
 
 
 class CRUDInterface(
-    AccessControl[Interface, InterfacePermission], 
-    CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate]
+    AccessControl[Interface, InterfacePermission],
+    CRUDBaseLogging[Interface, InterfaceCreate, InterfaceUpdate],
 ):
     def get_by_template_table_name(self, db: Session, *, table_name: str) -> Interface:
         query = db.query(Interface).filter(

@@ -505,3 +505,138 @@ def test_update_form_input_normal_user_fail_no_permission(
         f"User ID {user.id} does not have update permissions for "
         f"interface ID {interface.id}"
     )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for Form Input delete endpoint ----------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_delete_form_input(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successful form input deletion"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    form_input = create_random_form_input(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+    )
+    form_input_crud = crud.interface.get_interface_crud(db, id=interface.id)
+    stored_form_input = form_input_crud.get(db, id=form_input.id)
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == form_input.name
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+    assert stored_form_input is None
+
+
+def test_delete_form_input_fail_interface_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified interface doesn't exist"""
+    form_input = create_random_form_input(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{-1}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_delete_form_input_fail_form_input_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified form input record doesn't exist"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{-1}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find form input record."
+
+
+def test_delete_form_input_fail_interface_table_not_created(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified interface doesn't have a backing table"""
+    interface = create_random_interface(db, table_name="fail_table_not_created5")
+    form_input = create_random_form_input(db)
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        "The backing table for this interface has not been created."
+    )
+
+
+def test_delete_form_input_normal_user(client: TestClient, db: Session) -> None:
+    """Successful form input delete by a normal user"""
+    setup = interface_permission_setup(db, permission_type=PermissionTypeEnum.delete)
+    interface = setup["interface"]
+    user = setup["user"]
+    form_input = create_random_form_input(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=user_token_headers,
+    )
+    form_input_crud = crud.interface.get_interface_crud(db, id=interface.id)
+    stored_form_input = form_input_crud.get(db, id=form_input.id)
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == form_input.name
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+    assert stored_form_input is None
+
+
+def test_delete_form_input_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    """Fail if the normal user doesn't have delete permissions"""
+    setup = interface_permission_setup(
+        db, permission_type=PermissionTypeEnum.delete, permission_enabled=False
+    )
+    interface = setup["interface"]
+    user = setup["user"]
+    form_input = create_random_form_input(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have delete permissions for "
+        f"interface ID {interface.id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------

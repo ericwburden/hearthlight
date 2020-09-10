@@ -15,6 +15,9 @@ interface_create_validator = deps.UserPermissionValidator(
 interface_update_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.interface, schemas.PermissionTypeEnum.update
 )
+interface_delete_validator = deps.UserPermissionValidator(
+    schemas.ResourceTypeEnum.interface, schemas.PermissionTypeEnum.delete
+)
 
 router = APIRouter()
 
@@ -110,4 +113,28 @@ def update_form_input(
     if not form_input:
         raise HTTPException(status_code=404, detail="Cannot find form input record.")
     form_input = form_input_crud.update(db, db_obj=form_input, obj_in=form_input_in)
+    return form_input
+
+
+@router.delete("/{resource_id}/form-inputs/{form_input_id}")
+def delete_form_input(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    form_input_id: int,
+    current_user: models.User = Depends(interface_delete_validator),
+) -> BaseModel:
+    interface = crud.interface.get(db, id=resource_id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+    if not interface.table_created:
+        raise HTTPException(
+            status_code=403,
+            detail="The backing table for this interface has not been created.",
+        )
+    form_input_crud = crud.interface.get_interface_crud(db, id=resource_id)
+    form_input = form_input_crud.get(db, id=form_input_id)
+    if not form_input:
+        raise HTTPException(status_code=404, detail="Cannot find form input record.")
+    form_input = form_input_crud.remove(db, id=form_input_id)
     return form_input

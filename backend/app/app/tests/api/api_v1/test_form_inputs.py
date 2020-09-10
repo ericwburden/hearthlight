@@ -376,3 +376,132 @@ def test_read_form_inputs_normal_user_fail_no_permission(
 # --------------------------------------------------------------------------------------
 # region | Tests for Form Input update endpoint ----------------------------------------
 # --------------------------------------------------------------------------------------
+
+
+def test_update_form_input(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successful form input update"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    form_input = create_random_form_input(db)
+    data = {"name": random_lower_string()}
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == data["name"]
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+
+
+def test_update_form_input_fail_interface_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified interface doesn't exist"""
+    form_input = create_random_form_input(db)
+    data = {"name": random_lower_string()}
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{-1}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_update_form_input_fail_form_input_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified form input record doesn't exist"""
+    interface = crud.interface.get_by_template_table_name(
+        db, table_name="form_input_test_table"
+    )
+    data = {"name": random_lower_string()}
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{-1}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find form input record."
+
+
+def test_update_form_input_fail_interface_table_not_created(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the specified interface doesn't have a backing table"""
+    interface = create_random_interface(db, table_name="fail_table_not_created4")
+    form_input = create_random_form_input(db)
+    data = {"name": random_lower_string()}
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        "The backing table for this interface has not been created."
+    )
+
+
+def test_update_form_input_normal_user(client: TestClient, db: Session) -> None:
+    """Successful form input update by a normal user"""
+    setup = interface_permission_setup(db, permission_type=PermissionTypeEnum.update)
+    interface = setup["interface"]
+    user = setup["user"]
+    form_input = create_random_form_input(db)
+    data = {"name": random_lower_string()}
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=user_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 200
+    assert content["id"] == form_input.id
+    assert content["name"] == data["name"]
+    assert content["date_created"] == str(form_input.date_created)
+    assert content["an_integer"] == form_input.an_integer
+    assert content["node_id"] == form_input.node_id
+
+
+def test_update_form_input_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    """Fail if the normal user doesn't have update permissions"""
+    setup = interface_permission_setup(
+        db, permission_type=PermissionTypeEnum.update, permission_enabled=False
+    )
+    interface = setup["interface"]
+    user = setup["user"]
+    form_input = create_random_form_input(db)
+    data = {"name": random_lower_string()}
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.put(
+        f"{settings.API_V1_STR}/interfaces/{interface.id}/form-inputs/{form_input.id}",
+        headers=user_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have update permissions for "
+        f"interface ID {interface.id}"
+    )

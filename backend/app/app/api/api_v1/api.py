@@ -1,14 +1,13 @@
 from fastapi import APIRouter
 
 from app.api.api_v1.endpoints import (
-    form_inputs,
-    interfaces,
     login,
     nodes,
     users,
     user_groups,
     utils,
 )
+from app.api.api_v1.endpoints.interfaces import interfaces, form_inputs
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])

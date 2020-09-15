@@ -32,13 +32,13 @@ class CRUDInterface(
 ):
     def get_by_template_table_name(self, db: Session, *, table_name: str) -> Interface:
         query = db.query(Interface).filter(
-            Interface.table_template["table_name"].astext == table_name
+            Interface.template["table"]["table_name"].astext == table_name
         )
         return query.first()
 
     def get_interface_crud(self, db: Session, *, id: int) -> CRUDInterfaceFormInput:
         interface = db.query(Interface).get(id)
-        return CRUDInterfaceFormInput(interface.table_template["table_name"])
+        return CRUDInterfaceFormInput(interface.template["table"]["table_name"])
 
     def create_template_table(self, db: Session, *, id: int) -> Interface:
         """Add a table to the database from an interface template
@@ -51,7 +51,7 @@ class CRUDInterface(
             Interface: The interface housing the table template
         """
         interface = db.query(Interface).get(id)
-        table_template = TableTemplate(**interface.table_template)
+        table_template = TableTemplate(**interface.template["table"])
         new_table = self._template_to_table_def(table_template, (Base, Default))
         new_table.__table__.create(engine)
         interface.table_created = True

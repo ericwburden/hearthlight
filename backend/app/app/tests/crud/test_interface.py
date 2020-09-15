@@ -18,7 +18,7 @@ def test_create_interface(db: Session, superuser: User) -> None:
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id
@@ -26,7 +26,7 @@ def test_create_interface(db: Session, superuser: User) -> None:
     assert interface
     assert interface.name == name
     assert interface.interface_type == interface_type
-    assert interface.table_template == table_template
+    assert interface.template["table"] == table_template
     assert interface.created_by_id == superuser.id
 
 
@@ -35,7 +35,7 @@ def test_get_interface(db: Session, superuser: User) -> None:
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id
@@ -44,7 +44,7 @@ def test_get_interface(db: Session, superuser: User) -> None:
     assert stored_interface
     assert interface.name == stored_interface.name
     assert interface.interface_type == stored_interface.interface_type
-    assert interface.table_template == stored_interface.table_template
+    assert interface.template == stored_interface.template
     assert interface.created_by_id == stored_interface.created_by_id
 
 
@@ -54,7 +54,7 @@ def test_get_multi_interface(db: Session, superuser: User) -> None:
     table_template = test_table_template()
     new_interfaces_in = [
         InterfaceCreate(
-            name=n, interface_type=interface_type, table_template=table_template
+            name=n, interface_type=interface_type, template={"table": table_template}
         )
         for n in names
     ]
@@ -68,7 +68,7 @@ def test_get_multi_interface(db: Session, superuser: User) -> None:
         for si in stored_interfaces:
             name_match = nii.name == si.name
             interface_type_match = nii.interface_type == si.interface_type
-            table_template_match = nii.table_template == si.table_template
+            table_template_match = nii.template == si.template
             if name_match and interface_type_match and table_template_match:
                 found_match = True
                 break
@@ -80,7 +80,7 @@ def test_update_interface(db: Session, superuser: User) -> None:
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id
@@ -101,7 +101,7 @@ def test_delete_interface(db: Session, superuser: User) -> None:
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id
@@ -119,7 +119,7 @@ def test_create_table_from_template(db: Session, superuser: User) -> None:
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id
@@ -135,7 +135,7 @@ def test_create_table_from_template_fail_exists(db: Session, superuser: User) ->
     interface_type = "test"
     table_template = test_table_template()
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template={"table": table_template}
     )
     interface = crud.interface.create(
         db=db, obj_in=interface_in, created_by_id=superuser.id

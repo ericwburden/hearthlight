@@ -98,35 +98,37 @@ def create_interface_form_input_testing_table():
     db = SessionLocal()
     name = "form_input_test_table"
     interface_type = "test"
-    table_template = {
-        "table_name": name,
-        "columns": [
-            {
-                "column_name": "id",
-                "data_type": "Integer",
-                "kwargs": {"primary_key": True, "index": True},
-            },
-            {
-                "column_name": "name",
-                "data_type": "String(256)",
-                "kwargs": {"unique": True, "nullable": False},
-            },
-            {
-                "column_name": "date_created",
-                "data_type": "Date",
-                "kwargs": {"nullable": False},
-            },
-            {"column_name": "an_integer", "data_type": "Integer"},
-            {
-                "column_name": "node_id",
-                "data_type": "Integer",
-                "args": ["ForeignKey('node.id')"],
-                "kwargs": {"nullable": True},
-            },
-        ],
+    template = {
+        "table": {
+            "table_name": name,
+            "columns": [
+                {
+                    "column_name": "id",
+                    "data_type": "Integer",
+                    "kwargs": {"primary_key": True, "index": True},
+                },
+                {
+                    "column_name": "name",
+                    "data_type": "String(256)",
+                    "kwargs": {"unique": True, "nullable": False},
+                },
+                {
+                    "column_name": "date_created",
+                    "data_type": "Date",
+                    "kwargs": {"nullable": False},
+                },
+                {"column_name": "an_integer", "data_type": "Integer"},
+                {
+                    "column_name": "node_id",
+                    "data_type": "Integer",
+                    "args": ["ForeignKey('node.id')"],
+                    "kwargs": {"nullable": True},
+                },
+            ],
+        }
     }
     interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template=template
     )
     interface = crud.interface.create(db=db, obj_in=interface_in, created_by_id=1)
     crud.interface.create_template_table(db, id=interface.id)

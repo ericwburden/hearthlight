@@ -3,6 +3,7 @@ from .interface import (
     InterfaceCreate,
     InterfaceInDB,
     InterfaceUpdate,
-    TableTemplate,
-    ColumnTemplate,
+    InterfaceTemplate,
 )
+
+from .templates import TableTemplate, ColumnTemplate

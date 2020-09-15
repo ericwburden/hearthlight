@@ -18,7 +18,7 @@ def test_create_interface(
     data = {
         "name": random_lower_string(),
         "interface_type": "test",
-        "table_template": test_table_template().dict(),
+        "template": {"table": test_table_template().dict()},
     }
     response = client.post(
         f"{settings.API_V1_STR}/interfaces/",
@@ -29,7 +29,7 @@ def test_create_interface(
     assert response.status_code == 200
     assert content["name"] == data["name"]
     assert content["interface_type"] == data["interface_type"]
-    assert content["table_template"] == data["table_template"]
+    assert content["template"] == data["template"]
 
 
 def test_create_interface_fail_duplicate_table_name(
@@ -41,15 +41,15 @@ def test_create_interface_fail_duplicate_table_name(
     """
     name = random_lower_string()
     interface_type = "test"
-    table_template = test_table_template().dict()
+    template = {"table": test_table_template().dict()}
     interface_in = schemas.InterfaceCreate(
-        name=name, interface_type=interface_type, table_template=table_template
+        name=name, interface_type=interface_type, template=template
     )
     crud.interface.create(db=db, obj_in=interface_in, created_by_id=1)
     data = {
         "name": name,
         "interface_type": interface_type,
-        "table_template": table_template,
+        "template": template,
     }
     response = client.post(
         f"{settings.API_V1_STR}/interfaces/",
@@ -70,7 +70,7 @@ def test_create_interface_fail_not_superuser(
     data = {
         "name": random_lower_string(),
         "interface_type": "test",
-        "table_template": test_table_template().dict(),
+        "template": {"table": test_table_template().dict()},
     }
     response = client.post(
         f"{settings.API_V1_STR}/interfaces/",
@@ -103,7 +103,7 @@ def test_read_interface(
     assert content["id"] == interface.id
     assert content["name"] == interface.name
     assert content["interface_type"] == interface.interface_type
-    assert content["table_template"] == interface.table_template
+    assert content["template"] == interface.template
 
 
 def test_read_interface_fail_not_exist(
@@ -155,9 +155,7 @@ def test_read_multi_interface(
             id_match = stored_interface["id"] == interface.id
             name_match = stored_interface["name"] == interface.name
             type_match = stored_interface["interface_type"] == interface.interface_type
-            template_match = (
-                stored_interface["table_template"] == interface.table_template
-            )
+            template_match = stored_interface["template"] == interface.template
             if id_match and name_match and type_match and template_match:
                 found_match = True
                 break
@@ -199,7 +197,7 @@ def test_update_interface(
     assert content["name"] == data["name"]
     assert content["id"] == interface.id
     assert content["interface_type"] == interface.interface_type
-    assert content["table_template"] == interface.table_template
+    assert content["template"] == interface.template
 
 
 def test_update_interface_fail_not_exists(
@@ -238,7 +236,7 @@ def test_update_interface_fail_table_created(
 ) -> None:
     interface = create_random_interface(db)
     crud.interface.create_template_table(db, id=interface.id)
-    data = {"table_template": test_table_template().dict()}
+    data = {"template": {"table": test_table_template().dict()}}
     response = client.put(
         f"{settings.API_V1_STR}/interfaces/{interface.id}",
         headers=superuser_token_headers,

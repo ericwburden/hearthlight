@@ -46,7 +46,7 @@ def create_interface(
 
     - models.Interface: The created Interface
     """
-    template_table_name = interface_in.table_template.table_name
+    template_table_name = interface_in.template.table.table_name
     interface = crud.interface.get_by_template_table_name(
         db, table_name=template_table_name
     )
@@ -167,7 +167,11 @@ def update_interface(
     interface = crud.interface.get(db=db, id=id)
     if not interface:
         raise HTTPException(status_code=404, detail="Cannot find interface.")
-    if interface_in.table_template and interface.table_created:
+    if (
+        interface_in.template
+        and interface_in.template.table
+        and interface.table_created
+    ):
         raise HTTPException(
             status_code=400,
             detail=(
@@ -299,6 +303,6 @@ def get_interface_schema(
             status_code=403,
             detail="The backing table for this interface has not been created.",
         )
-    table_name = interface.table_template["table_name"]
+    table_name = interface.template["table"]["table_name"]
     schema = get_generic_schema(table_name)
     return schema.schema()

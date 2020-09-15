@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.models import Interface
-from app.schemas import InterfaceCreate, TableTemplate, ColumnTemplate
+from app.schemas import (
+    InterfaceCreate,
+    InterfaceTemplate,
+    TableTemplate,
+    ColumnTemplate,
+)
 from app.tests.utils.utils import random_lower_string
 
 
@@ -26,7 +31,7 @@ def create_random_interface(db: Session, table_name: Optional[str] = None) -> In
     interface_in = InterfaceCreate(
         name=random_lower_string(),
         interface_type="test",
-        table_template=test_table_template(name=table_name),
+        template=InterfaceTemplate(table=test_table_template(name=table_name)),
     )
     interface = crud.interface.create(db, obj_in=interface_in, created_by_id=1)
     return interface

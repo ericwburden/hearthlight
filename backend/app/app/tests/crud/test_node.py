@@ -180,9 +180,7 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     )
 
     # Create User Group attached to parent node
-    user_group_in = UserGroupCreate(
-        name="test_get_multi_node_with_permission", node_id=parent_node.id
-    )
+    user_group_in = UserGroupCreate(name=random_lower_string(), node_id=parent_node.id)
     user_group = crud.user_group.create(
         db, obj_in=user_group_in, created_by_id=superuser.id
     )

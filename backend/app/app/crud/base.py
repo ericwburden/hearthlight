@@ -147,6 +147,7 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 class AccessControl(Generic[ModelType, PermissionType]):
     def __init__(self, model: Type[ModelType], permission_model: Type[PermissionType]):
+        self.resource_type = permission_model.__mapper__.polymorphic_identity
         self.permission_model = permission_model
         super().__init__(model)
 
@@ -155,7 +156,7 @@ class AccessControl(Generic[ModelType, PermissionType]):
         permissions = [
             self.permission_model(
                 resource_id=created_obj.id,
-                resource_type=self.model.__tablename__,
+                resource_type=self.resource_type,
                 permission_type=permission_type,
             )
             for permission_type in list(PermissionTypeEnum)
@@ -190,14 +191,12 @@ class AccessControl(Generic[ModelType, PermissionType]):
         return query.all()
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
-        permission = aliased(Permission)
-        query = (
-            db.query(permission)
-            .join(self.permission_model, permission.id == self.permission_model.id)
+        return (
+            db.query(self.permission_model)
             .join(self.model, self.permission_model.resource_id == self.model.id)
             .filter(self.model.id == id)
+            .all()
         )
-        return query.all()
 
     def get_permission(
         self, db: Session, *, id: int, permission_type: PermissionTypeEnum

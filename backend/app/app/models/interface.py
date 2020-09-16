@@ -33,8 +33,6 @@ class Interface(Base, Default):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(256), nullable=False)
     interface_type = Column(String(64), nullable=False)
-    template = Column(JSON, nullable=False)
-    table_created = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), server_onupdate=func.now())
     created_by_id = Column(
@@ -53,3 +51,23 @@ class Interface(Base, Default):
     updated_by_user = relationship(
         "User", back_populates="interfaces_updated", foreign_keys=[updated_by_id]
     )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "interface",
+        "polymorphic_on": interface_type,
+    }
+
+
+class FormInputInterface(Interface):
+    id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
+    template = Column(JSON, nullable=False)
+    table_created = Column(Boolean, default=False)
+
+    __mapper_args__ = {"polymorphic_identity": "form_input_interface"}
+
+
+class QueryInterface(Interface):
+    id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
+    template = Column(JSON, nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "query_interface"}

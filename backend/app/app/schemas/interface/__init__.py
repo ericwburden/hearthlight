@@ -7,3 +7,5 @@ from .interface import (
 )
 
 from .templates import TableTemplate, ColumnTemplate
+
+from .form_input import FormInput, FormInputCreate, FormInputInDB, FormInputUpdate

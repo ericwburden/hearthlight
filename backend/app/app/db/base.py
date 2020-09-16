@@ -8,5 +8,13 @@ from app.models.user_group import (  # noqa F401
     UserGroupUserRel,  # noqa F401
     UserGroupPermissionRel,  # noqa F401
 )
-from app.models.permission import Permission, NodePermission  # noqa F401
-from app.models.interface import Interface  # noqa F401
+from app.models.permission import (  # noqa F401
+    Permission,
+    NodePermission,
+    InterfacePermission,
+)
+from app.models.interface import (  # noqa F401
+    Interface,
+    FormInputInterface,
+    QueryInterface,
+)

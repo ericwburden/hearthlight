@@ -1,1 +1,1 @@
-from .crud_form_input import CRUDInterfaceFormInput
+from .crud_form_input import CRUDInterfaceFormInput, form_input

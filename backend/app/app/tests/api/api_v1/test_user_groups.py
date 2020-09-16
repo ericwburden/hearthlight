@@ -951,7 +951,7 @@ def test_user_group_revoke_bulk_permissions_normal_user(
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
-    data = [model_encoder(p) for p in permissions]
+    data = [model_encoder(p, db) for p in permissions]
     response = client.delete(
         f"{settings.API_V1_STR}/user_groups/{setup['user_group'].id}/permissions/",
         headers=user_token_headers,

@@ -97,7 +97,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
     ) -> ModelType:
-        obj_data = model_encoder(db_obj)
+        obj_data = model_encoder(db_obj, db)
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -190,12 +190,14 @@ class AccessControl(Generic[ModelType, PermissionType]):
         return query.all()
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
-        return (
-            db.query(self.permission_model)
+        permission = aliased(Permission)
+        query = (
+            db.query(permission)
+            .join(self.permission_model, permission.id == self.permission_model.id)
             .join(self.model, self.permission_model.resource_id == self.model.id)
             .filter(self.model.id == id)
-            .all()
         )
+        return query.all()
 
     def get_permission(
         self, db: Session, *, id: int, permission_type: PermissionTypeEnum

@@ -47,8 +47,8 @@ def create_random_form_input_table_entry(db: Session):
         "an_integer": randint(0, 10000),
         "node_id": node.id,
     }
-    interface = crud.interface.get_by_template_table_name(
+    form_input = crud.form_input.get_by_template_table_name(
         db, table_name="form_input_test_table"
     )
-    form_input_crud = crud.interface.get_interface_crud(db, id=interface.id)
+    form_input_crud = crud.form_input.get_table_crud(db, id=form_input.id)
     return form_input_crud.create(db, obj_in=data)

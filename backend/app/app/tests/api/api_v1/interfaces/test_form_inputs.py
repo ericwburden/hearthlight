@@ -3,36 +3,41 @@ from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.core.config import settings
-from app.tests.utils.interface import test_table_template, create_random_interface
+from app.tests.utils.form_input import (
+    create_random_form_input_interface,
+    test_table_template,
+)
 from app.tests.utils.utils import random_lower_string
 
+
+FORM_INPUT_INTERFACE_TYPE = "form_input_interface"
+
 # --------------------------------------------------------------------------------------
-# region | Tests for Interface create endpoint -----------------------------------------
+# region | Tests for Form Input Interface create endpoint ------------------------------
 # --------------------------------------------------------------------------------------
 
 
-def test_create_interface(
+def test_create_form_input_interface(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successful interface creation"""
     data = {
         "name": random_lower_string(),
-        "interface_type": "test",
-        "template": {"table": test_table_template().dict()},
+        "template": test_table_template().dict(),
     }
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/",
         headers=superuser_token_headers,
         json=data,
     )
     content = response.json()
     assert response.status_code == 200
     assert content["name"] == data["name"]
-    assert content["interface_type"] == data["interface_type"]
+    assert content["interface_type"] == FORM_INPUT_INTERFACE_TYPE
     assert content["template"] == data["template"]
 
 
-def test_create_interface_fail_duplicate_table_name(
+def test_create_form_input_interface_fail_duplicate_table_name(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """
@@ -40,40 +45,36 @@ def test_create_interface_fail_duplicate_table_name(
     exists
     """
     name = random_lower_string()
-    interface_type = "test"
-    template = {"table": test_table_template().dict()}
-    interface_in = schemas.InterfaceCreate(
-        name=name, interface_type=interface_type, template=template
-    )
-    crud.interface.create(db=db, obj_in=interface_in, created_by_id=1)
+    template = test_table_template().dict()
+    form_input_in = schemas.FormInputCreate(name=name, template=template)
+    crud.form_input.create(db=db, obj_in=form_input_in, created_by_id=1)
     data = {
         "name": name,
-        "interface_type": interface_type,
         "template": template,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/",
         headers=superuser_token_headers,
         json=data,
     )
     content = response.json()
     assert response.status_code == 400
     assert content["detail"] == (
-        "An interface with that table name already exists, rename your template table."
+        "A form input interface with that table name already exists, "
+        "rename your template table."
     )
 
 
-def test_create_interface_fail_not_superuser(
+def test_create_form_input_interface_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """If the user attempting to access the endpoint is not a superuser"""
     data = {
         "name": random_lower_string(),
-        "interface_type": "test",
-        "template": {"table": test_table_template().dict()},
+        "template": test_table_template().dict(),
     }
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/",
         headers=normal_user_token_headers,
         json=data,
     )
@@ -85,46 +86,47 @@ def test_create_interface_fail_not_superuser(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-# region | Tests for Interface read one endpoint ---------------------------------------
+# region | Tests for Form Input Interface read one endpoint ----------------------------
 # --------------------------------------------------------------------------------------
 
 
-def test_read_interface(
+def test_read_form_input_interface(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully retrieve an interface by ID"""
-    interface = create_random_interface(db)
+    """Successfully retrieve a form input by ID"""
+    form_input = create_random_form_input_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
-    assert content["id"] == interface.id
-    assert content["name"] == interface.name
-    assert content["interface_type"] == interface.interface_type
-    assert content["template"] == interface.template
+    assert content["id"] == form_input.id
+    assert content["name"] == form_input.name
+    assert content["interface_type"] == FORM_INPUT_INTERFACE_TYPE
+    assert content["template"] == form_input.template
 
 
-def test_read_interface_fail_not_exist(
+def test_read_form_input_interface_fail_not_exist(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Fail when the interface doesn't exist"""
+    """Fail when the form input interface doesn't exist"""
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{-1}",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
     assert content["detail"] == "Cannot find interface."
 
 
-def test_read_interface_fail_not_superuser(
+def test_read_form_input_interface_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """If the user attempting to access the endpoint is not a superuser"""
-    interface = create_random_interface(db)
+    form_input = create_random_form_input_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=normal_user_token_headers,
     )
     content = response.json()
@@ -135,39 +137,43 @@ def test_read_interface_fail_not_superuser(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-# region | Tests for Interface read multi endpoint -------------------------------------
+# region | Tests for Form Input Interface read multi endpoint --------------------------
 # --------------------------------------------------------------------------------------
 
 
-def test_read_multi_interface(
+def test_read_multi_form_input_interface(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully retrieve multiple interfaces"""
-    interfaces = [create_random_interface(db) for i in range(10)]
+    form_inputs = [create_random_form_input_interface(db) for i in range(10)]
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/form-inputs/",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
-    for interface in interfaces:
+    for form_input in form_inputs:
         found_match = False
-        for stored_interface in content:
-            id_match = stored_interface["id"] == interface.id
-            name_match = stored_interface["name"] == interface.name
-            type_match = stored_interface["interface_type"] == interface.interface_type
-            template_match = stored_interface["template"] == interface.template
+        for stored_form_input in content:
+            id_match = stored_form_input["id"] == form_input.id
+            name_match = stored_form_input["name"] == form_input.name
+            type_match = (
+                stored_form_input["interface_type"] == FORM_INPUT_INTERFACE_TYPE
+            )
+            template_match = stored_form_input["template"] == form_input.template
             if id_match and name_match and type_match and template_match:
                 found_match = True
                 break
         assert found_match
 
 
-def test_read_multi_interface_fail_not_superuser(
+def test_read_multi_form_input_interface_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """Fail if the user is not a superuser"""
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/", headers=normal_user_token_headers,
+        f"{settings.API_V1_STR}/interfaces/form-inputs/",
+        headers=normal_user_token_headers,
     )
     content = response.json()
     assert response.status_code == 400
@@ -177,36 +183,36 @@ def test_read_multi_interface_fail_not_superuser(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-# region | Tests for Interface update endpoint -----------------------------------------
+# region | Tests for Form Input Interface update endpoint ------------------------------
 # --------------------------------------------------------------------------------------
 
 
-def test_update_interface(
+def test_update_form_input_interface(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully update an interface"""
-    interface = create_random_interface(db)
+    """Successfully update a form input interface"""
+    form_input = create_random_form_input_interface(db)
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=superuser_token_headers,
         json=data,
     )
     content = response.json()
     assert response.status_code == 200
     assert content["name"] == data["name"]
-    assert content["id"] == interface.id
-    assert content["interface_type"] == interface.interface_type
-    assert content["template"] == interface.template
+    assert content["id"] == form_input.id
+    assert content["interface_type"] == FORM_INPUT_INTERFACE_TYPE
+    assert content["template"] == form_input.template
 
 
-def test_update_interface_fail_not_exists(
+def test_update_form_input_interface_fail_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Fail if the interface doesn't exist"""
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/interfaces/{-1}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{-1}",
         headers=superuser_token_headers,
         json=data,
     )
@@ -215,14 +221,14 @@ def test_update_interface_fail_not_exists(
     assert content["detail"] == "Cannot find interface."
 
 
-def test_update_interface_fail_not_superuser(
+def test_update_form_input_interface_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """Fail if the user is not a superuser"""
-    interface = create_random_interface(db)
+    form_input = create_random_form_input_interface(db)
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=normal_user_token_headers,
         json=data,
     )
@@ -231,14 +237,15 @@ def test_update_interface_fail_not_superuser(
     assert content["detail"] == "The user is not a superuser"
 
 
-def test_update_interface_fail_table_created(
+def test_update_form_input_interface_fail_table_created(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    interface = create_random_interface(db)
-    crud.interface.create_template_table(db, id=interface.id)
-    data = {"template": {"table": test_table_template().dict()}}
+    """Fail if the table has already been created"""
+    form_input = create_random_form_input_interface(db)
+    crud.form_input.create_template_table(db, id=form_input.id)
+    data = {"template": test_table_template().dict()}
     response = client.put(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=superuser_token_headers,
         json=data,
     )
@@ -252,46 +259,46 @@ def test_update_interface_fail_table_created(
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
-# region | Tests for Interface delete endpoint -----------------------------------------
+# region | Tests for Form Input Interface delete endpoint ------------------------------
 # --------------------------------------------------------------------------------------
 
 
-def test_delete_interface(
+def test_delete_form_input_interface(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully delete an interface"""
-    interface = create_random_interface(db)
+    """Successfully delete a form input interface"""
+    form_input = create_random_form_input_interface(db)
     response = client.delete(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=superuser_token_headers,
     )
-    stored_interface = crud.interface.get(db, id=interface.id)
+    stored_interface = crud.form_input.get(db, id=form_input.id)
     content = response.json()
-    # breakpoint()
     assert response.status_code == 200
-    assert content["name"] == interface.name
+    assert content["name"] == form_input.name
     assert stored_interface is None
 
 
-def test_delete_interface_fail_not_exists(
+def test_delete_form_input_interface_fail_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Fail if the interface doesn't exist"""
+    """Fail if the form input interface doesn't exist"""
     response = client.delete(
-        f"{settings.API_V1_STR}/interfaces/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{-1}",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
     assert content["detail"] == "Cannot find interface."
 
 
-def test_delete_interface_fail_not_superuser(
+def test_delete_form_input_interface_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """Fail if the user is not a superuser"""
-    interface = create_random_interface(db)
+    form_input = create_random_form_input_interface(db)
     response = client.delete(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}",
         headers=normal_user_token_headers,
     )
     content = response.json()
@@ -309,24 +316,24 @@ def test_delete_interface_fail_not_superuser(
 def test_build_table_endpoint(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully build an interface's backing table"""
-    interface = create_random_interface(db)
+    """Successfully build a form input interface's backing table"""
+    form_input = create_random_form_input_interface(db)
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}/build_table",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}/build_table",
         headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
-    assert content["name"] == interface.name
+    assert content["name"] == form_input.name
     assert content["table_created"]
 
 
 def test_build_table_fail_interface_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Fail if the interface doesn't exist"""
+    """Fail if the form input interface doesn't exist"""
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/{-1}/build_table",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{-1}/build_table",
         headers=superuser_token_headers,
     )
     content = response.json()
@@ -338,9 +345,9 @@ def test_build_table_fail_not_superuser(
     client: TestClient, normal_user_token_headers: dict, db: Session
 ) -> None:
     """Fail if the user is not a superuser"""
-    interface = create_random_interface(db)
+    form_input = create_random_form_input_interface(db)
     response = client.post(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}/build_table",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}/build_table",
         headers=normal_user_token_headers,
     )
     content = response.json()
@@ -355,14 +362,14 @@ def test_build_table_fail_not_superuser(
 # --------------------------------------------------------------------------------------
 
 
-def test_read_interface_schema(
+def test_read_form_input_interface_schema(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Successfully retrieve an interface schema"""
+    """Successfully retrieve a form input interface schema"""
     table_name = "form_input_test_table"
-    interface = crud.interface.get_by_template_table_name(db, table_name=table_name)
+    form_input = crud.form_input.get_by_template_table_name(db, table_name=table_name)
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}/schema",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}/schema",
         headers=superuser_token_headers,
     )
     content = response.json()
@@ -370,12 +377,12 @@ def test_read_interface_schema(
     assert content["title"] == table_name
 
 
-def test_read_interface_schema_fail_not_exists(
+def test_read_form_input_interface_schema_fail_not_exists(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    """Fail when the interface specified isn't in the database"""
+    """Fail when the form input interface specified isn't in the database"""
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{-1}/schema",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{-1}/schema",
         headers=superuser_token_headers,
     )
     content = response.json()
@@ -383,13 +390,13 @@ def test_read_interface_schema_fail_not_exists(
     assert content["detail"] == "Cannot find interface."
 
 
-def test_read_interface_schema_fail_table_not_created(
+def test_read_form_input_interface_schema_fail_table_not_created(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Fail when the backing table hasn't been created yet"""
-    interface = create_random_interface(db)
+    form_input = create_random_form_input_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/interfaces/{interface.id}/schema",
+        f"{settings.API_V1_STR}/interfaces/form-inputs/{form_input.id}/schema",
         headers=superuser_token_headers,
     )
     content = response.json()

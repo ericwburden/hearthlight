@@ -218,7 +218,8 @@ class AccessControl(Generic[ModelType, PermissionType]):
 
 
 class CRUDInterfaceBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
-    def __init__(self, table_name: str):
+    def __init__(self, id: int, table_name: str):
+        self.interface_id = id
         self.model = get_generic_model(table_name)
         self.schema = get_generic_schema(table_name)
 
@@ -229,8 +230,10 @@ class CRUDInterfaceBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType])
         return self.schema
 
     def create(self, db: Session, *, obj_in: Dict[str, Any]) -> ModelType:
-        self.schema(**obj_in)  # Checks for validation errors
-        return super().create(db, obj_in=obj_in)
+        # Inject the interface id as a foreign key and validate the
+        # structure of the obj_in against the target table model
+        new_obj = self.schema(**obj_in, interface_id=self.interface_id)
+        return super().create(db, obj_in=new_obj)
 
     def update(
         self, db: Session, *, db_obj: ModelType, obj_in: Dict[str, Any],

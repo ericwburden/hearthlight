@@ -7,16 +7,12 @@ from sqlalchemy import MetaData
 
 from app import crud
 from app.core.config import settings
+from app.db import base
 from app.db.session import SessionLocal, engine
 from app.main import app
-
-from app.models.node import Node
 from app.models.user import User
-from app.models.user_group import UserGroup, UserGroupUserRel, UserGroupPermissionRel
-from app.models.permission import Permission, NodePermission
-from app.models.interface import Interface
 
-from app.schemas.interface import InterfaceCreate
+from app.schemas.interface import FormInputCreate
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import get_superuser_token_headers, get_superuser
 
@@ -57,16 +53,10 @@ def normal_user(client: TestClient) -> User:
 
 def clear_db():
     db = SessionLocal()
-
     models = [
-        UserGroupPermissionRel,
-        NodePermission,
-        Permission,
-        UserGroupUserRel,
-        UserGroup,
-        Node,
-        Interface,
-        User,
+        cls
+        for name, cls in base.__dict__.items()
+        if isinstance(cls, type) and name != "Base"
     ]
     model_table_names = [m.__tablename__ for m in models]
     model_table_names.append("alembic_version")
@@ -97,41 +87,36 @@ def clear_db():
 def create_interface_form_input_testing_table():
     db = SessionLocal()
     name = "form_input_test_table"
-    interface_type = "test"
     template = {
-        "table": {
-            "table_name": name,
-            "columns": [
-                {
-                    "column_name": "id",
-                    "data_type": "Integer",
-                    "kwargs": {"primary_key": True, "index": True},
-                },
-                {
-                    "column_name": "name",
-                    "data_type": "String(256)",
-                    "kwargs": {"unique": True, "nullable": False},
-                },
-                {
-                    "column_name": "date_created",
-                    "data_type": "Date",
-                    "kwargs": {"nullable": False},
-                },
-                {"column_name": "an_integer", "data_type": "Integer"},
-                {
-                    "column_name": "node_id",
-                    "data_type": "Integer",
-                    "args": ["ForeignKey('node.id')"],
-                    "kwargs": {"nullable": True},
-                },
-            ],
-        }
+        "table_name": name,
+        "columns": [
+            {
+                "column_name": "id",
+                "data_type": "Integer",
+                "kwargs": {"primary_key": True, "index": True},
+            },
+            {
+                "column_name": "name",
+                "data_type": "String(256)",
+                "kwargs": {"unique": True, "nullable": False},
+            },
+            {
+                "column_name": "date_created",
+                "data_type": "Date",
+                "kwargs": {"nullable": False},
+            },
+            {"column_name": "an_integer", "data_type": "Integer"},
+            {
+                "column_name": "node_id",
+                "data_type": "Integer",
+                "args": ["ForeignKey('node.id')"],
+                "kwargs": {"nullable": True},
+            },
+        ],
     }
-    interface_in = InterfaceCreate(
-        name=name, interface_type=interface_type, template=template
-    )
-    interface = crud.interface.create(db=db, obj_in=interface_in, created_by_id=1)
-    crud.interface.create_template_table(db, id=interface.id)
+    form_input_in = FormInputCreate(name=name, template=template)
+    form_input = crud.form_input.create(db=db, obj_in=form_input_in, created_by_id=1)
+    crud.form_input.create_template_table(db, id=form_input.id)
 
 
 def pytest_sessionstart(session):

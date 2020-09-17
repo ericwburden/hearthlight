@@ -12,8 +12,8 @@ from typing import Any, Tuple
 
 from app.db.base_class import Base, Default
 from app.db.session import engine
-from app.crud.base import AccessControl, CRUDBaseLogging
-from app.models.interface import FormInputInterface, Interface
+from app.crud.base import AccessControl, CRUDBaseLogging, CRUDInterfaceBase
+from app.models.interface import FormInputInterface
 from app.models.permission import InterfacePermission
 from app.schemas.interface import (
     FormInputCreate,
@@ -23,10 +23,26 @@ from app.schemas.interface import (
 )
 
 
-class CRUDInterfaceFormInput(
+class CRUDFormInputInterfaceTable(CRUDInterfaceBase):
+    pass
+
+
+class CRUDFormInputInterface(
     AccessControl[FormInputInterface, InterfacePermission],
     CRUDBaseLogging[FormInputInterface, FormInputCreate, FormInputUpdate],
 ):
+    def get_by_template_table_name(
+        self, db: Session, *, table_name: str
+    ) -> FormInputInterface:
+        query = db.query(FormInputInterface).filter(
+            FormInputInterface.template["table_name"].astext == table_name
+        )
+        return query.first()
+
+    def get_table_crud(self, db: Session, *, id: int) -> CRUDFormInputInterfaceTable:
+        form_input = db.query(FormInputInterface).get(id)
+        return CRUDFormInputInterfaceTable(id, form_input.template["table_name"])
+
     def create_template_table(self, db: Session, *, id: int) -> FormInputInterface:
         """Add a table to the database from an interface template
 
@@ -66,6 +82,12 @@ class CRUDInterfaceFormInput(
         columns = {
             c.column_name: self._column_def_to_column(c) for c in template.columns
         }
+
+        # Inject a foreign key to the interface table into the
+        # table structure
+        columns["interface_id"] = Column(
+            Integer, ForeignKey("interface.id"), index=True, nullable=False
+        )
         return type(table_name, base_class, columns)
 
     def _column_def_to_column(self, template: ColumnTemplate) -> Column:
@@ -92,4 +114,4 @@ class CRUDInterfaceFormInput(
         return eval(column_str)
 
 
-form_input = CRUDInterfaceFormInput(FormInputInterface, InterfacePermission)
+form_input = CRUDFormInputInterface(FormInputInterface, InterfacePermission)

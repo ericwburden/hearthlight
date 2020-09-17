@@ -23,7 +23,7 @@ from app.schemas.interface import (
 )
 
 
-class CRUDFormInputInterfaceTable(CRUDInterfaceBase):
+class CRUDFormInputInterfaceEntry(CRUDInterfaceBase):
     pass
 
 
@@ -39,9 +39,9 @@ class CRUDFormInputInterface(
         )
         return query.first()
 
-    def get_table_crud(self, db: Session, *, id: int) -> CRUDFormInputInterfaceTable:
+    def get_table_crud(self, db: Session, *, id: int) -> CRUDFormInputInterfaceEntry:
         form_input = db.query(FormInputInterface).get(id)
-        return CRUDFormInputInterfaceTable(id, form_input.template["table_name"])
+        return CRUDFormInputInterfaceEntry(id, form_input.template["table_name"])
 
     def create_template_table(self, db: Session, *, id: int) -> FormInputInterface:
         """Add a table to the database from an interface template

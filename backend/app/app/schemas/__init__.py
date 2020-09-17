@@ -6,6 +6,10 @@ from .interface import (
     InterfaceTemplate,
     TableTemplate,
     ColumnTemplate,
+    FormInput,
+    FormInputCreate,
+    FormInputInDB,
+    FormInputUpdate,
 )
 from .msg import Msg
 from .node import Node, NodeCreate, NodeInDB, NodeUpdate

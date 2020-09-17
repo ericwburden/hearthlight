@@ -109,7 +109,7 @@ def create_interface_form_input_testing_table():
             {
                 "column_name": "node_id",
                 "data_type": "Integer",
-                "args": ["ForeignKey('node.id')"],
+                "args": ["ForeignKey('node.id', ondelete='CASCADE')"],
                 "kwargs": {"nullable": True},
             },
         ],

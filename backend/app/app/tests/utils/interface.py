@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -8,11 +8,12 @@ from app.schemas import (
     InterfaceTemplate,
     TableTemplate,
     ColumnTemplate,
+    QueryTemplate,
 )
 from app.tests.utils.utils import random_lower_string
 
 
-def test_table_template(name: Optional[str] = None) -> Dict[str, Any]:
+def test_table_template(name: Optional[str] = None) -> TableTemplate:
     if not name:
         name = random_lower_string()
     return TableTemplate(
@@ -25,6 +26,85 @@ def test_table_template(name: Optional[str] = None) -> Dict[str, Any]:
             )
         ],
     )
+
+
+def test_query_template() -> QueryTemplate:
+    test_query = {
+        "select": {
+            "columns": [
+                {"table": {"name": "user", "alias": "monkey"}, "column": "full_name"},
+                {"table": {"name": "user", "alias": "monkey"}, "column": "email"},
+            ],
+            "calculated_columns": [
+                {
+                    "func": "count",
+                    "args": [{"type": "scalar", "value": 1}],
+                    "label": "num_groups",
+                }
+            ],
+        },
+        "joins": [
+            {
+                "table": {"name": "user_group_user_rel", "alias": None},
+                "by": [
+                    {
+                        "left": {
+                            "type": "column",
+                            "table": {"name": "user", "alias": "monkey"},
+                            "value": "id",
+                        },
+                        "comparator": "==",
+                        "right": {
+                            "type": "column",
+                            "table": {"name": "user_group_user_rel", "alias": None},
+                            "value": "user_id",
+                        },
+                    },
+                ],
+            },
+            {
+                "table": {"name": "user_group", "alias": None},
+                "by": [
+                    {
+                        "left": {
+                            "type": "column",
+                            "table": {"name": "user_group_user_rel"},
+                            "value": "user_group_id",
+                        },
+                        "comparator": "==",
+                        "right": {
+                            "type": "column",
+                            "table": {"name": "user_group", "alias": None},
+                            "value": "id",
+                        },
+                    },
+                ],
+            },
+        ],
+        "filters": [
+            {
+                "type": "and",
+                "filters": [
+                    {
+                        "left": {
+                            "type": "column",
+                            "table": {"name": "user", "alias": "monkey"},
+                            "value": "id",
+                        },
+                        "comparator": ">",
+                        "right": {"type": "scalar", "value": 1},
+                    },
+                ],
+            },
+        ],
+        "group_by": {
+            "columns": [
+                {"table": {"name": "user", "alias": "monkey"}, "column": "full_name"},
+                {"table": {"name": "user", "alias": "monkey"}, "column": "email"},
+            ]
+        },
+    }
+    return QueryTemplate(**test_query)
 
 
 def create_random_interface(db: Session, table_name: Optional[str] = None) -> Interface:

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.db.base_class import Base, Default
 
@@ -60,7 +60,7 @@ class Interface(Base, Default):
 
 class FormInputInterface(Interface):
     id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
-    template = Column(JSON, nullable=False)
+    template = Column(JSONB, nullable=False)
     table_created = Column(Boolean, default=False)
 
     __mapper_args__ = {"polymorphic_identity": "form_input_interface"}
@@ -68,6 +68,10 @@ class FormInputInterface(Interface):
 
 class QueryInterface(Interface):
     id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
-    template = Column(JSON, nullable=False)
+    template = Column(JSONB, nullable=False)
+    refresh_interval = Column(Integer, nullable=False)
+    last_run = Column(DateTime)
+    last_result = Column(JSONB, nullable=True)
+    total_rows = Column(Integer, default=0)
 
     __mapper_args__ = {"polymorphic_identity": "query_interface"}

@@ -25,7 +25,7 @@ class FormInputUpdate(FormInputBase):
 # Properties shared by models stored in DB
 class FormInputInDBBase(FormInputBase):
     id: int
-    interface_type: str = "form_input"
+    interface_type: str = "form_input_interface"
     table_created: bool = False
     created_at: datetime
     updated_at: datetime

@@ -10,6 +10,11 @@ from .interface import (
     FormInputCreate,
     FormInputInDB,
     FormInputUpdate,
+    QueryTemplate,
+    Query,
+    QueryCreate,
+    QueryInDB,
+    QueryUpdate,
 )
 from .msg import Msg
 from .node import Node, NodeCreate, NodeInDB, NodeUpdate

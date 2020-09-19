@@ -21,6 +21,9 @@ api_router.include_router(
     prefix="/interfaces/form-inputs",
     tags=["interfaces", "form inputs"],
 )
+api_router.include_router(
+    interfaces.query_router, prefix="/queries", tags=["interfaces", "queries"]
+)
 api_router.include_router(nodes.router, prefix="/nodes", tags=["nodes"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(

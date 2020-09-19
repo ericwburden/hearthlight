@@ -31,6 +31,9 @@ class QueryInDBBase(QueryBase):
     last_run: Optional[datetime] = None
     result_expires: Optional[datetime] = 86400
     last_result: Optional[List[Dict[str, Any]]]
+    last_page: int
+    last_page_size: int
+    total_rows: int
     created_at: datetime
     updated_at: datetime
     created_by_id: int

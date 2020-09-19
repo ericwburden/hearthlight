@@ -140,6 +140,8 @@ class CRUDQueryInterface(
         query_converter = QueryTemplateConverter(Base, engine)
         query_query = query_converter.convert(template, db)
         query.total_rows = query_query.count()
+        query.last_page = page
+        query.last_page_size = page_size
         result = [
             model_encoder(q)
             for q in query_query.limit(page_size).offset(page * page_size).all()

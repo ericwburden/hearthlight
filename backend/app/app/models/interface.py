@@ -72,6 +72,8 @@ class QueryInterface(Interface):
     refresh_interval = Column(Integer, nullable=False)
     last_run = Column(DateTime)
     last_result = Column(JSONB, nullable=True)
+    last_page = Column(Integer, default=0)
+    last_page_size = Column(Integer, default=25)
     total_rows = Column(Integer, default=0)
 
     __mapper_args__ = {"polymorphic_identity": "query_interface"}

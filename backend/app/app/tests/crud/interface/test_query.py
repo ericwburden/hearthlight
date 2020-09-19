@@ -140,3 +140,19 @@ def test_run_query_fetch_last_run(db: Session, superuser: User) -> None:
     db.refresh(query)
     assert query_result
     assert query.last_run == pre_fetch_last_run
+
+
+def test_run_query_with_error(db: Session, superuser: User) -> None:
+    name = random_lower_string()
+    refresh_interval = timedelta(days=1)
+    query_template = {
+        "select": {"columns": [{"table": {"name": "garbage"}, "column": "*"}]}
+    }
+    query_in = QueryCreate(
+        name=name, template=query_template, refresh_interval=refresh_interval
+    )
+    query = crud.query.create(db=db, obj_in=query_in, created_by_id=superuser.id)
+    query_result = crud.query.run_query(db=db, id=query.id)
+    db.refresh(query)
+    assert query_result
+    assert "msg" in query_result[0].keys()

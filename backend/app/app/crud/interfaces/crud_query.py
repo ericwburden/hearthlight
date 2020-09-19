@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
@@ -7,11 +8,11 @@ from sqlalchemy.orm.query import Query
 from typing import Any, Dict, Iterable, List, Optional
 
 from app.crud.base import AccessControl, CRUDBaseLogging
-from app.crud.utils import model_encoder
 from app.db.base_class import Base
 from app.db.session import engine
 from app.models.interface import QueryInterface
 from app.models.permission import InterfacePermission
+from app.schemas import Msg
 from app.schemas.interface import (
     QueryCreate,
     QueryUpdate,
@@ -69,11 +70,14 @@ class QueryTemplateConverter:
         """
         tables = {}
         for table_item in table_items:
+            table_name = table_item["name"]
             table_key = (
                 table_item["alias"] if table_item["alias"] else table_item["name"]
             )
+            if table_name not in self.metadata.tables.keys():
+                raise KeyError(f"{table_name} is not a valid table name.")
+
             if table_key not in tables.keys():
-                table_name = table_item["name"]
                 if table_name in self.base.metadata.tables.keys():
                     table = self.base.metadata.tables[table_name]
                 else:
@@ -138,18 +142,21 @@ class CRUDQueryInterface(
                 return query.last_result
         template = QueryTemplate(**query.template)
         query_converter = QueryTemplateConverter(Base, engine)
-        query_query = query_converter.convert(template, db)
-        query.total_rows = query_query.count()
+        try:
+            query_query = query_converter.convert(template, db)
+            result = query_query.limit(page_size).offset(page * page_size).all()
+            result_dict = [r._asdict() for r in result]
+            query.total_rows = query_query.count()
+        except Exception as e:
+            result = Msg(msg=getattr(e, "message", repr(e)))
+            result_dict = [result.dict()]
+            query.total_rows = None
         query.last_page = page
         query.last_page_size = page_size
-        result = [
-            model_encoder(q)
-            for q in query_query.limit(page_size).offset(page * page_size).all()
-        ]
         query.last_run = datetime.now()
-        query.last_result = result
+        query.last_result = jsonable_encoder(result_dict)
         db.commit()
-        return result
+        return result_dict
 
 
 query = CRUDQueryInterface(QueryInterface, InterfacePermission)

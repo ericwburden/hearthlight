@@ -7,6 +7,7 @@ from app.schemas import PermissionTypeEnum
 from app.tests.utils.node import create_random_node
 from app.tests.utils.user import create_random_user
 from app.tests.utils.user_group import create_random_user_group
+from app.tests.utils.query import create_random_query_interface
 
 
 def node_permission_setup(
@@ -245,6 +246,31 @@ def form_input_permission_setup(
         )
     return {
         "form_input": form_input,
+        "permission": permission,
+        "user_group": user_group,
+        "user": user,
+    }
+
+
+def query_permission_setup(
+    db: Session, *, permission_type: PermissionTypeEnum, permission_enabled: bool = True
+) -> Dict[
+    str, Union[models.QueryInterface, models.Permission, models.UserGroup, models.User]
+]:
+    query = create_random_query_interface(db)
+    user = create_random_user(db)
+    user_group = create_random_user_group(db)
+    permission = crud.query.get_permission(
+        db, id=query.id, permission_type=permission_type
+    )
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+    crud.permission.grant(db, user_group_id=user_group.id, permission_id=permission.id)
+    if not permission_enabled:
+        crud.permission.revoke(
+            db, user_group_id=user_group.id, permission_id=permission.id
+        )
+    return {
+        "query": query,
         "permission": permission,
         "user_group": user_group,
         "user": user,

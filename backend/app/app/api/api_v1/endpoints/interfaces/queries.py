@@ -231,7 +231,7 @@ def query_interface_run_query(
     query interface or be a superuser.
 
     ## Args:
-        
+
     - resource_id (int): Primary key ID for the query interface.
     - db (Session, optional): SQLAlchemy Session. Defaults to
     Depends(deps.get_db).
@@ -251,7 +251,7 @@ def query_interface_run_query(
     on the query interface.
 
     # Returns:
-    
+
     - List[Dict[str, Any]]: List of query results, schema dependent on
     the query template 'select' clause.
     """

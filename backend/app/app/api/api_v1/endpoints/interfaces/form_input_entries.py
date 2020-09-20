@@ -30,7 +30,7 @@ def create_form_input_entry(
     form_input_entry_in: Dict[str, Any] = Body(...),
     current_user: models.User = Depends(interface_create_validator),
 ) -> BaseModel:
-    """Create an entry in a form input backing table
+    """# Create an entry in a form input backing table
 
     Based on a FormInput schema (~/interfaces/form-inputs/{id}/schema),
     create a new entry in a FormInputInterface backing table. If the
@@ -90,7 +90,7 @@ def read_form_input_entry(
     entry_id: int,
     current_user: models.User = Depends(interface_read_validator),
 ) -> BaseModel:
-    """Read one created form input entry
+    """# Read one created form input entry
 
     In order to read from the form input interface's backing table, the
     user needs to either have read permissions on the form input or be
@@ -147,7 +147,7 @@ def read_form_inputs(
     limit: int = 100,
     current_user: models.User = Depends(interface_read_validator),
 ) -> List[BaseModel]:
-    """Read multiple form input entries
+    """# Read multiple form input entries
 
     Read multiple entries from the form input interface backing table.
     The user must either have read permissions on the form input
@@ -202,7 +202,7 @@ def update_form_input(
     form_input_in: Dict[str, Any] = Body(...),
     current_user: models.User = Depends(interface_update_validator),
 ) -> BaseModel:
-    """Update a form input interface entry
+    """# Update a form input interface entry
 
     Based on a FormInput schema (~/interfaces/form-inputs/{id}/schema),
     update an entry in a FormInputInterface backing table. If the
@@ -266,7 +266,7 @@ def delete_form_input(
     entry_id: int,
     current_user: models.User = Depends(interface_delete_validator),
 ) -> BaseModel:
-    """Delete a form input interface entry
+    """# Delete a form input interface entry
 
     In order to delete from the form input interface's backing table,
     the user needs to either have delete permissions on the form input

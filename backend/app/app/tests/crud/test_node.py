@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.node import NodeCreate, NodeUpdate
 from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user_group import UserGroupCreate
+from app.tests.utils.form_input import create_random_form_input_interface
 from app.tests.utils.user import create_random_user
 from app.tests.utils.node import create_random_node
 from app.tests.utils.utils import random_lower_string
@@ -242,3 +243,20 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
+
+
+def test_add_interface_to_node(db: Session, superuser: User) -> None:
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    result = crud.node.add_interface(db, node=node, interface=interface)
+    assert result is node
+    assert interface in node.interfaces
+
+
+def test_remove_interface_from_node(db: Session, superuser: User) -> None:
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    crud.node.add_interface(db, node=node, interface=interface)
+    result = crud.node.remove_interface(db, node=node, interface=interface)
+    assert result is node
+    assert interface not in node.interfaces

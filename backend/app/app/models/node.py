@@ -82,3 +82,10 @@ class Node(Base, Default):
         foreign_keys="NodePermission.resource_id",
         cascade="all, delete",
     )
+    interfaces = relationship(
+        "Interface",
+        secondary="interface_node_rel",
+        back_populates="nodes",
+        cascade="all, delete",
+        passive_deletes=True,
+    )

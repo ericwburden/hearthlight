@@ -8,6 +8,15 @@ from app.db.base_class import Base, Default
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
+    from .node import Node  # noqa: F401
+
+
+class InterfaceNodeRel(Base, Default):
+    """Many-to-many association table for Interfaces and Nodes
+    """
+
+    interface_id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
+    node_id = Column(Integer, ForeignKey("node.id"), primary_key=True)
 
 
 class Interface(Base, Default):
@@ -50,6 +59,13 @@ class Interface(Base, Default):
     )
     updated_by_user = relationship(
         "User", back_populates="interfaces_updated", foreign_keys=[updated_by_id]
+    )
+    nodes = relationship(
+        "Node",
+        secondary="interface_node_rel",
+        back_populates="interfaces",
+        cascade="all, delete",
+        passive_deletes=True,
     )
 
     __mapper_args__ = {

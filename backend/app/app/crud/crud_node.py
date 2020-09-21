@@ -3,8 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBaseLogging, AccessControl, node_tree_ids
-from app.models.node import Node
-from app.models.permission import NodePermission
+from app.models import Interface, Node, NodePermission
 from app.schemas.node import NodeCreate, NodeUpdate
 
 
@@ -79,6 +78,40 @@ class CRUDNode(
         """
         node_ids = node_tree_ids(db, id=id)
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
+
+    def add_interface(self, db: Session, *, node: Node, interface: Interface) -> Node:
+        """Attach an interface to a node
+
+        Args:
+            db (Session): SQLAlchemy Session
+            node (Node): The node to attach the interface to
+            interface (Interface): The interface to attach to the node
+
+        Returns:
+            Node: The node after attaching the interface
+        """
+        node.interfaces.append(interface)
+        db.commit()
+        db.refresh(node)
+        return node
+
+    def remove_interface(
+        self, db: Session, *, node: Node, interface: Interface
+    ) -> Node:
+        """Detach an interface from a node
+
+        Args:
+            db (Session): SQLAlchemy Session
+            node (Node): The node to detach the interface from
+            interface (Interface): The interface to detach from the node
+
+        Returns:
+            Node: The node after detaching the interface
+        """
+        node.interfaces.remove(interface)
+        db.commit()
+        db.refresh(node)
+        return node
 
 
 node = CRUDNode(Node, NodePermission)

@@ -29,7 +29,9 @@ def test_create_form_input_interface(
         "refresh_interval": randint(36000, 576000),
     }
     response = client.post(
-        f"{settings.API_V1_STR}/queries/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/interfaces/queries/",
+        headers=superuser_token_headers,
+        json=data,
     )
     content = response.json()
     assert response.status_code == 200
@@ -49,7 +51,9 @@ def test_create_form_input_interface_fail_not_superuser(
         "refresh_interval": randint(36000, 576000),
     }
     response = client.post(
-        f"{settings.API_V1_STR}/queries/", headers=normal_user_token_headers, json=data,
+        f"{settings.API_V1_STR}/interfaces/queries/",
+        headers=normal_user_token_headers,
+        json=data,
     )
     content = response.json()
     assert response.status_code == 400
@@ -69,7 +73,8 @@ def test_read_form_input_interface(
     """Successfully retrieve a query by ID"""
     query = create_random_query_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{query.id}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
@@ -85,7 +90,8 @@ def test_read_form_input_interface_fail_not_exist(
 ) -> None:
     """Fail when the query interface doesn't exist"""
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{-1}",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
@@ -98,7 +104,7 @@ def test_read_form_input_interface_fail_not_superuser(
     """If the user attempting to access the endpoint is not a superuser"""
     form_input = create_random_query_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{form_input.id}",
+        f"{settings.API_V1_STR}/interfaces/queries/{form_input.id}",
         headers=normal_user_token_headers,
     )
     content = response.json()
@@ -119,7 +125,7 @@ def test_read_multi_query_interface(
     """Successfully retrieve multiple interfaces"""
     form_inputs = [create_random_query_interface(db) for i in range(10)]
     response = client.get(
-        f"{settings.API_V1_STR}/queries/", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/", headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
@@ -141,7 +147,7 @@ def test_read_multi_query_interface_fail_not_superuser(
 ) -> None:
     """Fail if the user is not a superuser"""
     response = client.get(
-        f"{settings.API_V1_STR}/queries/", headers=normal_user_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/", headers=normal_user_token_headers,
     )
     content = response.json()
     assert response.status_code == 400
@@ -162,7 +168,7 @@ def test_update_query_interface(
     query = create_random_query_interface(db)
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/queries/{query.id}",
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}",
         headers=superuser_token_headers,
         json=data,
     )
@@ -181,7 +187,7 @@ def test_update_query_interface_fail_not_exists(
     """Fail if the interface doesn't exist"""
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/queries/{-1}",
+        f"{settings.API_V1_STR}/interfaces/queries/{-1}",
         headers=superuser_token_headers,
         json=data,
     )
@@ -197,7 +203,7 @@ def test_update_query_interface_fail_not_superuser(
     query = create_random_query_interface(db)
     data = {"name": random_lower_string()}
     response = client.put(
-        f"{settings.API_V1_STR}/queries/{query.id}",
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}",
         headers=normal_user_token_headers,
         json=data,
     )
@@ -219,7 +225,8 @@ def test_delete_query_interface(
     """Successfully delete a queryinterface"""
     query = create_random_query_interface(db)
     response = client.delete(
-        f"{settings.API_V1_STR}/queries/{query.id}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}",
+        headers=superuser_token_headers,
     )
     stored_query = crud.query.get(db, id=query.id)
     content = response.json()
@@ -233,7 +240,8 @@ def test_delete_query_interface_fail_not_exists(
 ) -> None:
     """Fail if the query interface doesn't exist"""
     response = client.delete(
-        f"{settings.API_V1_STR}/queries/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{-1}",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
@@ -246,7 +254,8 @@ def test_delete_query_interface_fail_not_superuser(
     """Fail if the user is not a superuser"""
     query = create_random_query_interface(db)
     response = client.delete(
-        f"{settings.API_V1_STR}/queries/{query.id}", headers=normal_user_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}",
+        headers=normal_user_token_headers,
     )
     content = response.json()
     assert response.status_code == 400
@@ -266,7 +275,7 @@ def test_query_interface_run_query(
     """Successfully run a query interface query"""
     query = create_random_query_interface(db)
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{query.id}/run",
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}/run",
         headers=superuser_token_headers,
     )
     content = response.json()
@@ -279,7 +288,8 @@ def test_query_interface_run_query_fail_not_exist(
 ) -> None:
     """Fail if the query interface doesn't exist"""
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{-1}/run", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{-1}/run",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
@@ -297,7 +307,8 @@ def test_query_interface_run_query_normal_user(
         client=client, email=user.email, db=db
     )
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{query.id}/run", headers=user_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}/run",
+        headers=user_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
@@ -317,7 +328,8 @@ def test_query_interface_run_query_normal_user_fail_no_permission(
         client=client, email=user.email, db=db
     )
     response = client.get(
-        f"{settings.API_V1_STR}/queries/{query.id}/run", headers=user_token_headers,
+        f"{settings.API_V1_STR}/interfaces/queries/{query.id}/run",
+        headers=user_token_headers,
     )
     content = response.json()
     assert response.status_code == 403

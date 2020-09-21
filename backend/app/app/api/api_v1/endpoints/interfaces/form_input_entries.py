@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.utils import model_encoder
 
 interface_read_validator = deps.UserPermissionValidator(
     schemas.ResourceTypeEnum.interface, schemas.PermissionTypeEnum.read
@@ -29,7 +30,7 @@ def create_form_input_entry(
     resource_id: int,
     form_input_entry_in: Dict[str, Any] = Body(...),
     current_user: models.User = Depends(interface_create_validator),
-) -> BaseModel:
+) -> Dict[str, Any]:
     """# Create an entry in a form input backing table
 
     Based on a FormInput schema (~/interfaces/form-inputs/{id}/schema),
@@ -63,7 +64,7 @@ def create_form_input_entry(
 
     ## Returns:
 
-    - BaseModel: The entry created, will match the schema for the form
+    - Dict[str, Any]: The entry created, will match the schema for the form
     input interface backing table.
     """
     form_input = crud.form_input.get(db, id=resource_id)
@@ -79,7 +80,7 @@ def create_form_input_entry(
         form_input_entry = form_input_crud.create(db, obj_in=form_input_entry_in)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.message)
-    return form_input_entry
+    return model_encoder(form_input_entry)
 
 
 @router.get("/{resource_id}/entries/{entry_id}", response_model=Dict[str, Any])
@@ -89,7 +90,7 @@ def read_form_input_entry(
     resource_id: int,
     entry_id: int,
     current_user: models.User = Depends(interface_read_validator),
-) -> BaseModel:
+) -> Dict[str, Any]:
     """# Read one created form input entry
 
     In order to read from the form input interface's backing table, the
@@ -120,7 +121,7 @@ def read_form_input_entry(
 
     ## Returns:
 
-    - BaseModel: The fetched entry, will match the schema for the form
+    - Dict[str, Any]: The fetched entry, will match the schema for the form
     input interface backing table.
     """
     form_input = crud.form_input.get(db, id=resource_id)
@@ -135,7 +136,7 @@ def read_form_input_entry(
     form_input_entry = form_input_crud.get(db, id=entry_id)
     if not form_input_entry:
         raise HTTPException(status_code=404, detail="Cannot find form input entry.")
-    return form_input_entry
+    return model_encoder(form_input_entry)
 
 
 @router.get("/{resource_id}/entries/", response_model=List[Dict[str, Any]])
@@ -146,7 +147,7 @@ def read_form_inputs(
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(interface_read_validator),
-) -> List[BaseModel]:
+) -> List[Dict[str, Any]]:
     """# Read multiple form input entries
 
     Read multiple entries from the form input interface backing table.
@@ -177,7 +178,7 @@ def read_form_inputs(
 
     ## Returns:
 
-    - List[BaseModel]: A list of form input entries. These will match
+    - List[Dict[str, Any]]: A list of form input entries. These will match
     the schema of the form input interface backing table.
     """
     form_input = crud.form_input.get(db, id=resource_id)
@@ -190,7 +191,7 @@ def read_form_inputs(
         )
     form_input_crud = crud.form_input.get_table_crud(db, id=resource_id)
     form_input_entries = form_input_crud.get_multi(db, skip=skip, limit=limit)
-    return form_input_entries
+    return model_encoder(form_input_entries)
 
 
 @router.put("/{resource_id}/entries/{entry_id}", response_model=Dict[str, Any])
@@ -201,7 +202,7 @@ def update_form_input(
     entry_id: int,
     form_input_in: Dict[str, Any] = Body(...),
     current_user: models.User = Depends(interface_update_validator),
-) -> BaseModel:
+) -> Dict[str, Any]:
     """# Update a form input interface entry
 
     Based on a FormInput schema (~/interfaces/form-inputs/{id}/schema),
@@ -237,7 +238,7 @@ def update_form_input(
 
     ## Returns:
 
-    - BaseModel: The updated form input entry, will match the schema for
+    - Dict[str, Any]: The updated form input entry, will match the schema for
     the form input interface backing table.
     """
     form_input = crud.form_input.get(db, id=resource_id)
@@ -255,7 +256,7 @@ def update_form_input(
     form_input_entry = form_input_crud.update(
         db, db_obj=form_input_entry, obj_in=form_input_in
     )
-    return form_input_entry
+    return model_encoder(form_input_entry)
 
 
 @router.delete("/{resource_id}/entries/{entry_id}", response_model=Dict[str, Any])
@@ -265,7 +266,7 @@ def delete_form_input(
     resource_id: int,
     entry_id: int,
     current_user: models.User = Depends(interface_delete_validator),
-) -> BaseModel:
+) -> Dict[str, Any]:
     """# Delete a form input interface entry
 
     In order to delete from the form input interface's backing table,
@@ -296,7 +297,7 @@ def delete_form_input(
 
     ## Returns:
 
-    - BaseModel: The deleted form input entry, will match the schema for
+    - Dict[str, Any]: The deleted form input entry, will match the schema for
     the form input interface backing table.
     """
     form_input = crud.form_input.get(db, id=resource_id)
@@ -312,4 +313,4 @@ def delete_form_input(
     if not form_input_entry:
         raise HTTPException(status_code=404, detail="Cannot find form input entry.")
     form_input_entry = form_input_crud.remove(db, id=entry_id)
-    return form_input_entry
+    return model_encoder(form_input_entry)

@@ -305,3 +305,103 @@ def delete_node(
         raise HTTPException(status_code=404, detail="Cannot find node.")
     node = crud.node.remove(db=db, id=resource_id)
     return node
+
+
+@router.post(
+    "/{resource_id}/interfaces/{interface_id}/add", response_model=schemas.Node
+)
+def add_interface_to_node(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    interface_id: int,
+    current_user: models.User = Depends(node_create_validator),
+) -> models.Node:
+    """# Add (attach) an interface to a node
+
+    In order to associate an interface with a node, the node and
+    interface must both exist in the database and the user must either
+    have create permissions for the parent node or be a superuser.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the parent node
+    - interface_id (int): Primary key ID for the interface
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(node_create_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When attempting to attach an interface to a
+    node that doesn't exist.
+    - HTTPException: 404 - When attempting to attach an interface that
+    doesn't exist to a node.
+    - HTTPException: 403 - When the user doesn't have create permissions
+    for the parent node.
+
+    ## Returns:
+
+    - models.Node: The node the interface was attached to.
+    """
+    node = crud.node.get(db=db, id=resource_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Cannot find node.")
+
+    interface = crud.interface.get(db=db, id=interface_id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+
+    node = crud.node.add_interface(db, node=node, interface=interface)
+    return node
+
+
+@router.post(
+    "/{resource_id}/interfaces/{interface_id}/remove", response_model=schemas.Node
+)
+def remove_interface_from_node(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    interface_id: int,
+    current_user: models.User = Depends(node_update_validator),
+) -> models.Node:
+    """# Remove (dettach) an interface from a node
+
+    In order to dissociate an interface from a node, the node and
+    interface must both exist in the database and the user must either
+    have update permissions for the parent node or be a superuser.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the parent node
+    - interface_id (int): Primary key ID for the interface
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(node_update_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When attempting to detach an interface from a
+    node that doesn't exist.
+    - HTTPException: 404 - When attempting to detach an interface that
+    doesn't exist from a node.
+    - HTTPException: 403 - When the user doesn't have update permissions
+    for the parent node.
+
+    ## Returns:
+
+    - models.Node: The node the interface was detached from.
+    """
+    node = crud.node.get(db=db, id=resource_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Cannot find node.")
+
+    interface = crud.interface.get(db=db, id=interface_id)
+    if not interface:
+        raise HTTPException(status_code=404, detail="Cannot find interface.")
+
+    node = crud.node.remove_interface(db, node=node, interface=interface)
+    return node

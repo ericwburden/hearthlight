@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.core.config import settings
 from app.schemas import PermissionTypeEnum
+from app.tests.utils.form_input import create_random_form_input_interface
 from app.tests.utils.user import authentication_token_from_email, create_random_user
 from app.tests.utils.utils import random_lower_string
 from app.tests.utils.node import create_random_node
@@ -676,6 +677,228 @@ def test_delete_node_fail_user_no_permission(
         f"User ID {setup['user'].id} does not have "
         f"{setup['permission'].permission_type} permissions for "
         f"{setup['permission'].resource_type} ID {setup['node'].id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node add interface endpoint -----------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_add_interface_to_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully add an interface to a node"""
+
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/add",
+        headers=superuser_token_headers,
+    )
+    db.refresh(node)
+    assert response.status_code == 200
+    assert interface in node.interfaces
+
+
+def test_add_interface_to_node_fail_node_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the node doesn't exist"""
+
+    interface = create_random_form_input_interface(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{-1}/interfaces/{interface.id}/add",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find node."
+
+
+def test_add_interface_to_node_fail_interface_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the interface doesn't exist"""
+
+    node = create_random_node(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{-1}/add",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_add_interface_to_node_normal_user(client: TestClient, db: Session) -> None:
+    """Successfully add an interface to a node as a normal user"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test",
+        permission_type=PermissionTypeEnum.create,
+        permission_enabled=True,
+    )
+    node = setup["node"]
+    user = setup["user"]
+    interface = create_random_form_input_interface(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/add",
+        headers=user_token_headers,
+    )
+    db.refresh(node)
+    assert response.status_code == 200
+    assert interface in node.interfaces
+
+
+def test_add_interface_to_node_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    """Successfully add an interface to a node as a normal user"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test",
+        permission_type=PermissionTypeEnum.create,
+        permission_enabled=False,
+    )
+    node = setup["node"]
+    user = setup["user"]
+    interface = create_random_form_input_interface(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/add",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {node.id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node remove interface endpoint --------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_remove_interface_from_node(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully remove an interface from a node"""
+
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    crud.node.add_interface(db, node=node, interface=interface)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/remove",
+        headers=superuser_token_headers,
+    )
+    db.refresh(node)
+    assert response.status_code == 200
+    assert interface not in node.interfaces
+
+
+def test_remove_interface_from_node_fail_node_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the node doesn't exist"""
+
+    interface = create_random_form_input_interface(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{-1}/interfaces/{interface.id}/remove",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find node."
+
+
+def test_remove_interface_from_node_fail_interface_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the interface doesn't exist"""
+
+    node = create_random_node(db)
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{-1}/remove",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 404
+    assert content["detail"] == "Cannot find interface."
+
+
+def test_remove_interface_from_node_normal_user(
+    client: TestClient, db: Session
+) -> None:
+    """Successfully remove an interface from a node as a normal user"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test",
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=True,
+    )
+    node = setup["node"]
+    user = setup["user"]
+    interface = create_random_form_input_interface(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    crud.node.add_interface(db, node=node, interface=interface)
+
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/remove",
+        headers=user_token_headers,
+    )
+    db.refresh(node)
+    assert response.status_code == 200
+    assert interface not in node.interfaces
+
+
+def test_remove_interface_from_node_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    """Successfully add an interface to a node as a normal user"""
+
+    setup = node_permission_setup(
+        db,
+        node_type="test",
+        permission_type=PermissionTypeEnum.update,
+        permission_enabled=False,
+    )
+    node = setup["node"]
+    user = setup["user"]
+    interface = create_random_form_input_interface(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/{node.id}/interfaces/{interface.id}/remove",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have "
+        f"{setup['permission'].permission_type} permissions for "
+        f"{setup['permission'].resource_type} ID {node.id}"
     )
 
 

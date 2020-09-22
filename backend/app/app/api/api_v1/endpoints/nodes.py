@@ -307,6 +307,46 @@ def delete_node(
     return node
 
 
+@router.get("/{resource_id}/children", response_model=schemas.NodeWithChildren)
+def read_node_with_children(
+    *,
+    db: Session = Depends(deps.get_db),
+    resource_id: int,
+    current_user: models.User = Depends(node_read_validator),
+) -> schemas.NodeWithChildren:
+    """# Fetch a record representing a node with its direct children
+
+    Provides access to a listing of all node children (other nodes,
+    user groups, and interfaces) by node ID. This listing is intended
+    to provide a method for browsing through the node hierarchy
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the node
+    - db (Session, optional): SQLAlchemy Session. Defaults to
+    Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to Depends(node_read_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the indicated node doesn't exist in
+    the database.
+    - HTTPException: 403 - When the user doesn't have read permissions
+    on the indicated node.
+
+    ## Returns:
+
+    - schemas.NodeWithChildren: The fetched node child listing
+    """
+
+    node = crud.node.get(db=db, id=resource_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Cannot find node.")
+    node = crud.node.get_node_children(db=db, id=resource_id)
+    return node
+
+
 @router.post(
     "/{resource_id}/interfaces/{interface_id}/add", response_model=schemas.Node
 )

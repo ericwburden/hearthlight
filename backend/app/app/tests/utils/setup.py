@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models
 from app.schemas import PermissionTypeEnum
+from app.tests.utils.form_input import create_random_form_input_interface
 from app.tests.utils.node import create_random_node
 from app.tests.utils.user import create_random_user
 from app.tests.utils.user_group import create_random_user_group
@@ -132,6 +133,35 @@ def multi_node_permission_setup(
         "permissions": permissions,
         "user_group": user_group,
         "user": user,
+    }
+
+
+def node_children_setup(
+    db: Session,
+) -> Dict[str, Union[models.Node, models.Interface, models.UserGroup]]:
+    """
+    Setup: Create a parent_node, create a user group with the parent
+    node as the parent, create a child node with the parent node as the
+    parent, create an interface, associate the interface with the parent
+    node.
+
+    Returns a dictionary of the format: {
+        "parent_node": Node,
+        "child_node": Node,
+        "user_group": UserGroup,
+        "interface": Interface
+    }
+    """
+    parent_node = create_random_node(db)
+    user_group = create_random_user_group(db, node_id=parent_node.id)
+    child_node = create_random_node(db, parent_id=parent_node.id)
+    interface = create_random_form_input_interface(db)
+    crud.node.add_interface(db, node=parent_node, interface=interface)
+    return {
+        "parent_node": parent_node,
+        "child_node": child_node,
+        "user_group": user_group,
+        "interface": interface,
     }
 
 

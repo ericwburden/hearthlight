@@ -17,7 +17,7 @@ from .interface import (
     QueryUpdate,
 )
 from .msg import Msg
-from .node import Node, NodeCreate, NodeInDB, NodeUpdate
+from .node import Node, NodeCreate, NodeInDB, NodeUpdate, NodeWithChildren
 from .permission import (
     Permission,
     PermissionCreate,

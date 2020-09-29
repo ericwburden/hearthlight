@@ -41,6 +41,11 @@ class Node(NodeInDBBase):
     pass
 
 
+class NodeList(BaseModel):
+    total_records: int
+    nodes: Optional[List[Node]] = []
+
+
 # Properties properties stored in DB
 class NodeInDB(NodeInDBBase):
     pass

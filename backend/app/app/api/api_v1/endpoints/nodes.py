@@ -194,6 +194,40 @@ def read_nodes(
     return nodes
 
 
+@router.get("/networks/", response_model=schemas.NodeList)
+def read_networks(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> schemas.NodeList:
+    """# Read a list of network nodes
+
+    Returns network nodes in descending primary key order by default
+
+    ## Args:
+
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults
+    to Depends(deps.get_db).
+    - skip (int, optional): Number of records to skip. Defaults to 0.
+    - limit (int, optional): Number of records to retrieve. Defaults
+    to 100.
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(deps.get_current_active_user).
+
+    ## Returns:
+
+    - NodeList: Object containing a list of nodes and total row count
+    """
+    node_count = crud.node.count(db)
+    nodes = []
+    if node_count > 0:
+        nodes = crud.node.get_multi_networks(db, skip=skip, limit=limit)
+
+    return schemas.NodeList(total_records=node_count, nodes=nodes)
+
+
 @router.put("/{resource_id}", response_model=schemas.Node)
 def update_node(
     *,

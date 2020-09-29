@@ -25,7 +25,9 @@ def test_create_network(
     """Successful network creation"""
     data = {"node_type": "network", "name": random_lower_string(), "is_active": True}
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -55,7 +57,9 @@ def test_create_network_fail_with_parent(
         "parent_id": parent_node.id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 400
     content = response.json()
@@ -70,7 +74,9 @@ def test_create_network_fail_not_superuser(client: TestClient, db: Session) -> N
     )
     data = {"node_type": "network", "name": random_lower_string(), "is_active": True}
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
@@ -96,7 +102,9 @@ def test_create_node(
         "parent_id": parent_node.id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -133,7 +141,9 @@ def test_create_node_normal_user(
         "parent_id": setup["node"].id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -159,7 +169,9 @@ def test_create_node_fail_no_parent_provided(
         "is_active": True,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 400
     content = response.json()
@@ -177,7 +189,9 @@ def test_create_node_fail_parent_not_exist(
         "parent_id": -1,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 404
     content = response.json()
@@ -198,7 +212,9 @@ def test_create_node_fail_parent_not_active(
         "parent_id": parent_node.id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
@@ -226,7 +242,9 @@ def test_create_node_fail_permission_false(
         "parent_id": setup["node"].id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
@@ -254,7 +272,9 @@ def test_create_node_fail_permission_missing(
         "parent_id": parent_node.id,
     }
     response = client.post(
-        f"{settings.API_V1_STR}/nodes/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
@@ -275,7 +295,8 @@ def test_read_node(
 
     node = create_random_node(db, created_by_id=1, node_type="network")
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{node.id}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/nodes/{node.id}",
+        headers=superuser_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
@@ -307,7 +328,8 @@ def test_read_node_normal_user(
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}",
+        headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
@@ -329,7 +351,8 @@ def test_read_node_fail_node_not_exists(
     """Fails if the node doesn't exist"""
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/nodes/{-1}",
+        headers=superuser_token_headers,
     )
     assert response.status_code == 404
     content = response.json()
@@ -352,7 +375,8 @@ def test_read_node_fail_node_no_permission(
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{setup['node'].id}", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{setup['node'].id}",
+        headers=user_token_headers,
     )
     assert response.status_code == 403
     content = response.json()
@@ -379,7 +403,8 @@ def test_read_nodes(
         create_random_node(db, created_by_id=1, node_type="network") for i in range(10)
     ]
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
     )
     content = response.json()
     stored_node_ids = [node["id"] for node in content]
@@ -405,7 +430,10 @@ def test_read_nodes_normal_user(
         client=client, email=setup["user"].email, db=db
     )
 
-    response = client.get(f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,)
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+    )
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 10
@@ -428,10 +456,67 @@ def test_read_nodes_fail_no_permission(
         client=client, email=user.email, db=db
     )
 
-    response = client.get(f"{settings.API_V1_STR}/nodes/", headers=user_token_headers,)
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/",
+        headers=user_token_headers,
+    )
     content = response.json()
     assert response.status_code == 200
     assert len(content) == 0
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region Tests for Node read multi networks endpoint -----------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_read_network_nodes(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Successfully read multiple entered nodes"""
+
+    nodes = [
+        create_random_node(db, created_by_id=1, node_type="network") for i in range(10)
+    ]
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/networks/",
+        headers=superuser_token_headers,
+    )
+    content = response.json()
+    stored_node_ids = [node["id"] for node in content["nodes"]]
+    assert response.status_code == 200
+    assert len(content["nodes"]) >= 10
+    assert all([n.id in stored_node_ids for n in nodes])
+
+
+def test_read_network_nodes_fail_normal_user(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail when attempting to read network nodes as a normal user"""
+
+    setup = multi_node_permission_setup(
+        db,
+        n=10,
+        node_type="network",
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=True,
+    )
+    nodes = setup["nodes"]
+    user = setup["user"]
+    node_ids = [node.id for node in nodes]
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/nodes/networks/",
+        headers=user_token_headers,
+    )
+    content = response.json()
+    assert response.status_code == 400
+    assert content["detail"] == "The user is not a superuser"
 
 
 # --------------------------------------------------------------------------------------
@@ -949,7 +1034,8 @@ def test_get_node_with_children_fail_not_exist(
     """Fail if the node doesn't exist"""
 
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{-1}/children", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/nodes/{-1}/children",
+        headers=superuser_token_headers,
     )
     content = response.json()
     assert response.status_code == 404
@@ -972,7 +1058,8 @@ def test_get_node_with_children_normal_user(client: TestClient, db: Session) -> 
         client=client, email=user.email, db=db
     )
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{node.id}/children", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{node.id}/children",
+        headers=user_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
@@ -1003,7 +1090,8 @@ def test_get_node_with_children_normal_user_fail_no_permission(
         client=client, email=user.email, db=db
     )
     response = client.get(
-        f"{settings.API_V1_STR}/nodes/{node.id}/children", headers=user_token_headers,
+        f"{settings.API_V1_STR}/nodes/{node.id}/children",
+        headers=user_token_headers,
     )
     content = response.json()
     assert response.status_code == 403

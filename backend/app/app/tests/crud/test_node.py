@@ -44,6 +44,22 @@ def test_get_multi_node(db: Session, superuser: User) -> None:
         assert n in stored_node_names
 
 
+def test_get_multi_network(db: Session, superuser: User) -> None:
+    names = [random_lower_string() for n in range(10)]
+    new_networks_in = [NodeCreate(name=name, node_type="network") for name in names]
+    [
+        crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
+        for node_in in new_networks_in
+    ]
+    new_node_in = NodeCreate(name=random_lower_string(), node_type="something_else")
+    new_node = crud.node.create(db=db, obj_in=new_node_in, created_by_id=superuser.id)
+    stored_nodes = crud.node.get_multi_networks(db=db)
+    stored_node_names = [sn.name for sn in stored_nodes]
+    for n in names:
+        assert n in stored_node_names
+    assert new_node.name not in stored_node_names
+
+
 def test_update_node(db: Session, superuser: User) -> None:
     name = random_lower_string()
     node_in = NodeCreate(name=name, node_type="node")

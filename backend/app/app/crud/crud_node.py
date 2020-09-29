@@ -83,7 +83,10 @@ def node_child_listings_cte(db: Session) -> CTE:
         )
         .join(all_children, Node.id == all_children.c.node_children_node_id)
         .group_by(
-            Node.id, Node.node_type, Node.name, all_children.c.node_children_child_type,
+            Node.id,
+            Node.node_type,
+            Node.name,
+            all_children.c.node_children_child_type,
         )
         .order_by(Node.id)
         .cte(name="node_child_listings")
@@ -176,6 +179,18 @@ class CRUDNode(
             obj_in.depth = parent.depth + 1
         return super().update(
             db, db_obj=db_obj, obj_in=obj_in, updated_by_id=updated_by_id
+        )
+
+    def get_multi_networks(
+        self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> List[Node]:
+        return (
+            db.query(self.model)
+            .filter(self.model.node_type == "network")
+            .order_by(self.model.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
         )
 
     def get_child_nodes(self, db: Session, *, id: int) -> List[Node]:

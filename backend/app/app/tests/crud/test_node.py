@@ -6,7 +6,9 @@ from app.models.user import User
 from app.schemas.node import NodeCreate, NodeUpdate
 from app.schemas.permission import PermissionTypeEnum
 from app.schemas.user_group import UserGroupCreate
+from app.tests.utils.form_input import create_random_form_input_interface
 from app.tests.utils.user import create_random_user
+from app.tests.utils.user_group import create_random_user_group
 from app.tests.utils.node import create_random_node
 from app.tests.utils.utils import random_lower_string
 
@@ -131,7 +133,7 @@ def test_get_node_descendants(db: Session, superuser: User) -> None:
         db=db, obj_in=outlaw_node_in, created_by_id=superuser.id
     )
 
-    nodes = crud.node.get_children(db, id=parent_node.id)
+    nodes = crud.node.get_child_nodes(db, id=parent_node.id)
     node_ids = [n.id for n in nodes]
 
     assert len(nodes) == 4
@@ -237,6 +239,59 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     for n in names:
         assert n in stored_node_names
     assert blocked_node.name not in stored_node_names
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests to modify interfaces attached to a node -------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_add_interface_to_node(db: Session, superuser: User) -> None:
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    result = crud.node.add_interface(db, node=node, interface=interface)
+    assert result is node
+    assert interface in node.interfaces
+
+
+def test_remove_interface_from_node(db: Session, superuser: User) -> None:
+    node = create_random_node(db)
+    interface = create_random_form_input_interface(db)
+    crud.node.add_interface(db, node=node, interface=interface)
+    result = crud.node.remove_interface(db, node=node, interface=interface)
+    assert result is node
+    assert interface not in node.interfaces
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests to fetch node children ------------------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_get_node_children(db: Session, superuser: User) -> None:
+    node = create_random_node(db)
+    user_group = create_random_user_group(db, node_id=node.id)
+    child_node = create_random_node(db, parent_id=node.id)
+    interface = create_random_form_input_interface(db)
+    crud.node.add_interface(db, node=node, interface=interface)
+    result = crud.node.get_node_children(db, id=node.id)
+
+    assert result.node_id == node.id
+    assert result.node_name == node.name
+    for child_list in result.child_lists:
+        child_type = child_list.child_type
+        assert child_type in ["interface", "node", "user_group"]
+        for child in child_list.children:
+            if child_type == "interface":
+                assert child.child_id == interface.id
+            if child_type == "node":
+                assert child.child_id == child_node.id
+            if child_type == "user_group":
+                assert child.child_id == user_group.id
 
 
 # --------------------------------------------------------------------------------------

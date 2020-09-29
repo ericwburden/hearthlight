@@ -17,4 +17,5 @@ from app.models.interface import (  # noqa F401
     Interface,
     FormInputInterface,
     QueryInterface,
+    InterfaceNodeRel,
 )

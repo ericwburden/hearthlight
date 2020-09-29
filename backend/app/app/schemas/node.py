@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -44,3 +44,20 @@ class Node(NodeInDBBase):
 # Properties properties stored in DB
 class NodeInDB(NodeInDBBase):
     pass
+
+
+class NodeChild(BaseModel):
+    child_id: int
+    child_name: str
+
+
+class NodeChildList(BaseModel):
+    child_type: str
+    children: List[NodeChild]
+
+
+class NodeWithChildren(BaseModel):
+    node_id: int
+    node_type: str
+    node_name: str
+    child_lists: List[NodeChildList]

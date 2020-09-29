@@ -60,6 +60,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model = model
 
+    def count(self, db: Session) -> int:
+        return db.query(self.model).count()
+
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
@@ -236,7 +239,11 @@ class CRUDInterfaceBase(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType])
         return super().create(db, obj_in=new_obj)
 
     def update(
-        self, db: Session, *, db_obj: ModelType, obj_in: Dict[str, Any],
+        self,
+        db: Session,
+        *,
+        db_obj: ModelType,
+        obj_in: Dict[str, Any],
     ) -> ModelType:
         # For every table column, take either the existing value or the
         # new value being passed in through 'obj_in'

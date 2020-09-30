@@ -25,18 +25,12 @@
                 ></v-text-field>
               </v-form>
               <div v-if="loginError">
-                <v-alert
-                  :value="loginError"
-                  transition="fade-transition"
-                  type="error"
-                >
+                <v-alert :value="loginError" transition="fade-transition" type="error">
                   Incorrect email or password
                 </v-alert>
               </div>
               <v-flex class="caption text-xs-right"
-                ><router-link to="/recover-password"
-                  >Forgot your password?</router-link
-                ></v-flex
+                ><router-link to="/recover-password">Forgot your password?</router-link></v-flex
               >
             </v-card-text>
             <v-card-actions>
@@ -51,14 +45,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { readIsLoggedIn, readLoginError } from "@/store/main/getters";
-import { dispatchLogIn } from "@/store/main/actions";
+import { Component, Vue } from 'vue-property-decorator';
+import { readIsLoggedIn, readLoginError } from '@/store/main/getters';
+import { dispatchLogIn } from '@/store/main/actions';
 
 @Component
 export default class LoginForm extends Vue {
-  public email = "";
-  public password = "";
+  public email = '';
+  public password = '';
 
   public get loginError() {
     return readLoginError(this.$store);
@@ -71,7 +65,7 @@ export default class LoginForm extends Vue {
     });
 
     if (readIsLoggedIn(this.$store)) {
-      this.$router.push("/");
+      this.$router.push('/');
     }
   }
 }

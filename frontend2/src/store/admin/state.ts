@@ -1,3 +1,5 @@
-export interface MainState {
-  nodes: Node[];
+import { INodeList } from '@/interfaces';
+
+export interface AdminState {
+  networks: INodeList;
 }

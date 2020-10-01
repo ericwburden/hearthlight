@@ -131,7 +131,33 @@ class CRUDNode(
         )
 
     def get_by_name(self, db: Session, name: str) -> Optional[Node]:
+        """Feth a node by name
+
+        Node names are unique
+
+        Args:
+            db (Session): SQLAlchemy Session
+            name (str): Node name to search for
+
+        Returns:
+            Optional[Node]: The found node, or None if no node with the
+            given name
+        """
         return db.query(self.model).filter(self.model.name == name).first()
+
+    def get_types(self, db: Session) -> List[str]:
+        """Fetch a list of node types
+
+        Except for 'network'
+
+        Args:
+            db (Session): SQLAlchemy Session
+
+        Returns:
+            List[str]: List of node types in the database
+        """
+        unique_types = db.query(self.model.node_type).distinct().all()
+        return [ut.node_type for ut in unique_types if ut.node_type != "network"]
 
     def get_multi_networks(
         self, db: Session, *, skip: int = 0, limit: int = 100

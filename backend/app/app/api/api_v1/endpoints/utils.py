@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
+from sqlalchemy.orm import Session
 
-from app import models, schemas
+from app import models, schemas, crud
 from app.api import deps
 from app.core.celery_app import celery_app
 from app.utils import send_test_email
@@ -33,3 +34,8 @@ def test_email(
     """
     send_test_email(email_to=email_to)
     return {"msg": "Test email sent"}
+
+
+@router.get("/node-types/", response_model=List[str], status_code=200)
+def get_node_types(db: Session = Depends(deps.get_db)) -> List[str]:
+    return crud.node.get_types(db)

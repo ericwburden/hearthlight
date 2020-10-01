@@ -341,18 +341,14 @@ def delete_node(
     return node
 
 
-@router.get("/{resource_id}/children", response_model=schemas.NodeWithChildren)
-def read_node_with_children(
+@router.get("/{resource_id}/children", response_model=List[schemas.NodeChild])
+def read_node_children(
     *,
     db: Session = Depends(deps.get_db),
     resource_id: int,
     current_user: models.User = Depends(node_read_validator),
-) -> schemas.NodeWithChildren:
-    """# Fetch a record representing a node with its direct children
-
-    Provides access to a listing of all node children (other nodes,
-    user groups, and interfaces) by node ID. This listing is intended
-    to provide a method for browsing through the node hierarchy
+) -> List[schemas.NodeChild]:
+    """# Fetch records indicating direct descendants for a node
 
     ## Args:
 
@@ -364,21 +360,21 @@ def read_node_with_children(
 
     ## Raises:
 
-    - HTTPException: 404 - When the indicated node doesn't exist in
-    the database.
+    - HTTPException: 404 - When attempting to find children for a node
+    that doesn't exist
     - HTTPException: 403 - When the user doesn't have read permissions
-    on the indicated node.
+    on the node
 
     ## Returns:
 
-    - schemas.NodeWithChildren: The fetched node child listing
+    - List[schemas.NodeChild]: List of node child records
     """
 
     node = crud.node.get(db=db, id=resource_id)
     if not node:
         raise HTTPException(status_code=404, detail="Cannot find node.")
-    node = crud.node.get_node_children(db=db, id=resource_id)
-    return node
+    node_children = crud.node.get_node_children(db=db, id=resource_id)
+    return node_children
 
 
 @router.post(

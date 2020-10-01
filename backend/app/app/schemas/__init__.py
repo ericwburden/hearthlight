@@ -17,7 +17,14 @@ from .interface import (
     QueryUpdate,
 )
 from .msg import Msg
-from .node import Node, NodeList, NodeCreate, NodeInDB, NodeUpdate, NodeWithChildren
+from .node import (
+    Node,
+    NodeList,
+    NodeCreate,
+    NodeInDB,
+    NodeUpdate,
+    NodeChild,
+)
 from .permission import (
     Permission,
     PermissionCreate,

@@ -998,7 +998,7 @@ def test_remove_interface_from_node_normal_user_fail_no_permission(
 # --------------------------------------------------------------------------------------
 
 
-def test_get_node_with_children(
+def test_get_node_children(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
     """Successfully get a node with children listing"""
@@ -1014,18 +1014,13 @@ def test_get_node_with_children(
     )
     content = response.json()
     assert response.status_code == 200
-    assert content["node_id"] == node.id
-    assert content["node_name"] == node.name
-    for child_list in content["child_lists"]:
-        child_type = child_list["child_type"]
-        assert child_type in ["interface", "node", "user_group"]
-        for child in child_list["children"]:
-            if child_type == "interface":
-                assert child["child_id"] == interface.id
-            if child_type == "node":
-                assert child["child_id"] == child_node.id
-            if child_type == "user_group":
-                assert child["child_id"] == user_group.id
+    for child in content:
+        if child["child_type"] == "interface":
+            assert child["child_id"] == interface.id
+        if child["child_type"] == "node":
+            assert child["child_id"] == child_node.id
+        if child["child_type"] == "user_group":
+            assert child["child_id"] == user_group.id
 
 
 def test_get_node_with_children_fail_not_exist(
@@ -1063,14 +1058,9 @@ def test_get_node_with_children_normal_user(client: TestClient, db: Session) -> 
     )
     content = response.json()
     assert response.status_code == 200
-    assert content["node_id"] == node.id
-    assert content["node_name"] == node.name
-    for child_list in content["child_lists"]:
-        child_type = child_list["child_type"]
-        assert child_type in ["interface", "node", "user_group"]
-        for child in child_list["children"]:
-            if child_type == "user_group":
-                assert child["child_id"] == user_group.id
+    for child in content:
+        if child["child_type"] == "user_group":
+            assert child["child_id"] == user_group.id
 
 
 def test_get_node_with_children_normal_user_fail_no_permission(

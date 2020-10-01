@@ -52,17 +52,7 @@ class NodeInDB(NodeInDBBase):
 
 
 class NodeChild(BaseModel):
+    node_id: int
+    child_type: str
     child_id: int
     child_name: str
-
-
-class NodeChildList(BaseModel):
-    child_type: str
-    children: List[NodeChild]
-
-
-class NodeWithChildren(BaseModel):
-    node_id: int
-    node_type: str
-    node_name: str
-    child_lists: List[NodeChildList]

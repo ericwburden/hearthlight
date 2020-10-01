@@ -1,13 +1,13 @@
 from typing import List
 
 from sqlalchemy import func
-from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql.expression import literal
+from sqlalchemy.orm import Query, Session, aliased
+from sqlalchemy.sql.expression import literal, literal_column
 from sqlalchemy.sql.selectable import CTE
 
 from app.crud.base import CRUDBaseLogging, AccessControl, node_tree_ids
 from app.models import Interface, Node, NodePermission, UserGroup
-from app.schemas import NodeCreate, NodeUpdate, NodeWithChildren
+from app.schemas import NodeCreate, NodeUpdate, NodeChild
 
 
 # --------------------------------------------------------------------------------------
@@ -55,68 +55,17 @@ def node_children_cte(db: Session) -> CTE:
     )
 
 
-def all_children_cte(db: Session) -> CTE:
-    node_children = db.query(node_children_cte(db))
+def all_children(db: Session) -> Query:
+    child_node = aliased(Node)
+    node_children = db.query(
+        Node.id.label("node_id"),
+        literal("node").label("child_type"),
+        child_node.id.label("child_id"),
+        child_node.name.label("child_name"),
+    ).join(child_node, Node.id == child_node.parent_id)
     user_group_children = db.query(user_group_children_cte(db))
     interface_children = db.query(interface_children_cte(db))
-    return node_children.union(user_group_children, interface_children).cte(
-        name="all_node_children"
-    )
-
-
-def node_child_listings_cte(db: Session) -> CTE:
-    all_children = all_children_cte(db)
-    return (
-        db.query(
-            Node.id.label("node_id"),
-            Node.node_type,
-            Node.name.label("node_name"),
-            all_children.c.node_children_child_type.label("child_type"),
-            func.array_agg(
-                func.json_build_object(
-                    "child_id",
-                    all_children.c.node_children_child_id,
-                    "child_name",
-                    all_children.c.node_children_child_name,
-                )
-            ).label("children"),
-        )
-        .join(all_children, Node.id == all_children.c.node_children_node_id)
-        .group_by(
-            Node.id,
-            Node.node_type,
-            Node.name,
-            all_children.c.node_children_child_type,
-        )
-        .order_by(Node.id)
-        .cte(name="node_child_listings")
-    )
-
-
-def nodes_with_children_cte(db: Session) -> CTE:
-    node_child_listings = node_child_listings_cte(db)
-    return (
-        db.query(
-            node_child_listings.c.node_id,
-            node_child_listings.c.node_type,
-            node_child_listings.c.node_name,
-            func.array_agg(
-                func.json_build_object(
-                    "child_type",
-                    node_child_listings.c.child_type,
-                    "children",
-                    node_child_listings.c.children,
-                )
-            ).label("child_lists"),
-        )
-        .group_by(
-            node_child_listings.c.node_id,
-            node_child_listings.c.node_type,
-            node_child_listings.c.node_name,
-        )
-        .order_by(node_child_listings.c.node_id)
-        .cte(name="nodes_with_children")
-    )
+    return node_children.union(user_group_children, interface_children)
 
 
 # --------------------------------------------------------------------------------------
@@ -210,24 +159,22 @@ class CRUDNode(
         node_ids = node_tree_ids(db, id=id)
         return db.query(self.model).filter(self.model.id.in_(node_ids)).all()
 
-    def get_node_children(self, db: Session, *, id: int) -> NodeWithChildren:
-        """Fetch an object describing a node's direct children
+    def get_node_children(self, db: Session, *, id: int) -> List[NodeChild]:
+        """Fetch a list of node children, all types
 
         Args:
             db (Session): SQLAlchemy Session
-            id (int): Primary key ID of the Node
+            id (int): Primary key ID for the node
 
         Returns:
-            NodeWithChildren: The resulting object listing the children
-            associated with the indicated node
+            List[NodeChild]: Listing of node child records
         """
-        nodes_with_children = nodes_with_children_cte(db)
-        node_with_children = (
-            db.query(nodes_with_children)
-            .filter(nodes_with_children.c.node_id == id)
-            .first()
+        node_child_records = (
+            all_children(db).filter(literal_column("node_id") == id).all()
         )
-        return NodeWithChildren(**node_with_children._asdict())
+        return [
+            NodeChild(**child_record._asdict()) for child_record in node_child_records
+        ]
 
     def add_interface(self, db: Session, *, node: Node, interface: Interface) -> Node:
         """Attach an interface to a node

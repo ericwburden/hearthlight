@@ -296,18 +296,14 @@ def test_get_node_children(db: Session, superuser: User) -> None:
     crud.node.add_interface(db, node=node, interface=interface)
     result = crud.node.get_node_children(db, id=node.id)
 
-    assert result.node_id == node.id
-    assert result.node_name == node.name
-    for child_list in result.child_lists:
-        child_type = child_list.child_type
-        assert child_type in ["interface", "node", "user_group"]
-        for child in child_list.children:
-            if child_type == "interface":
-                assert child.child_id == interface.id
-            if child_type == "node":
-                assert child.child_id == child_node.id
-            if child_type == "user_group":
-                assert child.child_id == user_group.id
+    for node_child in result:
+        assert node_child.node_id == node.id
+        if node_child.child_type == "interface":
+            assert node_child.child_id == interface.id
+        if node_child.child_type == "node":
+            assert node_child.child_id == child_node.id
+        if node_child.child_type == "user_group":
+            assert node_child.child_id == user_group.id
 
 
 # --------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Query, Session, aliased
@@ -129,6 +129,9 @@ class CRUDNode(
         return super().update(
             db, db_obj=db_obj, obj_in=obj_in, updated_by_id=updated_by_id
         )
+
+    def get_by_name(self, db: Session, name: str) -> Optional[Node]:
+        return db.query(self.model).filter(self.model.name == name).first()
 
     def get_multi_networks(
         self, db: Session, *, skip: int = 0, limit: int = 100

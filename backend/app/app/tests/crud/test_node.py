@@ -31,6 +31,15 @@ def test_get_node(db: Session, superuser: User) -> None:
     assert node.name == stored_node.name
 
 
+def test_get_node_by_name(db: Session, superuser: User) -> None:
+    node_in = NodeCreate(name=random_lower_string(), node_type="node")
+    node = crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
+    stored_node = crud.node.get_by_name(db=db, name=node.name)
+    assert stored_node
+    assert node.id == stored_node.id
+    assert node.name == stored_node.name
+
+
 def test_get_multi_node(db: Session, superuser: User) -> None:
     names = [random_lower_string() for n in range(10)]
     new_nodes_in = [NodeCreate(name=name, node_type="node") for name in names]

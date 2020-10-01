@@ -69,6 +69,8 @@ def create_node(
     inactive
     - HTTPException: 403 - When a normal user attempts to create a node
     without create permissions on the parent
+    - HTTPException: 409 - When attempting to create a node with the
+    name of an existing node (names must be unique).
 
     ## Returns:
 
@@ -119,7 +121,11 @@ def create_node(
                 status_code=403,
                 detail="User does not have permission to create this node",
             )
-
+    node = crud.node.get_by_name(db=db, name=node_in.name)
+    if node:
+        raise HTTPException(
+            status_code=409, detail="A node with that name already exists."
+        )
     node = crud.node.create(db=db, obj_in=node_in, created_by_id=current_user.id)
     return node
 

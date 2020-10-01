@@ -281,6 +281,28 @@ def test_create_node_fail_permission_missing(
     assert content["detail"] == "User does not have permission to create this node"
 
 
+def test_create_node_fail_name_exists(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    """Fail if the node name isn't unique"""
+    existing_node = create_random_node(db)
+    parent_node = create_random_node(db, created_by_id=1, node_type="network")
+    data = {
+        "node_type": "test_create_node",
+        "name": existing_node.name,
+        "is_active": True,
+        "parent_id": parent_node.id,
+    }
+    response = client.post(
+        f"{settings.API_V1_STR}/nodes/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    content = response.json()
+    assert response.status_code == 409
+    assert content["detail"] == "A node with that name already exists."
+
+
 # --------------------------------------------------------------------------------------
 # endregion ----------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------

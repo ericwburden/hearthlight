@@ -30,6 +30,7 @@ export const mutations = {
   },
 };
 
+// eslint-disable-next-line
 const { commit } = getStoreAccessors<MainState | any, State>('');
 
 export const commitSetDashboardMiniDrawer = commit(mutations.setDashboardMiniDrawer);

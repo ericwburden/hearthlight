@@ -19,6 +19,7 @@ export interface INodeList {
 export interface INodeCreate {
   node_type: string;
   name: string;
+  parent_id?: number;
 }
 
 export interface INodeUpdate {
@@ -29,18 +30,8 @@ export interface INodeUpdate {
 }
 
 export interface INodeChild {
+  node_id: number;
+  child_type: string;
   child_id: number;
   child_name: string;
-}
-
-export interface INodeChildList {
-  child_type: string;
-  children: INodeChild[];
-}
-
-export interface INodeWithChildren {
-  node_id: number;
-  node_type: string;
-  node_name: string;
-  child_lists: INodeChildList[];
 }

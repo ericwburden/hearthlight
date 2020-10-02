@@ -6,7 +6,12 @@ import { actions } from './actions';
 import { AdminState } from './state';
 
 const defaultState: AdminState = {
+  activeNode: null,
+  applicationModel: [],
+  configScreenShowForm: '',
+  configureNodeFormProps: { id: null, title: '', parent: null, network: false, delete: false },
   networks: { total_records: 0, nodes: [] },
+  nodeTypes: [],
 };
 
 export const adminModule = {

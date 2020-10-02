@@ -18,6 +18,7 @@ import { AppNotification, MainState } from './state';
 
 type MainContext = ActionContext<MainState, State>;
 
+// eslint-disable-next-line
 const { dispatch } = getStoreAccessors<MainState | any, State>('');
 
 export const actions = {
@@ -118,6 +119,12 @@ export const actions = {
   async actionCheckApiError(context: MainContext, payload: AxiosError) {
     if (payload.response!.status === 401) {
       await dispatch(actions.actionLogOut)(context);
+    }
+    if (payload.response) {
+      commitAddNotification(context, {
+        content: payload.response.data.detail,
+        color: 'error',
+      });
     }
   },
   actionRouteLoggedIn(context: MainContext) {

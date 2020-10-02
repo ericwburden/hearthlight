@@ -10,6 +10,8 @@ const Home = () => import(/* webpackChunkName: "home" */ '../views/main/Home.vue
 const AdminDashboard = () => import(/* webpackChunkName: "admin" */ '../views/admin/AdminDashboard.vue');
 const ConfigureApplication = () =>
   import(/* webpackChunkName: "admin-configure" */ '../views/admin/ConfigureApplication.vue');
+const ConfigureNodeForm = () =>
+  import(/* webpackChunkName: "admin-configure-node" */ '@/components/forms/ConfigureNodeForm.vue');
 
 const routes: Array<RouteConfig> = [
   {
@@ -20,7 +22,14 @@ const routes: Array<RouteConfig> = [
       {
         path: 'admin',
         component: AdminDashboard,
-        children: [{ path: 'configure', name: 'admin.configure', component: ConfigureApplication }],
+        children: [
+          {
+            path: 'configure',
+            name: 'admin.configure',
+            component: ConfigureApplication,
+            children: [{ path: 'node/:uuid', name: 'admin.configure.node', component: ConfigureNodeForm }],
+          },
+        ],
       },
     ],
   },

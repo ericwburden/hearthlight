@@ -3,7 +3,7 @@
     <v-row align="center" justify="center">
       <v-spacer></v-spacer>
       <v-col align="center" justify="center">
-        <v-btn class="mt-5" block elevation="2" x-large color="success" @click="showForm('network')">
+        <v-btn class="mt-5" block elevation="2" x-large color="success" @click="createNetwork()">
           <v-icon>mdi-plus-circle-outline</v-icon>
           <span class="ml-2">New Network</span>
         </v-btn>
@@ -14,20 +14,38 @@
       <v-col>
         <h2>Networks</h2>
         <v-treeview
-          :load-children="fetchChildren"
+          :items="items"
+          :active.sync="active"
+          :open.sync="open"
           activatable
           color="info"
           transition
-          :items="items"
           expand-icon="mdi-arrow-down-drop-circle"
-        >
+          return-object
+          ><template v-slot:prepend="{ item }">
+            <IconWithTooltip v-if="item.type == 'network'" icon="mdi-google-circles-extended" msg="Network" />
+            <IconWithTooltip v-if="item.type == 'node'" icon="mdi-circle-double" msg="Node" />
+            <IconWithTooltip v-if="item.type == 'user_group'" icon="mdi-account-supervisor-circle" msg="User Group" />
+            <IconWithTooltip v-if="item.type == 'interface'" icon="mdi-swap-vertical-circl" msg="Interface" />
+          </template>
           <template v-slot:append="{ item }">
             <!-- Node Button -->
             <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn v-if="item.id" @click="identify(item)" icon color="success" v-bind="attrs" v-on="on">
-                  <v-icon>mdi-playlist-plus</v-icon>
-                </v-btn>
+                <v-sheet v-bind="attrs" v-on="on" class="d-inline">
+                  <v-menu offset-y>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn v-if="item.id" icon color="success" v-bind="attrs" v-on="on">
+                        <v-icon>mdi-playlist-plus</v-icon>
+                      </v-btn>
+                    </template>
+                    <v-list>
+                      <v-list-item @click="addNodeChild(item)">Node</v-list-item>
+                      <v-list-item @click="selectItem(item)">User Group</v-list-item>
+                      <v-list-item @click="selectItem(item)">Interface</v-list-item>
+                    </v-list>
+                  </v-menu>
+                </v-sheet>
               </template>
               <span>Add Child</span>
             </v-tooltip>
@@ -35,7 +53,7 @@
             <!-- User Group Button -->
             <v-tooltip bottom v-if="item.type == 'user_group'">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn v-if="item.id" @click="identify(item)" icon color="success" v-bind="attrs" v-on="on">
+                <v-btn v-if="item.id" @click="selectItem(item)" icon color="success" v-bind="attrs" v-on="on">
                   <v-icon>mdi-account-plus</v-icon>
                 </v-btn>
               </template>
@@ -44,7 +62,7 @@
 
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn v-if="item.id" @click="identify(item)" icon color="info" v-bind="attrs" v-on="on">
+                <v-btn v-if="item.id" @click="updateItem(item)" icon color="info" v-bind="attrs" v-on="on">
                   <v-icon>mdi-circle-edit-outline</v-icon>
                 </v-btn>
               </template>
@@ -53,7 +71,7 @@
 
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn v-if="item.id" @click="identify(item)" icon color="error" v-bind="attrs" v-on="on">
+                <v-btn v-if="item.id" @click="deleteItem(item)" icon color="error" v-bind="attrs" v-on="on">
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>
               </template>
@@ -64,14 +82,7 @@
       </v-col>
       <v-divider class="mx-4" vertical></v-divider>
       <v-col>
-        <v-row>
-          <v-col v-if="form != ''" class="d-flex justify-end">
-            <v-btn icon color="error" @click="showForm('')" large><v-icon>mdi-close-circle</v-icon></v-btn>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col v-if="form == 'network'"><CreateNetworkForm network/></v-col>
-        </v-row>
+        <router-view :key="$route.fullPath"></router-view>
       </v-col>
     </v-row>
   </v-container>
@@ -79,99 +90,109 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import CreateNetworkForm from '@/components/forms/CreateNetworkForm.vue';
-import { readNetworks } from '@/store/admin/getters';
-import { dispatchGetNetworks } from '@/store/admin/actions';
-import { api } from '@/api';
-import { INodeList, INode, INodeChildList, INodeChild } from '@/interfaces';
-
-interface TreeViewEntry {
-  id?: number | undefined;
-  name: string;
-  type: string;
-  children?: TreeViewEntry[];
-}
+import { v4 as uuidv4 } from 'uuid';
+import IconWithTooltip from '@/components/IconWithTooltip.vue';
+import { readApplicationModel } from '@/store/admin/getters';
+import { dispatchGetNetworks, dispatchUpdateApplicationModelChildren } from '@/store/admin/actions';
+import { commitSetConfigureNodeFormProps } from '@/store/admin/mutations';
+import { ApplicationModelEntry, IConfigureNodeFormProps } from '@/interfaces';
 
 @Component({
-  components: { CreateNetworkForm },
+  components: { IconWithTooltip },
 })
 export default class ConfigureApplication extends Vue {
-  items: TreeViewEntry[] = [];
-  form = '';
+  selected: ApplicationModelEntry | null = null;
+  open: ApplicationModelEntry[] = [];
+  active: ApplicationModelEntry[] = [];
 
-  public identify(item: TreeViewEntry) {
-    alert(item.id);
+  get items() {
+    return readApplicationModel(this.$store);
   }
 
-  get networks() {
-    return readNetworks(this.$store);
+  @Watch('open')
+  async onOpen(val: ApplicationModelEntry[], oldVal: ApplicationModelEntry[]) {
+    const openedItem = val.find((item) => !oldVal.includes(item));
+    if (openedItem) {
+      let child;
+      for (child of openedItem.children) {
+        await dispatchUpdateApplicationModelChildren(this.$store, child);
+      }
+    }
   }
 
-  @Watch('networks')
-  onNetworksChanged(val: INodeList) {
-    this.items = val.nodes.map((network: INode) => {
-      return {
-        id: network.id,
-        type: 'network',
-        name: network.name,
-        children: [],
-      };
-    });
+  // For now, close all the tree nodes when the form changes
+  // in order to provide the opportunity to trigger the 'open'
+  // watcher to load in child elements
+  @Watch('$route.fullPath')
+  async onFormReset() {
+    this.open = [];
   }
 
   public async mounted() {
     await dispatchGetNetworks(this.$store);
   }
 
-  public parseChildList(cl: INodeChildList) {
-    let name = '';
-    switch (cl.child_type) {
-      case 'user_group':
-        name = 'User Groups';
-        break;
-      case 'node':
-        name = 'Nodes';
-        break;
-      case 'interface':
-        name = 'Interfaces';
-        break;
-      default:
-        'Other';
-    }
-    return {
-      name: name,
-      type: 'list',
-      children: this.parseChildren(cl.children, cl.child_type),
+  // Functions to manage actions on tree view items
+  public selectItem(item: ApplicationModelEntry) {
+    this.selected = item;
+  }
+
+  public createNetwork() {
+    const configureNodeFormProps: IConfigureNodeFormProps = {
+      id: null,
+      title: 'Create New Network',
+      parent: null,
+      network: true,
+      delete: false,
     };
+    commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
+
+    this.$router.push(`/admin/configure/node/${uuidv4()}`);
   }
 
-  public parseChildren(children: INodeChild[], type: string) {
-    return children.map((c) => {
-      return { id: c.child_id, name: c.child_name, type: type, children: [] };
-    });
+  public addNodeChild(node: ApplicationModelEntry) {
+    const configureNodeFormProps: IConfigureNodeFormProps = {
+      id: null,
+      title: `${node.name}: Add Child Node`,
+      parent: node.id,
+      network: false,
+      delete: false,
+    };
+    commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
+
+    this.$router.push(`/admin/configure/node/${uuidv4()}`);
   }
 
-  public async fetchChildren(item: TreeViewEntry) {
-    if (item.id) {
-      const result = api
-        .getNodeChildren(this.$store.getters.token, item.id)
-        .then((res) => {
-          res.data.child_lists.map((cl) => {
-            const child = this.parseChildList(cl);
-            console.log(child);
-            if (item.children && child) {
-              item.children.push(child);
-            }
-          });
-        })
-        .catch((err) => console.warn(err));
-      console.log(item);
-      return result;
+  public updateItem(item: ApplicationModelEntry) {
+    this.selectItem(item);
+    if (item.type == 'node' || item.type == 'network') {
+      const configureNodeFormProps: IConfigureNodeFormProps = {
+        id: item.id,
+        title: `Update Node: ${item.name}`,
+        parent: null,
+        network: item.type == 'network',
+        delete: false,
+      };
+      commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
+
+      this.$router.push(`/admin/configure/node/${uuidv4()}`);
     }
   }
 
-  public showForm(formName: string) {
-    this.form = formName;
+  public deleteItem(item: ApplicationModelEntry) {
+    this.selectItem(item);
+    if (item.type == 'node' || item.type == 'network') {
+      const configureNodeFormProps: IConfigureNodeFormProps = {
+        id: item.id,
+        title: `Delete Node: ${item.name}`,
+        parent: null,
+        network: item.type == 'network',
+        delete: true,
+      };
+      commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
+
+      this.$router.push(`/admin/configure/node/${uuidv4()}`);
+    }
   }
 }
 </script>

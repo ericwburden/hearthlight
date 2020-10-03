@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -170,6 +170,8 @@ def read_nodes(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
+    sort_by: Optional[str] = "",
+    sort_desc: Optional[bool] = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> GenericModelList[schemas.Node]:
     """# Read a list of nodes
@@ -183,6 +185,9 @@ def read_nodes(
     - skip (int, optional): Number of records to skip. Defaults to 0.
     - limit (int, optional): Number of records to retrieve. Defaults
     to 100.
+    - sort_by (str, optional): Name of a column to sort by.
+    - sort_desc (bool, optional): Should the column be sorted
+    descending (true) or ascending (false).
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
@@ -192,10 +197,17 @@ def read_nodes(
     - List[Node]: List of retrieved nodes
     """
     if crud.user.is_superuser(current_user):
-        nodes = crud.node.get_multi(db, skip=skip, limit=limit)
+        nodes = crud.node.get_multi(
+            db, skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
+        )
     else:
         nodes = crud.node.get_multi_with_permissions(
-            db, user=current_user, skip=skip, limit=limit
+            db,
+            user=current_user,
+            skip=skip,
+            limit=limit,
+            sort_by=sort_by,
+            sort_desc=sort_desc,
         )
 
     return nodes

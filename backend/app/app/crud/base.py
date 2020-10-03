@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.generics import GenericModel
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.expression import and_, literal
+from sqlalchemy.sql.expression import and_, literal, ColumnElement
 
 from app.db.base_class import Base
 from app.crud.utils import model_encoder
@@ -58,6 +58,33 @@ def node_tree_ids(db: Session, *, id: int) -> List[int]:
     return [v for v, in query.all()]
 
 
+def parse_sort_col(
+    model: Base, sort_by: Optional[str] = None, sort_desc: Optional[bool] = None
+) -> Optional[ColumnElement]:
+    """Generate arguments to a Query.order_by() from a list of column
+    names and descending indicators.
+
+    Defaults to sorting by ID, descending if no sort_by column (or no
+    valid column name) is provided.
+
+    Args:
+        model (Base): The SQLAlchemy model holding the columns
+        sort_by (str): Clumn name as string
+        sort_desc (bool): Should the column be sorted descending (true)
+        or ascending (false).
+        then the column will be sorted descending, else ascending.
+
+    Returns:
+        Optional[ColumnElement]: The column to sort by
+    """
+    sort_col = getattr(model, sort_by, None)
+    if sort_col:
+        if sort_desc:
+            sort_col = sort_col.desc()
+        return sort_col
+    return model.id.desc()
+
+
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         """
@@ -77,9 +104,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 100
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        sort_by: Optional[str] = "",
+        sort_desc: Optional[bool] = None,
     ) -> GenericModelList:
-        base_query = db.query(self.model).order_by(self.model.id.desc())
+        base_query = db.query(self.model).order_by(
+            parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc)
+        )
         total_records = base_query.count()
         records = base_query.offset(skip).limit(limit).all()
         return GenericModelList[self.model](
@@ -183,7 +218,14 @@ class AccessControl(Generic[ModelType, PermissionType]):
         return created_obj
 
     def get_multi_with_permissions(
-        self, db: Session, *, user: User, skip: int = 0, limit: int = 100
+        self,
+        db: Session,
+        *,
+        user: User,
+        skip: int = 0,
+        limit: int = 100,
+        sort_by: Optional[str] = "",
+        sort_desc: Optional[bool] = None,
     ) -> GenericModelList:
         result_model = aliased(self.model)
         base_query = (
@@ -202,6 +244,9 @@ class AccessControl(Generic[ModelType, PermissionType]):
                     self.permission_model.permission_type == PermissionTypeEnum.read,
                     UserGroupPermissionRel.enabled == True,  # noqa E712
                 )
+            )
+            .order_by(
+                parse_sort_col(result_model, sort_by=sort_by, sort_desc=sort_desc)
             )
         )
         total_records = base_query.count()

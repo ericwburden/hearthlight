@@ -9,11 +9,12 @@ export interface INode {
   updated_at: Date;
   created_by_id: number;
   updated_by_id: number;
+  [key: string]: number | string | boolean | Date | undefined;
 }
 
 export interface INodeList {
   total_records: number;
-  nodes: INode[];
+  records: INode[];
 }
 
 export interface INodeCreate {

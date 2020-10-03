@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
+from app.crud.base import GenericModelList
 from app.utils import send_new_account_email
 from app.schemas.permission import PermissionTypeEnum, ResourceTypeEnum
 
@@ -154,13 +155,13 @@ def read_user_by_id(
     return user
 
 
-@router.get("/", response_model=List[schemas.User])
+@router.get("/", response_model=GenericModelList[schemas.User])
 def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> List[models.User]:
+) -> GenericModelList[schemas.User]:
     """# Fetch a list of users
 
     This endpoint fetches all users in the database. Only available to

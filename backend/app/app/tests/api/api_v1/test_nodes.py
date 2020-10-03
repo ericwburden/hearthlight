@@ -429,9 +429,9 @@ def test_read_nodes(
         headers=superuser_token_headers,
     )
     content = response.json()
-    stored_node_ids = [node["id"] for node in content]
+    stored_node_ids = [node["id"] for node in content["records"]]
     assert response.status_code == 200
-    assert len(content) >= 10
+    assert len(content["records"]) >= 10
     assert all([n.id in stored_node_ids for n in nodes])
 
 
@@ -458,8 +458,8 @@ def test_read_nodes_normal_user(
     )
     content = response.json()
     assert response.status_code == 200
-    assert len(content) == 10
-    assert all([n["id"] in node_ids for n in content])
+    assert len(content["records"]) == 10
+    assert all([n["id"] in node_ids for n in content["records"]])
 
 
 def test_read_nodes_fail_no_permission(
@@ -484,7 +484,7 @@ def test_read_nodes_fail_no_permission(
     )
     content = response.json()
     assert response.status_code == 200
-    assert len(content) == 0
+    assert len(content["records"]) == 0
 
 
 # --------------------------------------------------------------------------------------
@@ -507,9 +507,9 @@ def test_read_network_nodes(
         headers=superuser_token_headers,
     )
     content = response.json()
-    stored_node_ids = [node["id"] for node in content["nodes"]]
+    stored_node_ids = [node["id"] for node in content["records"]]
     assert response.status_code == 200
-    assert len(content["nodes"]) >= 10
+    assert len(content["records"]) >= 10
     assert all([n.id in stored_node_ids for n in nodes])
 
 

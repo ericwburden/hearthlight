@@ -71,7 +71,7 @@ def test_get_multi_node_permission(db: Session, normal_user: User) -> None:
     ]
     stored_permissions = crud.node_permission.get_multi(db=db)
     stored_permission_permission_types = [
-        sp.permission_type for sp in stored_permissions
+        sp.permission_type for sp in stored_permissions.records
     ]
 
     for pt in permission_types:

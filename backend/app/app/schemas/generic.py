@@ -1,11 +1,15 @@
 from pydantic import BaseModel, create_model
+from pydantic.generics import GenericModel
 
 # from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.engine import reflection
-from typing import Dict, Tuple, Any, Optional
-
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
 
 from app.db.session import engine
+
+# -----------------------------------------------------------------------------
+# region | Functions to generate schema from JSON -----------------------------
+# -----------------------------------------------------------------------------
 
 
 def get_generic_schema(table_name: str) -> BaseModel:
@@ -44,3 +48,15 @@ def _column_def_to_field(template: Dict[str, Any]) -> Optional[Tuple[Any]]:
     if template.get("default") and not template.get("autoincrement"):
         data_def = (data_type, template.get("default"))
     return (template.get("name"), data_def)
+
+
+# -----------------------------------------------------------------------------
+# endregion -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region | Pre-defined generic schema -----------------------------------------
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# endregion -------------------------------------------------------------------
+# -----------------------------------------------------------------------------

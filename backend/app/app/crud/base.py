@@ -1,6 +1,7 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
+from pydantic.generics import GenericModel
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, literal
@@ -23,6 +24,15 @@ ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 PermissionType = TypeVar("PermissionType", bound=BaseModel)
+
+
+class GenericModelList(GenericModel, Generic[ModelType]):
+    total_records: int
+    records: Optional[List[ModelType]] = []
+
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True
 
 
 def node_tree_ids(db: Session, *, id: int) -> List[int]:
@@ -68,13 +78,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
-        return (
-            db.query(self.model)
-            .order_by(self.model.id.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
+    ) -> GenericModelList:
+        base_query = db.query(self.model).order_by(self.model.id.desc())
+        total_records = base_query.count()
+        records = base_query.offset(skip).limit(limit).all()
+        return GenericModelList[self.model](
+            total_records=total_records, records=records
         )
 
     def get_filtered(self, db: Session, *, ids: List[int]) -> List[ModelType]:
@@ -149,7 +158,11 @@ class CRUDBaseLogging(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 
 class AccessControl(Generic[ModelType, PermissionType]):
-    def __init__(self, model: Type[ModelType], permission_model: Type[PermissionType]):
+    def __init__(
+        self,
+        model: Type[ModelType],
+        permission_model: Type[PermissionType],
+    ):
         self.resource_type = permission_model.__mapper__.polymorphic_identity
         self.permission_model = permission_model
         super().__init__(model)
@@ -171,9 +184,9 @@ class AccessControl(Generic[ModelType, PermissionType]):
 
     def get_multi_with_permissions(
         self, db: Session, *, user: User, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+    ) -> GenericModelList:
         result_model = aliased(self.model)
-        query = (
+        base_query = (
             db.query(result_model)
             .join(
                 self.permission_model,
@@ -191,7 +204,11 @@ class AccessControl(Generic[ModelType, PermissionType]):
                 )
             )
         )
-        return query.all()
+        total_records = base_query.count()
+        records = base_query.offset(skip).limit(limit).all()
+        return GenericModelList[self.model](
+            total_records=total_records, records=records
+        )
 
     def get_permissions(self, db: Session, *, id: int) -> List[Permission]:
         return (

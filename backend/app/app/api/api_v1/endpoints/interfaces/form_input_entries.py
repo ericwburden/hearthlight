@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.base import GenericModelList
 from app.crud.utils import model_encoder
 
 interface_read_validator = deps.UserPermissionValidator(
@@ -139,7 +140,7 @@ def read_form_input_entry(
     return model_encoder(form_input_entry)
 
 
-@router.get("/{resource_id}/entries/", response_model=List[Dict[str, Any]])
+@router.get("/{resource_id}/entries/", response_model=GenericModelList[Dict[str, Any]])
 def read_form_inputs(
     *,
     db: Session = Depends(deps.get_db),
@@ -147,7 +148,7 @@ def read_form_inputs(
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(interface_read_validator),
-) -> List[Dict[str, Any]]:
+) -> GenericModelList[Dict[str, Any]]:
     """# Read multiple form input entries
 
     Read multiple entries from the form input interface backing table.

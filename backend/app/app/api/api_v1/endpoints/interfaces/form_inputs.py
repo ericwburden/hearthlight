@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.base import GenericModelList
 from app.schemas.generic import get_generic_schema
 
 router = APIRouter()
@@ -100,13 +101,13 @@ def read_form_input_interface(
     return form_input
 
 
-@router.get("/", response_model=List[schemas.FormInput])
+@router.get("/", response_model=GenericModelList[schemas.FormInput])
 def read_form_input_interfaces(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> List[models.FormInputInterface]:
+) -> GenericModelList[schemas.FormInput]:
     """# Read a list of form input specifications
 
     ## Args:

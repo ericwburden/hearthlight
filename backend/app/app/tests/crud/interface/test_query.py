@@ -63,7 +63,7 @@ def test_get_multi_query(db: Session, superuser: User) -> None:
     stored_queries = crud.query.get_multi(db=db)
     for nqi in new_queries_in:
         found_match = False
-        for sq in stored_queries:
+        for sq in stored_queries.records:
             name_match = nqi.name == sq.name
             table_template_match = nqi.template == sq.template
             if name_match and table_template_match:

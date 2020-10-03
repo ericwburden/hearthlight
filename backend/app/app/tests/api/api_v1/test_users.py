@@ -24,7 +24,9 @@ def test_create_user(
     password = random_lower_string()
     data = {"email": username, "password": password}
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=superuser_token_headers,
+        json=data,
     )
     created_user = r.json()
     user = crud.user.get_by_email(db, email=username)
@@ -52,7 +54,9 @@ def test_create_user_normal_user(client: TestClient, db: Session) -> None:
     )
 
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=user_token_headers,
+        json=data,
     )
     created_user = r.json()
     user = crud.user.get_by_email(db, email=username)
@@ -68,7 +72,9 @@ def test_create_user_fail_user_exists(
     user = create_random_user(db)
     data = {"email": user.email, "password": user.hashed_password}
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=superuser_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=superuser_token_headers,
+        json=data,
     )
     content = r.json()
     assert r.status_code == 400
@@ -96,7 +102,9 @@ def test_create_user_fail_user_group_not_exists(
         client=client, email=user.email, db=db
     )
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=user_token_headers,
+        json=data,
     )
     content = r.json()
     user = crud.user.get_by_email(db, email=username)
@@ -126,7 +134,9 @@ def test_create_user_fail_normal_user_no_user_group(
     )
 
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=user_token_headers,
+        json=data,
     )
     content = r.json()
     user = crud.user.get_by_email(db, email=username)
@@ -150,7 +160,9 @@ def test_create_user_fail_normal_user_no_permission(
     )
 
     r = client.post(
-        f"{settings.API_V1_STR}/users/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/users/",
+        headers=user_token_headers,
+        json=data,
     )
     content = r.json()
     returned_user = crud.user.get_by_email(db, email=username)
@@ -178,7 +190,8 @@ def test_get_existing_user(
     user = crud.user.create(db, obj_in=user_in)
     user_id = user.id
     r = client.get(
-        f"{settings.API_V1_STR}/users/{user_id}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/users/{user_id}",
+        headers=superuser_token_headers,
     )
     assert 200 <= r.status_code < 300
     api_user = r.json()
@@ -230,7 +243,7 @@ def test_retrieve_users(
     crud.user.create(db, obj_in=user_in2)
 
     r = client.get(f"{settings.API_V1_STR}/users/", headers=superuser_token_headers)
-    all_users = r.json()
+    all_users = r.json()["records"]
 
     assert len(all_users) > 1
     for item in all_users:

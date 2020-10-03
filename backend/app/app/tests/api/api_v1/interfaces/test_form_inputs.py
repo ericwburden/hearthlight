@@ -154,7 +154,7 @@ def test_read_multi_form_input_interface(
     assert response.status_code == 200
     for form_input in form_inputs:
         found_match = False
-        for stored_form_input in content:
+        for stored_form_input in content["records"]:
             id_match = stored_form_input["id"] == form_input.id
             name_match = stored_form_input["name"] == form_input.name
             type_match = (

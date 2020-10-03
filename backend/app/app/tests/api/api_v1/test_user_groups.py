@@ -62,7 +62,9 @@ def test_create_user_group_normal_user(client: TestClient, db: Session) -> None:
     )
     data = {"node_id": setup["node"].id, "name": random_lower_string()}
     response = client.post(
-        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 200
     content = response.json()
@@ -125,7 +127,9 @@ def test_create_user_group_fail_no_permission(client: TestClient, db: Session) -
     )
     data = {"node_id": setup["node"].id, "name": random_lower_string()}
     response = client.post(
-        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers, json=data,
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=user_token_headers,
+        json=data,
     )
     assert response.status_code == 403
     content = response.json()
@@ -195,7 +199,8 @@ def test_read_user_group_fail_not_exists(
     """Fails if the user group doesn't exist"""
 
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/{-1}", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/user_groups/{-1}",
+        headers=superuser_token_headers,
     )
     assert response.status_code == 404
     content = response.json()
@@ -246,13 +251,14 @@ def test_read_user_groups(
         for i in range(10)
     ]
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/", headers=superuser_token_headers,
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=superuser_token_headers,
     )
 
     assert response.status_code == 200
     content = response.json()
-    stored_user_group_ids = [user_group["id"] for user_group in content]
-    assert len(content) >= 10
+    stored_user_group_ids = [user_group["id"] for user_group in content["records"]]
+    assert len(content["records"]) >= 10
     assert all([ug.id in stored_user_group_ids for ug in user_groups])
 
 
@@ -262,7 +268,10 @@ def test_read_user_groups_normal_user(
     """Successfully read user groups with permissions"""
 
     setup = multi_user_group_permission_setup(
-        db, n=10, permission_type=PermissionTypeEnum.read, permission_enabled=True,
+        db,
+        n=10,
+        permission_type=PermissionTypeEnum.read,
+        permission_enabled=True,
     )
     user_group_ids = [user_group.id for user_group in setup["user_groups"]]
     user_token_headers = authentication_token_from_email(
@@ -270,12 +279,13 @@ def test_read_user_groups_normal_user(
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=user_token_headers,
     )
     assert response.status_code == 200
     content = response.json()
-    assert len(content) == 10
-    assert all([ug["id"] in user_group_ids for ug in content])
+    assert len(content["records"]) == 10
+    assert all([ug["id"] in user_group_ids for ug in content["records"]])
 
 
 def test_read_user_groups_fail_no_permission(
@@ -293,11 +303,12 @@ def test_read_user_groups_fail_no_permission(
     )
 
     response = client.get(
-        f"{settings.API_V1_STR}/user_groups/", headers=user_token_headers,
+        f"{settings.API_V1_STR}/user_groups/",
+        headers=user_token_headers,
     )
     content = response.json()
     assert response.status_code == 200
-    assert len(content) == 0
+    assert len(content["records"]) == 0
 
 
 # --------------------------------------------------------------------------------------
@@ -476,7 +487,9 @@ def test_delete_user_group_normal_user(
     """Successfully delete a user group as a normal user"""
 
     setup = user_group_permission_setup(
-        db, permission_type=PermissionTypeEnum.delete, permission_enabled=True,
+        db,
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=True,
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
@@ -513,7 +526,9 @@ def test_delete_user_group_fail_user_no_permission(
     """Fails if the user doesn't have delete permissions on the target user group"""
 
     setup = user_group_permission_setup(
-        db, permission_type=PermissionTypeEnum.delete, permission_enabled=False,
+        db,
+        permission_type=PermissionTypeEnum.delete,
+        permission_enabled=False,
     )
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db

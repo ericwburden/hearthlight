@@ -70,7 +70,7 @@ def test_get_multi_form_input_table(db: Session, superuser: User) -> None:
     stored_form_inputs = form_input_table_crud.get_multi(db=db)
     for fic in form_input_creates:
         found_match = False
-        for sfi in stored_form_inputs:
+        for sfi in stored_form_inputs.records:
             name_match = fic["name"] == sfi.name
             date_match = fic["date_created"] == sfi.date_created
             integer_match = fic["an_integer"] == sfi.an_integer

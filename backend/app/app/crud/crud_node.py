@@ -5,7 +5,12 @@ from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql.expression import literal, literal_column
 from sqlalchemy.sql.selectable import CTE
 
-from app.crud.base import CRUDBaseLogging, AccessControl, node_tree_ids
+from app.crud.base import (
+    CRUDBaseLogging,
+    AccessControl,
+    GenericModelList,
+    node_tree_ids,
+)
 from app.models import Interface, Node, NodePermission, UserGroup
 from app.schemas import NodeCreate, NodeUpdate, NodeChild
 
@@ -161,14 +166,16 @@ class CRUDNode(
 
     def get_multi_networks(
         self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> List[Node]:
-        return (
+    ) -> GenericModelList:
+        base_query = (
             db.query(self.model)
-            .filter(self.model.node_type == "network")
             .order_by(self.model.id.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
+            .filter(self.model.node_type == "network")
+        )
+        total_records = base_query.count()
+        records = base_query.offset(skip).limit(limit).all()
+        return GenericModelList[self.model](
+            total_records=total_records, records=records
         )
 
     def get_child_nodes(self, db: Session, *, id: int) -> List[Node]:

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.base import GenericModelList
 
 router = APIRouter()
 node_create_validator = deps.UserPermissionValidator(
@@ -164,13 +165,13 @@ def read_node(
     return node
 
 
-@router.get("/", response_model=List[schemas.Node])
+@router.get("/", response_model=GenericModelList[schemas.Node])
 def read_nodes(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> List[models.Node]:
+) -> GenericModelList[schemas.Node]:
     """# Read a list of nodes
 
     Returns nodes in descending primary key order by default
@@ -200,13 +201,13 @@ def read_nodes(
     return nodes
 
 
-@router.get("/networks/", response_model=schemas.NodeList)
+@router.get("/networks/", response_model=GenericModelList[schemas.Node])
 def read_networks(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> schemas.NodeList:
+) -> GenericModelList[schemas.Node]:
     """# Read a list of network nodes
 
     Returns network nodes in descending primary key order by default
@@ -226,12 +227,13 @@ def read_networks(
 
     - NodeList: Object containing a list of nodes and total row count
     """
-    node_count = crud.node.count(db)
-    nodes = []
-    if node_count > 0:
-        nodes = crud.node.get_multi_networks(db, skip=skip, limit=limit)
+    # node_count = crud.node.count(db)
+    # nodes = []
+    # if node_count > 0:
+    #     nodes = crud.node.get_multi_networks(db, skip=skip, limit=limit)
 
-    return schemas.NodeList(total_records=node_count, nodes=nodes)
+    # return schemas.NodeList(total_records=node_count, nodes=nodes)
+    return crud.node.get_multi_networks(db, skip=skip, limit=limit)
 
 
 @router.put("/{resource_id}", response_model=schemas.Node)

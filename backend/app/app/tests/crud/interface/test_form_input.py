@@ -60,7 +60,7 @@ def test_get_multi_form_input(db: Session, superuser: User) -> None:
     stored_form_inputs = crud.form_input.get_multi(db=db)
     for nii in new_form_inputs_in:
         found_match = False
-        for si in stored_form_inputs:
+        for si in stored_form_inputs.records:
             name_match = nii.name == si.name
             table_template_match = nii.template == si.template
             if name_match and table_template_match:

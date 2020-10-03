@@ -48,7 +48,7 @@ def test_get_multi_node(db: Session, superuser: User) -> None:
         for node_in in new_nodes_in
     ]
     stored_nodes = crud.node.get_multi(db=db)
-    stored_node_names = [sn.name for sn in stored_nodes]
+    stored_node_names = [sn.name for sn in stored_nodes.records]
     for n in names:
         assert n in stored_node_names
 
@@ -63,7 +63,7 @@ def test_get_multi_network(db: Session, superuser: User) -> None:
     new_node_in = NodeCreate(name=random_lower_string(), node_type="something_else")
     new_node = crud.node.create(db=db, obj_in=new_node_in, created_by_id=superuser.id)
     stored_nodes = crud.node.get_multi_networks(db=db)
-    stored_node_names = [sn.name for sn in stored_nodes]
+    stored_node_names = [sn.name for sn in stored_nodes.records]
     for n in names:
         assert n in stored_node_names
     assert new_node.name not in stored_node_names
@@ -260,7 +260,7 @@ def test_get_multi_node_with_permission(db: Session, superuser: User) -> None:
     # all the nodes we just put in with permissions and that you don't get the
     # blocked node
     stored_nodes = crud.node.get_multi_with_permissions(db=db, user=normal_user)
-    stored_node_names = [sn.name for sn in stored_nodes]
+    stored_node_names = [sn.name for sn in stored_nodes.records]
     for n in names:
         assert n in stored_node_names
     assert blocked_node.name not in stored_node_names

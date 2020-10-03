@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.base import GenericModelList
 from app.crud.errors import MissingRecordsError
 
 router = APIRouter()
@@ -135,13 +136,13 @@ def read_user_group(
     return user_group
 
 
-@router.get("/", response_model=List[schemas.UserGroup])
+@router.get("/", response_model=GenericModelList[schemas.UserGroup])
 def read_user_groups(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> List[models.UserGroup]:
+) -> GenericModelList[schemas.UserGroup]:
     """# Read a list of nodes
 
     Returns nodes in descending primary key order by default

@@ -317,7 +317,7 @@ def test_read_form_input_entries(
     )
     content = response.json()
     assert response.status_code == 200
-    stored_ids = [c["id"] for c in content]
+    stored_ids = [c["id"] for c in content["records"]]
     for form_input_entry in form_input_entries:
         assert form_input_entry.id in stored_ids
 
@@ -369,7 +369,7 @@ def test_read_form_input_entries_normal_user(client: TestClient, db: Session) ->
     )
     content = response.json()
     assert response.status_code == 200
-    stored_ids = [c["id"] for c in content]
+    stored_ids = [c["id"] for c in content["records"]]
     for form_input_entry in form_input_entries:
         assert form_input_entry.id in stored_ids
 

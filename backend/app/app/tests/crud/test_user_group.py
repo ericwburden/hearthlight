@@ -57,7 +57,7 @@ def test_get_multi_user_group(db: Session, normal_user: User) -> None:
         for user_group_in in new_user_groups_in
     ]
     stored_user_groups = crud.user_group.get_multi(db=db)
-    stored_user_group_names = [sn.name for sn in stored_user_groups]
+    stored_user_group_names = [sn.name for sn in stored_user_groups.records]
     for n in names:
         assert n in stored_user_group_names
 
@@ -274,7 +274,7 @@ def test_get_multi_user_groups_with_permission(db: Session, superuser: User) -> 
     stored_user_groups = crud.user_group.get_multi_with_permissions(
         db=db, user=normal_user
     )
-    stored_user_group_names = [sn.name for sn in stored_user_groups]
+    stored_user_group_names = [sn.name for sn in stored_user_groups.records]
     for n in user_group_names:
         assert n in stored_user_group_names
     assert blocked_user_group.name not in stored_user_group_names

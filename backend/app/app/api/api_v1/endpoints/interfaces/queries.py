@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 
 from app import crud, models, schemas
 from app.api import deps
+from app.crud.base import GenericModelList
 
 
 interface_read_validator = deps.UserPermissionValidator(
@@ -90,13 +91,13 @@ def read_query_interface(
     return query
 
 
-@router.get("/", response_model=List[schemas.Query])
+@router.get("/", response_model=GenericModelList[schemas.Query])
 def read_query_interfaces(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> List[models.QueryInterface]:
+) -> GenericModelList[schemas.Query]:
     """# Read multiple query interfaces
 
     Fetch mutliple query interfaces directly. To fetch just the query

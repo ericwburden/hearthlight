@@ -9,9 +9,22 @@ const Home = () => import(/* webpackChunkName: "home" */ '../views/main/Home.vue
 // Admin routes
 const AdminDashboard = () => import(/* webpackChunkName: "admin" */ '../views/admin/AdminDashboard.vue');
 const ConfigureApplication = () =>
-  import(/* webpackChunkName: "admin-configure" */ '../views/admin/ConfigureApplication.vue');
+  import(
+    /* webpackChunkName: "admin-configure" */
+    '../views/admin/ConfigureApplication.vue'
+  );
+
 const ConfigureNodeForm = () =>
-  import(/* webpackChunkName: "admin-configure-node" */ '@/components/forms/ConfigureNodeForm.vue');
+  import(
+    /* webpackChunkName: "admin-configure-node" */
+    '@/components/forms/ConfigureNodeForm.vue'
+  );
+
+const NodeSearchForm = () =>
+  import(
+    /* webpackChunkName: "admin-configure-node-search" */
+    '@/components/forms/NodeSearchForm.vue'
+  );
 
 const routes: Array<RouteConfig> = [
   {
@@ -27,7 +40,10 @@ const routes: Array<RouteConfig> = [
             path: 'configure',
             name: 'admin.configure',
             component: ConfigureApplication,
-            children: [{ path: 'node/:uuid', name: 'admin.configure.node', component: ConfigureNodeForm }],
+            children: [
+              { path: 'node/:uuid', name: 'admin.configure.node', component: ConfigureNodeForm },
+              { path: 'node/:id/child-search', name: 'admin.configure.node.search', component: NodeSearchForm },
+            ],
           },
         ],
       },

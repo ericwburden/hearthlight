@@ -10,6 +10,7 @@ import {
   commitSetActiveNode,
   commitSetApplicationModel,
   commitSetNetworks,
+  commitSetNodes,
   commitSetNodeTypes,
 } from './mutations';
 import { AdminState } from './state';
@@ -108,6 +109,17 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionGetNodes(context: MainContext, payload: [number, number] = [0, 10]) {
+    // payload[0] == skip; payload[1] == limit
+    try {
+      const response = await api.getNodes(context.getters.token, payload[0], payload[1]);
+      if (response.data) {
+        commitSetNodes(context, response.data);
+      }
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
   async actionGetNodeTypes(context: MainContext) {
     try {
       const response = await api.getNodeTypes();
@@ -149,5 +161,6 @@ export const dispatchDeleteNode = dispatch(actions.actionDeleteNode);
 export const dispatchGetOneNode = dispatch(actions.actionReadOneNode);
 export const dispatchUpdateNode = dispatch(actions.actionUpdateNode);
 export const dispatchGetNetworks = dispatch(actions.actionGetNetworks);
+export const dispatchGetNodes = dispatch(actions.actionGetNodes);
 export const dispatchGetNodeTypes = dispatch(actions.actionGetNodeTypes);
 export const dispatchUpdateApplicationModelChildren = dispatch(actions.actionUpdateApplicationModelChildren);

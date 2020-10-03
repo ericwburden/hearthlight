@@ -5,7 +5,7 @@ import { State } from '../state';
 
 export const mutations = {
   initApplicationModel(state: AdminState, payload: INodeList) {
-    const networkEntries: ApplicationModelEntry[] = payload.nodes.map((network: INode) => {
+    const networkEntries: ApplicationModelEntry[] = payload.records.map((network: INode) => {
       return {
         id: network.id,
         type: 'network',
@@ -30,6 +30,9 @@ export const mutations = {
   setNetworks(state: AdminState, payload: INodeList) {
     state.networks = payload;
   },
+  setNodes(state: AdminState, payload: INodeList) {
+    state.nodes = payload;
+  },
   setNodeTypes(state: AdminState, payload: string[]) {
     state.nodeTypes = payload;
   },
@@ -43,4 +46,5 @@ export const commitSetApplicationModel = commit(mutations.setApplicationModel);
 export const commitSetConfigScreenShowForm = commit(mutations.setConfigScreenShowForm);
 export const commitSetConfigureNodeFormProps = commit(mutations.setConfigureNodeFormProps);
 export const commitSetNetworks = commit(mutations.setNetworks);
+export const commitSetNodes = commit(mutations.setNodes);
 export const commitSetNodeTypes = commit(mutations.setNodeTypes);

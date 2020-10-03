@@ -6,5 +6,6 @@ export interface AdminState {
   configScreenShowForm: string;
   configureNodeFormProps: IConfigureNodeFormProps;
   networks: INodeList;
+  nodes: INodeList;
   nodeTypes: string[];
 }

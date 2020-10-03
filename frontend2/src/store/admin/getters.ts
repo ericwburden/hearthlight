@@ -8,6 +8,7 @@ export const getters = {
   configScreenShowForm: (state: AdminState) => state.configScreenShowForm,
   configureNodeFormProps: (state: AdminState) => state.configureNodeFormProps,
   networks: (state: AdminState) => state.networks,
+  nodes: (state: AdminState) => state.nodes,
   nodeTypes: (state: AdminState) => state.nodeTypes,
 };
 
@@ -18,4 +19,5 @@ export const readApplicationModel = read(getters.applicationModel);
 export const readConfigScreenShowForm = read(getters.configScreenShowForm);
 export const readConfigureNodeFormProps = read(getters.configureNodeFormProps);
 export const readNetworks = read(getters.networks);
+export const readAdminNodes = read(getters.nodes);
 export const readNodeTypes = read(getters.nodeTypes);

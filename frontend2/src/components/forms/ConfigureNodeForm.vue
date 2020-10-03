@@ -125,8 +125,6 @@ export default class CreateNodeForm extends Vue {
   }
 
   public close() {
-    // Set the displayed form to none
-    // commitSetConfigScreenShowForm(this.$store, '');
     this.$router.push('/admin/configure');
   }
 

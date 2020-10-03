@@ -128,9 +128,10 @@ class CRUDNode(
 
         # If attempting to update the node's parent_id, set the new
         # node depth
+        obj_in_data = obj_in.dict()
         if db_obj.parent_id != obj_in.parent_id:
             parent = self.get(db, obj_in.parent_id)
-            obj_in.depth = parent.depth + 1
+            obj_in_data["depth"] = parent.depth + 1
         return super().update(
             db, db_obj=db_obj, obj_in=obj_in, updated_by_id=updated_by_id
         )

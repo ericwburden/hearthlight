@@ -109,10 +109,18 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
-  async actionGetNodes(context: MainContext, payload: [number, number] = [0, 10]) {
-    // payload[0] == skip; payload[1] == limit
+  async actionGetNodes(
+    context: MainContext,
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+  ) {
     try {
-      const response = await api.getNodes(context.getters.token, payload[0], payload[1]);
+      const response = await api.getNodes(
+        context.getters.token,
+        payload.skip,
+        payload.limit,
+        payload.sortBy,
+        payload.sortDesc,
+      );
       if (response.data) {
         commitSetNodes(context, response.data);
       }

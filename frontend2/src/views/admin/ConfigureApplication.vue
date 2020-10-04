@@ -17,7 +17,12 @@
         </v-card>
       </v-col>
       <v-col md="6" sm="12" order="2" order-md="1">
-        <v-card>
+        <v-card v-if="loading">
+          <v-container>
+            <v-skeleton-loader class="mx-auto" type="heading, list-item@5"></v-skeleton-loader>
+          </v-container>
+        </v-card>
+        <v-card v-else>
           <v-container>
             <h2>Networks</h2>
             <v-treeview
@@ -111,6 +116,7 @@ import { ApplicationModelEntry, IConfigureNodeFormProps } from '@/interfaces';
   components: { IconWithTooltip },
 })
 export default class ConfigureApplication extends Vue {
+  loading = true;
   selected: ApplicationModelEntry | null = null;
   open: ApplicationModelEntry[] = [];
   active: ApplicationModelEntry[] = [];
@@ -125,7 +131,9 @@ export default class ConfigureApplication extends Vue {
     if (openedItem) {
       let child;
       for (child of openedItem.children) {
-        await dispatchUpdateApplicationModelChildren(this.$store, child);
+        if (child.type == 'node' || child.type == 'network') {
+          await dispatchUpdateApplicationModelChildren(this.$store, child);
+        }
       }
     }
   }
@@ -140,6 +148,7 @@ export default class ConfigureApplication extends Vue {
 
   public async mounted() {
     await dispatchGetNetworks(this.$store);
+    this.loading = false;
   }
 
   // Functions to manage actions on tree view items

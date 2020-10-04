@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <v-col cols="10">
-        <h2>Select an existing node</h2>
+        <h2>{{ title }}</h2>
       </v-col>
       <v-col class="d-flex justify-end" cols="2">
         <v-btn icon color="error" @click="close()" large><v-icon>mdi-close-circle</v-icon></v-btn>
@@ -16,9 +16,9 @@
           :options.sync="options"
           :server-items-length="total"
           :loading="loading"
-          show-select
-          single-select
+          :item-class="rowColor"
           class="elevation-1"
+          @click:row="selectRow"
         >
           <template v-slot:[`item.is_active`]="{ item }">
             <v-icon v-if="item.is_active" color="success">mdi-check-circle</v-icon>
@@ -39,15 +39,16 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { DataOptions } from 'vuetify';
-import { INode } from '@/interfaces';
-import { readAdminNodes } from '@/store/admin/getters';
-import { dispatchGetNodes } from '@/store/admin/actions';
+import { INode, INodeUpdate } from '@/interfaces';
+import { readActiveNode, readAdminNodes } from '@/store/admin/getters';
+import { dispatchGetNetworks, dispatchGetNodes, dispatchGetOneNode, dispatchUpdateNode } from '@/store/admin/actions';
 
 @Component
 export default class NodeSearchForm extends Vue {
   public skip = 0;
   public limit = 10;
   public loading = true;
+  public selectedRow: INode | null = null;
   public options: DataOptions = {
     page: 1,
     itemsPerPage: 10,
@@ -67,12 +68,24 @@ export default class NodeSearchForm extends Vue {
     { text: 'Active', sortable: false, value: 'is_active', align: 'center' },
   ];
 
-  get total() {
+  get total(): number {
     return readAdminNodes(this.$store).total_records;
   }
 
+  get parent(): INode | null {
+    return readActiveNode(this.$store);
+  }
+
+  get title(): string {
+    if (this.parent) {
+      return `Assign existing node to: ${this.parent.name}`;
+    }
+    return 'Select an existing node';
+  }
+
   public async mounted() {
-    await dispatchGetNodes(this.$store, [0, this.options.itemsPerPage]);
+    await dispatchGetNodes(this.$store, { skip: 0, limit: this.options.itemsPerPage, sortBy: '', sortDesc: false });
+    await dispatchGetOneNode(this.$store, parseInt(this.$route.params.id));
     this.nodes = readAdminNodes(this.$store).records;
     this.loading = false;
   }
@@ -80,35 +93,32 @@ export default class NodeSearchForm extends Vue {
   @Watch('options', { deep: true })
   async onOptionsChange() {
     this.loading = true;
-    console.log(this.options);
     const { sortBy, sortDesc, page, itemsPerPage } = this.options;
 
     if (sortBy.length === 1 && sortDesc.length === 1) {
-      this.nodes = this.nodes.sort((a, b) => {
-        const sortA = a[sortBy[0]];
-        const sortB = b[sortBy[0]];
-
-        if (sortA && sortB) {
-          if (sortDesc[0]) {
-            if (sortA < sortB) return 1;
-            if (sortA > sortB) return -1;
-            return 0;
-          } else {
-            if (sortA < sortB) return -1;
-            if (sortA > sortB) return 1;
-            return 0;
-          }
-        }
-        return 0;
-      });
-
       if (itemsPerPage > 0) {
         const skip = (page - 1) * itemsPerPage;
-        await dispatchGetNodes(this.$store, [skip, itemsPerPage]);
+        await dispatchGetNodes(this.$store, {
+          skip: skip,
+          limit: itemsPerPage,
+          sortBy: sortBy[0],
+          sortDesc: sortDesc[0],
+        });
         this.nodes = readAdminNodes(this.$store).records;
       }
     }
     this.loading = false;
+  }
+
+  public rowColor(row: INode) {
+    if (this.selectedRow) {
+      return row.id == this.selectedRow.id ? 'success white--text' : '';
+    }
+    return '';
+  }
+
+  public selectRow(row: INode) {
+    this.selectedRow = row;
   }
 
   public close() {
@@ -126,10 +136,19 @@ export default class NodeSearchForm extends Vue {
       multiSort: false,
       mustSort: false,
     };
+    this.selectedRow = null;
   }
 
-  public submit() {
-    console.log(this.$route.params.id);
+  public async submit() {
+    if (this.parent && this.selectedRow) {
+      const nodeUpdate: INodeUpdate = {
+        /* eslint-disable @typescript-eslint/camelcase */
+        parent_id: this.parent.id,
+      };
+      await dispatchUpdateNode(this.$store, [this.selectedRow.id, nodeUpdate]);
+    }
+    await dispatchGetNetworks(this.$store);
+    this.close();
   }
 }
 </script>

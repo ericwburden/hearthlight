@@ -70,8 +70,11 @@ export const api = {
   async getNetworks(token: string) {
     return axios.get<INodeList>(`${apiUrl}/api/v1/nodes/networks/`, authHeaders(token));
   },
-  async getNodes(token: string, skip = 0, limit = 10) {
-    return axios.get<INodeList>(`${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}`, authHeaders(token));
+  async getNodes(token: string, skip = 0, limit = 10, sort_by = '', sort_desc = false) {
+    return axios.get<INodeList>(
+      `${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}&sort_by=${sort_by}&sort_desc=${sort_desc}`,
+      authHeaders(token),
+    );
   },
   async getNodeChildren(token: string, nodeId: number) {
     return axios.get<INodeChild[]>(`${apiUrl}/api/v1/nodes/${nodeId}/children`, authHeaders(token));

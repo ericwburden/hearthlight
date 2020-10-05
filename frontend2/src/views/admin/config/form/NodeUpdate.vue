@@ -27,6 +27,11 @@
         </v-col>
       </v-row>
       <v-row>
+        <v-col>
+          <v-switch v-model="isActive" inset label="Is Node Active?"></v-switch>
+        </v-col>
+      </v-row>
+      <v-row>
         <v-col class="d-flex justify-end">
           <v-btn color="warning" @click="reset" class="mx-2">Reset</v-btn>
           <v-btn color="success" @click="submit" class="mx-2">Submit</v-btn>
@@ -39,12 +44,12 @@
 <script lang="ts">
 /* eslint-disable @typescript-eslint/camelcase */
 import { Component, Vue } from 'vue-property-decorator';
-import { INodeCreate } from '@/interfaces';
+import { INodeUpdate } from '@/interfaces';
 import {
-  dispatchCreateNode,
   dispatchGetNetworks,
   dispatchGetNodeTypes,
   dispatchGetOneNode,
+  dispatchUpdateNode,
 } from '@/store/admin/actions';
 import { readActiveNode, readNodeTypes } from '@/store/admin/getters';
 
@@ -68,22 +73,30 @@ export default class NodeCreate extends Vue {
     (v: string | undefined) => (v && v.length <= 64) || 'Node Type must be less than 64 characters',
   ];
 
+  public isActive = false;
+
   get title() {
-    if (this.parentNode) {
-      return `Add child Node to ${this.parentNode.name}`;
+    if (this.currentNode && this.network) {
+      return `Update Network: ${this.currentNode.name}`;
+    }
+    if (this.currentNode) {
+      return `Update Node: ${this.currentNode.name}`;
     }
     return 'Create new network.';
   }
 
   get network() {
-    return this.parentNode == null;
+    if (this.currentNode) {
+      return this.currentNode.node_type == 'network';
+    }
+    return false;
   }
 
   get nodeTypes() {
     return readNodeTypes(this.$store).sort();
   }
 
-  get parentNode() {
+  get currentNode() {
     if (this.$route.params.id) {
       return readActiveNode(this.$store);
     }
@@ -104,27 +117,29 @@ export default class NodeCreate extends Vue {
 
   public reset() {
     this.$refs.form.reset();
-    this.nodeName = '';
-    this.nodeTypeText = '';
-
-    // If no parent is given, node type == 'network'
-    if (this.parentNode == null) {
-      this.nodeTypeText = 'network';
+    if (this.currentNode) {
+      this.nodeName = this.currentNode.name;
+      this.nodeTypeText = this.currentNode.node_type;
+      this.isActive = this.currentNode.is_active;
     }
   }
 
   public async submit() {
     if (await this.$refs.form.validate()) {
-      const nodeCreate: INodeCreate = {
-        name: this.nodeName,
-        node_type: this.nodeTypeText,
-      };
-      if (this.$route.params.id) {
-        nodeCreate.parent_id = parseInt(this.$route.params.id);
+      if (this.currentNode) {
+        const nodeUpdate: INodeUpdate = {
+          name: this.nodeName,
+          node_type: this.nodeTypeText,
+          is_active: this.isActive,
+        };
+        console.log(nodeUpdate);
+        if (nodeUpdate) {
+          await dispatchUpdateNode(this.$store, { id: parseInt(this.$route.params.id), object: nodeUpdate });
+        }
+
+        await dispatchGetNetworks(this.$store);
+        this.close();
       }
-      await dispatchCreateNode(this.$store, nodeCreate);
-      await dispatchGetNetworks(this.$store);
-      this.close();
     }
   }
 }

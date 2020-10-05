@@ -71,15 +71,13 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
-  async actionUpdateNode(context: MainContext, payload: [number, INodeUpdate]) {
-    const nodeId = payload[0];
-    const nodeUpdateObj = payload[1];
+  async actionUpdateNode(context: MainContext, payload: { id: number; object: INodeUpdate }) {
     try {
-      const loadingNotification = { content: `Updating node: ID ${nodeId}`, showProgress: true };
+      const loadingNotification = { content: `Updating node: ID ${payload.id}`, showProgress: true };
       commitAddNotification(context, loadingNotification);
       const response = (
         await Promise.all([
-          api.updateNode(context.getters.token, nodeId, nodeUpdateObj),
+          api.updateNode(context.getters.token, payload.id, payload.object),
           await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
         ])
       )[0];

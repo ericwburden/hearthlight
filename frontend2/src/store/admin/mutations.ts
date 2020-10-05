@@ -1,4 +1,11 @@
-import { ApplicationModelEntry, INodeList, INode, IConfigureNodeFormProps } from '@/interfaces';
+import {
+  ApplicationModelEntry,
+  IConfigureNodeFormProps,
+  INode,
+  INodeList,
+  IUserGroup,
+  IUserGroupList,
+} from '@/interfaces';
 import { AdminState } from './state';
 import { getStoreAccessors } from 'typesafe-vuex';
 import { State } from '../state';
@@ -10,6 +17,7 @@ export const mutations = {
         id: network.id,
         type: 'network',
         name: network.name,
+        key: `network-${network.id}`,
         children: [],
       };
     });
@@ -17,6 +25,9 @@ export const mutations = {
   },
   setActiveNode(state: AdminState, payload: INode) {
     state.activeNode = payload;
+  },
+  setActiveUserGroup(state: AdminState, payload: IUserGroup) {
+    state.activeUserGroup = payload;
   },
   setApplicationModel(state: AdminState, payload: ApplicationModelEntry[]) {
     state.applicationModel = payload;
@@ -36,6 +47,9 @@ export const mutations = {
   setNodeTypes(state: AdminState, payload: string[]) {
     state.nodeTypes = payload;
   },
+  setUserGroups(state: AdminState, payload: IUserGroupList) {
+    state.userGroups = payload;
+  },
 };
 
 const { commit } = getStoreAccessors<AdminState | any, State>('');
@@ -48,3 +62,6 @@ export const commitSetConfigureNodeFormProps = commit(mutations.setConfigureNode
 export const commitSetNetworks = commit(mutations.setNetworks);
 export const commitSetNodes = commit(mutations.setNodes);
 export const commitSetNodeTypes = commit(mutations.setNodeTypes);
+
+export const commitSetActiveUserGroup = commit(mutations.setActiveUserGroup);
+export const commitSetUserGroups = commit(mutations.setUserGroups);

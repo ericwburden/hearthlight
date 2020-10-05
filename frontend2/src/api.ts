@@ -6,6 +6,10 @@ import {
   INodeCreate,
   INodeList,
   INodeUpdate,
+  IUserGroup,
+  IUserGroupCreate,
+  IUserGroupList,
+  IUserGroupUpdate,
   IUserProfile,
   IUserProfileUpdate,
   IUserProfileCreate,
@@ -81,5 +85,25 @@ export const api = {
   },
   async getNodeTypes() {
     return axios.get<string[]>(`${apiUrl}/api/v1/utils/node-types/`);
+  },
+
+  // User Group endpoints
+  async createUserGroup(token: string, data: IUserGroupCreate) {
+    return axios.post<IUserGroup>(`${apiUrl}/api/v1/user_groups/`, data, authHeaders(token));
+  },
+  async deleteUserGroup(token: string, UserGroupId: number) {
+    return axios.delete<IUserGroup>(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, authHeaders(token));
+  },
+  async getOneUserGroup(token: string, UserGroupId: number) {
+    return axios.get<IUserGroup>(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, authHeaders(token));
+  },
+  async updateUserGroup(token: string, UserGroupId: number, data: IUserGroupUpdate) {
+    return axios.put(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, data, authHeaders(token));
+  },
+  async getUserGroups(token: string, skip = 0, limit = 10, sort_by = '', sort_desc = false) {
+    return axios.get<IUserGroupList>(
+      `${apiUrl}/api/v1/user_groups/?skip=${skip}&limit=${limit}&sort_by=${sort_by}&sort_desc=${sort_desc}`,
+      authHeaders(token),
+    );
   },
 };

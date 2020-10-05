@@ -1,21 +1,6 @@
 <template>
-  <v-form v-model="valid" ref="nodeCreateForm" lazy-validation>
-    <v-container v-if="deleteForm">
-      <v-row>
-        <v-col>
-          <h2>Really delete node {{ name }}?</h2>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-btn x-large color="warning" @click="close">Cancel</v-btn>
-        </v-col>
-        <v-col>
-          <v-btn x-large color="error" @click="confirm">Delete</v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
-    <v-container v-else>
+  <v-form v-model="valid" ref="form" lazy-validation>
+    <v-container>
       <v-row>
         <v-col cols="10">
           <h2>{{ title }}</h2>
@@ -71,15 +56,14 @@ import {
 import { readActiveNode, readConfigureNodeFormProps, readNodeTypes } from '@/store/admin/getters';
 
 @Component
-export default class CreateNodeForm extends Vue {
+export default class ConfigureNodeForm extends Vue {
   // Needed to set the correct type in order to make form functions available
   $refs!: {
-    nodeCreateForm: HTMLFormElement;
+    form: HTMLFormElement;
   };
 
   public title = this.props.title;
   public network = this.props.network;
-  public deleteForm = this.props.delete;
   public name = this.activeNode ? this.activeNode.name : null;
   public valid = false;
   public nodeName = '';
@@ -129,7 +113,7 @@ export default class CreateNodeForm extends Vue {
   }
 
   public reset() {
-    this.$refs.nodeCreateForm.reset();
+    this.$refs.form.reset();
     if (this.props.id && this.activeNode) {
       // If the 'id' prop is set, populate the fields
       this.nodeName = this.activeNode.name;
@@ -156,7 +140,7 @@ export default class CreateNodeForm extends Vue {
   }
 
   public async submit() {
-    if (await this.$refs.nodeCreateForm.validate()) {
+    if (await this.$refs.form.validate()) {
       if (this.props.id) {
         // If the 'id' prop is set, update the node
         const nodeUpdate: INodeUpdate = {
@@ -184,7 +168,7 @@ export default class CreateNodeForm extends Vue {
     }
   }
 
-  public async confirm() {
+  public async confirmDelete() {
     if (this.props.id) {
       await dispatchDeleteNode(this.$store, this.props.id);
     }

@@ -117,7 +117,7 @@ export const actions = {
     }
   },
   async actionCheckApiError(context: MainContext, payload: AxiosError) {
-    if (payload.response!.status === 401) {
+    if ([401, 502].includes(payload.response!.status)) {
       await dispatch(actions.actionLogOut)(context);
     }
     if (payload.response) {

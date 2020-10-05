@@ -29,6 +29,7 @@
               :items="items"
               :active.sync="active"
               :open.sync="open"
+              item-key="key"
               activatable
               color="info"
               transition
@@ -45,29 +46,49 @@
                 <IconWithTooltip v-if="item.type == 'interface'" icon="mdi-swap-vertical-circl" msg="Interface" />
               </template>
               <template v-slot:append="{ item }">
-                <!-- Node Button -->
+                <!-- Node Add New Child Button -->
                 <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
                   <template v-slot:activator="{ on, attrs }">
                     <v-sheet v-bind="attrs" v-on="on" class="d-inline">
                       <v-menu offset-y>
                         <template v-slot:activator="{ on, attrs }">
                           <v-btn v-if="item.id" icon color="success" v-bind="attrs" v-on="on">
-                            <v-icon>mdi-playlist-plus</v-icon>
+                            <v-icon>mdi-layers-plus</v-icon>
                           </v-btn>
                         </template>
                         <v-list>
-                          <v-list-item @click="addNodeChild(item)">New Node</v-list-item>
-                          <v-list-item @click="selectNodeChild(item)">Existing Node</v-list-item>
+                          <v-list-item @click="addNodeChild(item)">Node</v-list-item>
+                          <v-list-item @click="addUserGroupChild(item)">User Group</v-list-item>
+                          <v-list-item @click="selectItem(item)">Interface</v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-sheet>
+                  </template>
+                  <span>Add New Child</span>
+                </v-tooltip>
+
+                <!-- Node Assign Existing Child Button -->
+                <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-sheet v-bind="attrs" v-on="on" class="d-inline">
+                      <v-menu offset-y>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-btn v-if="item.id" icon color="info" v-bind="attrs" v-on="on">
+                            <v-icon>mdi-layers-search</v-icon>
+                          </v-btn>
+                        </template>
+                        <v-list>
+                          <v-list-item @click="selectNodeChild(item)">Node</v-list-item>
                           <v-list-item @click="selectItem(item)">User Group</v-list-item>
                           <v-list-item @click="selectItem(item)">Interface</v-list-item>
                         </v-list>
                       </v-menu>
                     </v-sheet>
                   </template>
-                  <span>Add Child</span>
+                  <span>Assign Existing Child</span>
                 </v-tooltip>
 
-                <!-- User Group Button -->
+                <!-- User Group Add User Button -->
                 <v-tooltip bottom v-if="item.type == 'user_group'">
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn v-if="item.id" @click="selectItem(item)" icon color="success" v-bind="attrs" v-on="on">
@@ -77,6 +98,7 @@
                   <span>Add User</span>
                 </v-tooltip>
 
+                <!-- Edit Item Button -->
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn v-if="item.id" @click="updateItem(item)" icon color="info" v-bind="attrs" v-on="on">
@@ -86,10 +108,11 @@
                   <span>Edit</span>
                 </v-tooltip>
 
+                <!-- Delete Item Button -->
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn v-if="item.id" @click="deleteItem(item)" icon color="error" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-delete</v-icon>
+                      <v-icon>mdi-layers-remove</v-icon>
                     </v-btn>
                   </template>
                   <span>Delete</span>
@@ -170,16 +193,7 @@ export default class ConfigureApplication extends Vue {
   }
 
   public addNodeChild(node: ApplicationModelEntry) {
-    const configureNodeFormProps: IConfigureNodeFormProps = {
-      id: null,
-      title: `${node.name}: Add Child Node`,
-      parent: node.id,
-      network: false,
-      delete: false,
-    };
-    commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
-
-    this.$router.push(`/admin/configure/node/${uuidv4()}`);
+    this.$router.push(`/admin/configure/node/${node.id}/add-child-node`);
   }
 
   public selectNodeChild(node: ApplicationModelEntry) {
@@ -200,22 +214,23 @@ export default class ConfigureApplication extends Vue {
 
       this.$router.push(`/admin/configure/node/${uuidv4()}`);
     }
+    if (item.type == 'user_group') {
+      this.$router.push(`/admin/configure/user-group/${item.id}/update`);
+    }
   }
 
   public deleteItem(item: ApplicationModelEntry) {
     this.selectItem(item);
     if (item.type == 'node' || item.type == 'network') {
-      const configureNodeFormProps: IConfigureNodeFormProps = {
-        id: item.id,
-        title: `Delete Node: ${item.name}`,
-        parent: null,
-        network: item.type == 'network',
-        delete: true,
-      };
-      commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
-
-      this.$router.push(`/admin/configure/node/${uuidv4()}`);
+      this.$router.push(`/admin/configure/node/${item.id}/delete`);
     }
+    if (item.type == 'user_group') {
+      this.$router.push(`/admin/configure/user-group/${item.id}/delete`);
+    }
+  }
+
+  public addUserGroupChild(node: ApplicationModelEntry) {
+    this.$router.push(`/admin/configure/node/${node.id}/add-user-group`);
   }
 }
 </script>

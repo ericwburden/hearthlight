@@ -14,16 +14,16 @@ const ConfigureApplication = () =>
     '../views/admin/config/ConfigureApplication.vue'
   );
 
-const ConfigureNodeForm = () =>
-  import(
-    /* webpackChunkName: "admin-configure-node" */
-    '../views/admin/config/form/ConfigureNodeForm.vue'
-  );
-
 const NodeCreate = () =>
   import(
     /* webpackChunkName: "admin-configure-node-create" */
     '../views/admin/config/form/NodeCreate.vue'
+  );
+
+const NodeUpdate = () =>
+  import(
+    /* webpackChunkName: "admin-configure-node-update" */
+    '../views/admin/config/form/NodeUpdate.vue'
   );
 
 const NodeSearchForm = () =>
@@ -62,8 +62,9 @@ const routes: Array<RouteConfig> = [
             name: 'admin.configure',
             component: ConfigureApplication,
             children: [
+              { path: 'new-network', name: 'admin.configure.new-network', component: NodeCreate },
               { path: 'node/:id/add-child-node', name: 'admin.configure.node.add-child-node', component: NodeCreate },
-              { path: 'node/:uuid', name: 'admin.configure.node', component: ConfigureNodeForm },
+              { path: 'node/:id/update', name: 'admin.configure.node.update', component: NodeUpdate },
               { path: 'node/:id/child-search', name: 'admin.configure.node.search', component: NodeSearchForm },
               { path: ':type/:id/delete', name: 'admin.configure.delete', component: ConfirmDelete },
               {

@@ -145,7 +145,7 @@ export default class NodeSearchForm extends Vue {
         /* eslint-disable @typescript-eslint/camelcase */
         parent_id: this.parent.id,
       };
-      await dispatchUpdateNode(this.$store, [this.selectedRow.id, nodeUpdate]);
+      await dispatchUpdateNode(this.$store, { id: this.selectedRow.id, object: nodeUpdate });
     }
     await dispatchGetNetworks(this.$store);
     this.close();

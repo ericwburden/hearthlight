@@ -128,12 +128,10 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import { v4 as uuidv4 } from 'uuid';
 import IconWithTooltip from '@/components/IconWithTooltip.vue';
 import { readApplicationModel } from '@/store/admin/getters';
 import { dispatchGetNetworks, dispatchUpdateApplicationModelChildren } from '@/store/admin/actions';
-import { commitSetConfigureNodeFormProps } from '@/store/admin/mutations';
-import { ApplicationModelEntry, IConfigureNodeFormProps } from '@/interfaces';
+import { ApplicationModelEntry } from '@/interfaces';
 
 @Component({
   components: { IconWithTooltip },
@@ -180,16 +178,7 @@ export default class ConfigureApplication extends Vue {
   }
 
   public createNetwork() {
-    const configureNodeFormProps: IConfigureNodeFormProps = {
-      id: null,
-      title: 'Create New Network',
-      parent: null,
-      network: true,
-      delete: false,
-    };
-    commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
-
-    this.$router.push(`/admin/configure/node/${uuidv4()}`);
+    this.$router.push(`/admin/configure/new-network`);
   }
 
   public addNodeChild(node: ApplicationModelEntry) {
@@ -203,16 +192,7 @@ export default class ConfigureApplication extends Vue {
   public updateItem(item: ApplicationModelEntry) {
     this.selectItem(item);
     if (item.type == 'node' || item.type == 'network') {
-      const configureNodeFormProps: IConfigureNodeFormProps = {
-        id: item.id,
-        title: `Update Node: ${item.name}`,
-        parent: null,
-        network: item.type == 'network',
-        delete: false,
-      };
-      commitSetConfigureNodeFormProps(this.$store, configureNodeFormProps);
-
-      this.$router.push(`/admin/configure/node/${uuidv4()}`);
+      this.$router.push(`/admin/configure/node/${item.id}/update`);
     }
     if (item.type == 'user_group') {
       this.$router.push(`/admin/configure/user-group/${item.id}/update`);

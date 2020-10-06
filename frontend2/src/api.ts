@@ -49,8 +49,11 @@ export const api = {
   async updateMe(token: string, data: IUserProfileUpdate) {
     return axios.put<IUserProfile>(`${apiUrl}/api/v1/users/me`, data, authHeaders(token));
   },
-  async getUsers(token: string) {
-    return axios.get<IUserProfileList>(`${apiUrl}/api/v1/users/`, authHeaders(token));
+  async getUsers(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+    return axios.get<IUserProfileList>(
+      `${apiUrl}/api/v1/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      authHeaders(token),
+    );
   },
   async updateUser(token: string, userId: number, data: IUserProfileUpdate) {
     return axios.put(`${apiUrl}/api/v1/users/${userId}`, data, authHeaders(token));

@@ -1,5 +1,12 @@
 import { api } from '@/api';
-import { ApplicationModelEntry, INodeCreate, INodeUpdate, IUserGroupCreate, IUserGroupUpdate } from '@/interfaces';
+import {
+  ApplicationModelEntry,
+  INodeCreate,
+  INodeUpdate,
+  IUserGroupCreate,
+  IUserGroupUpdate,
+  IUserProfileCreate,
+} from '@/interfaces';
 import { searchApplicationModel } from '@/utils';
 import { getStoreAccessors } from 'typesafe-vuex';
 import { ActionContext } from 'vuex';
@@ -251,6 +258,27 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+
+  // User Actions
+  async actionCreateUser(context: MainContext, payload: IUserProfileCreate) {
+    try {
+      const loadingNotification = { content: `Saving new user: ${payload.email}`, showProgress: true };
+      commitAddNotification(context, loadingNotification);
+      (
+        await Promise.all([
+          api.createUser(context.getters.token, payload),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
+        ])
+      )[0];
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: `Created new user: ${payload.email}`,
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 };
 
 export const dispatchCreateNode = dispatch(actions.actionCreateNode);
@@ -267,3 +295,5 @@ export const dispatchGetOneUserGroup = dispatch(actions.actionGetOneUserGroup);
 export const dispatchCreateUserGroup = dispatch(actions.actionCreateUserGroup);
 export const dispatchUpdateUserGroup = dispatch(actions.actionUpdateUserGroup);
 export const dispatchDeleteUserGroup = dispatch(actions.actionDeleteUserGroup);
+
+export const dispatchCreateUser = dispatch(actions.actionCreateUser);

@@ -91,7 +91,7 @@
                 <!-- User Group Add User Button -->
                 <v-tooltip bottom v-if="item.type == 'user_group'">
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="selectItem(item)" icon color="success" v-bind="attrs" v-on="on">
+                    <v-btn v-if="item.id" @click="addUserToGroup(item)" icon color="success" v-bind="attrs" v-on="on">
                       <v-icon>mdi-account-plus</v-icon>
                     </v-btn>
                   </template>
@@ -187,6 +187,10 @@ export default class ConfigureApplication extends Vue {
 
   public addNodeChild(node: ApplicationModelEntry) {
     this.$router.push(`/admin/configure/node/${node.id}/add-child-node`);
+  }
+
+  public addUserToGroup(userGroup: ApplicationModelEntry) {
+    this.$router.push(`/admin/configure/user-group/${userGroup.id}/add-user`);
   }
 
   public selectExistingNode(node: ApplicationModelEntry) {

@@ -5,11 +5,3 @@ export interface ApplicationModelEntry {
   key: string;
   children: ApplicationModelEntry[];
 }
-
-export interface IConfigureNodeFormProps {
-  id: number | null;
-  title: string;
-  parent: number | null;
-  network: boolean;
-  delete: boolean;
-}

@@ -44,7 +44,7 @@ import { readActiveNode, readAdminNodes } from '@/store/admin/getters';
 import { dispatchGetNetworks, dispatchGetNodes, dispatchGetOneNode, dispatchUpdateNode } from '@/store/admin/actions';
 
 @Component
-export default class NodeSearchForm extends Vue {
+export default class NodeSearch extends Vue {
   public skip = 0;
   public limit = 10;
   public loading = true;

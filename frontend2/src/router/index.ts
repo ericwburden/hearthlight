@@ -26,10 +26,10 @@ const NodeUpdate = () =>
     '../views/admin/config/form/NodeUpdate.vue'
   );
 
-const NodeSearchForm = () =>
+const NodeSearch = () =>
   import(
     /* webpackChunkName: "admin-configure-node-search" */
-    '../views/admin/config/form/NodeSearchForm.vue'
+    '../views/admin/config/form/NodeSearch.vue'
   );
 
 const UserGroupCreate = () =>
@@ -65,7 +65,7 @@ const routes: Array<RouteConfig> = [
               { path: 'new-network', name: 'admin.configure.new-network', component: NodeCreate },
               { path: 'node/:id/add-child-node', name: 'admin.configure.node.add-child-node', component: NodeCreate },
               { path: 'node/:id/update', name: 'admin.configure.node.update', component: NodeUpdate },
-              { path: 'node/:id/child-search', name: 'admin.configure.node.search', component: NodeSearchForm },
+              { path: 'node/:id/child-search', name: 'admin.configure.node.search', component: NodeSearch },
               { path: ':type/:id/delete', name: 'admin.configure.delete', component: ConfirmDelete },
               {
                 path: 'node/:id/add-user-group',

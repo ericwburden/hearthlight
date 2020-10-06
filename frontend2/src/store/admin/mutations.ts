@@ -52,6 +52,7 @@ export const mutations = {
   },
 };
 
+// eslint-disable-next-line
 const { commit } = getStoreAccessors<AdminState | any, State>('');
 
 export const commitInitApplicationModel = commit(mutations.initApplicationModel);

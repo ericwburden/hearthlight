@@ -26,12 +26,13 @@ type MainContext = ActionContext<MainState, State>;
 //eslint-disable-next-line
 const { dispatch } = getStoreAccessors<AdminState | MainState | any, State>('');
 
+/* eslint-disable @typescript-eslint/camelcase */
 export const actions = {
   // Node Actions
   async actionDeleteNode(context: MainContext, payload: number) {
     try {
       const loadingNotification = { content: `Deleting node: ID ${payload}`, showProgress: true };
-      const response = await api.deleteNode(context.getters.token, payload);
+      await api.deleteNode(context.getters.token, payload);
       commitRemoveNotification(context, loadingNotification);
       commitAddNotification(context, {
         content: `Node ${payload} successfully deleted.`,
@@ -46,10 +47,10 @@ export const actions = {
       const node_type = payload.node_type == 'network' ? 'network' : 'node';
       const loadingNotification = { content: `Saving new ${node_type}: ${payload.name}`, showProgress: true };
       commitAddNotification(context, loadingNotification);
-      const response = (
+      (
         await Promise.all([
           api.createNode(context.getters.token, payload),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitRemoveNotification(context, loadingNotification);
@@ -78,7 +79,7 @@ export const actions = {
       const response = (
         await Promise.all([
           api.updateNode(context.getters.token, payload.id, payload.object),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitSetActiveNode(context, response.data);
@@ -143,7 +144,13 @@ export const actions = {
         const applicationModel = readApplicationModel(store);
         const applicationModelEntry = searchApplicationModel(applicationModel, payload.id, payload.type);
         if (applicationModelEntry) {
-          const children = response.data.map((child) => {
+          const sorted_result = response.data.sort((a, b) => {
+            if (a.child_type == b.child_type) return a.child_id - b.child_id;
+            if (a.child_type < b.child_type) return 1;
+            if (b.child_type > a.child_type) return -1;
+            return 0;
+          });
+          const children = sorted_result.map((child) => {
             const childEntry: ApplicationModelEntry = {
               id: child.child_id,
               name: child.child_name,
@@ -196,10 +203,10 @@ export const actions = {
     try {
       const loadingNotification = { content: `Saving new user group: ${payload.name}`, showProgress: true };
       commitAddNotification(context, loadingNotification);
-      const response = (
+      (
         await Promise.all([
           api.createUserGroup(context.getters.token, payload),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitRemoveNotification(context, loadingNotification);
@@ -218,7 +225,7 @@ export const actions = {
       const response = (
         await Promise.all([
           api.updateUserGroup(context.getters.token, payload.id, payload.object),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitSetActiveUserGroup(context, response.data);

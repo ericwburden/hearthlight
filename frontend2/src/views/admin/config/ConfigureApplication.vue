@@ -11,7 +11,7 @@
       <v-spacer></v-spacer>
     </v-row>
     <v-row>
-      <v-col md="6" sm="12" order="1" order-md="2">
+      <v-col md="6" sm="12" order="1" order-md="2" v-if="showForm">
         <v-card>
           <router-view :key="$route.fullPath"></router-view>
         </v-card>
@@ -144,6 +144,10 @@ export default class ConfigureApplication extends Vue {
 
   get items() {
     return readApplicationModel(this.$store);
+  }
+
+  get showForm() {
+    return this.$route.name != 'admin.configure';
   }
 
   @Watch('open')

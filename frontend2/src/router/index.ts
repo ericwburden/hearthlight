@@ -44,6 +44,9 @@ const UserGroupUpdate = () =>
     '../views/admin/config/form/UserGroupUpdate.vue'
   );
 
+const UserGroupSearch = () =>
+  import(/* webpackChunkName: "admin-configure-user-group-search" */ '../views/admin/config/form/UserGroupSearch.vue');
+
 const ConfirmDelete = () =>
   import(/* webpackChunkName: "admin-configure" */ '../views/admin/config/form/ConfirmDelete.vue');
 
@@ -76,6 +79,11 @@ const routes: Array<RouteConfig> = [
                 path: 'user-group/:id/update',
                 name: 'admin.configure.user-group.update',
                 component: UserGroupUpdate,
+              },
+              {
+                path: 'node/:id/user-group-search',
+                name: 'admin.configure.node.add-child-user-group',
+                component: UserGroupSearch,
               },
             ],
           },

@@ -78,8 +78,8 @@
                           </v-btn>
                         </template>
                         <v-list>
-                          <v-list-item @click="selectNodeChild(item)">Node</v-list-item>
-                          <v-list-item @click="selectItem(item)">User Group</v-list-item>
+                          <v-list-item @click="selectExistingNode(item)">Node</v-list-item>
+                          <v-list-item @click="selectExistingUserGroup(item)">User Group</v-list-item>
                           <v-list-item @click="selectItem(item)">Interface</v-list-item>
                         </v-list>
                       </v-menu>
@@ -189,8 +189,12 @@ export default class ConfigureApplication extends Vue {
     this.$router.push(`/admin/configure/node/${node.id}/add-child-node`);
   }
 
-  public selectNodeChild(node: ApplicationModelEntry) {
+  public selectExistingNode(node: ApplicationModelEntry) {
     this.$router.push(`/admin/configure/node/${node.id}/child-search`);
+  }
+
+  public selectExistingUserGroup(node: ApplicationModelEntry) {
+    this.$router.push(`/admin/configure/node/${node.id}/user-group-search`);
   }
 
   public updateItem(item: ApplicationModelEntry) {

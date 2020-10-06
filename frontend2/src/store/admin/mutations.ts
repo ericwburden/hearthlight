@@ -1,11 +1,4 @@
-import {
-  ApplicationModelEntry,
-  IConfigureNodeFormProps,
-  INode,
-  INodeList,
-  IUserGroup,
-  IUserGroupList,
-} from '@/interfaces';
+import { ApplicationModelEntry, INode, INodeList, IUserGroup, IUserGroupList } from '@/interfaces';
 import { AdminState } from './state';
 import { getStoreAccessors } from 'typesafe-vuex';
 import { State } from '../state';
@@ -32,12 +25,6 @@ export const mutations = {
   setApplicationModel(state: AdminState, payload: ApplicationModelEntry[]) {
     state.applicationModel = payload;
   },
-  setConfigScreenShowForm(state: AdminState, payload: string) {
-    state.configScreenShowForm = payload;
-  },
-  setConfigureNodeFormProps(state: AdminState, payload: IConfigureNodeFormProps) {
-    state.configureNodeFormProps = payload;
-  },
   setNetworks(state: AdminState, payload: INodeList) {
     state.networks = payload;
   },
@@ -58,8 +45,6 @@ const { commit } = getStoreAccessors<AdminState | any, State>('');
 export const commitInitApplicationModel = commit(mutations.initApplicationModel);
 export const commitSetActiveNode = commit(mutations.setActiveNode);
 export const commitSetApplicationModel = commit(mutations.setApplicationModel);
-export const commitSetConfigScreenShowForm = commit(mutations.setConfigScreenShowForm);
-export const commitSetConfigureNodeFormProps = commit(mutations.setConfigureNodeFormProps);
 export const commitSetNetworks = commit(mutations.setNetworks);
 export const commitSetNodes = commit(mutations.setNodes);
 export const commitSetNodeTypes = commit(mutations.setNodeTypes);

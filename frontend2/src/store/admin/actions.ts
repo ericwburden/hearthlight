@@ -6,6 +6,7 @@ import {
   IUserGroupCreate,
   IUserGroupUpdate,
   IUserProfileCreate,
+  IUserProfileList,
 } from '@/interfaces';
 import { searchApplicationModel } from '@/utils';
 import { getStoreAccessors } from 'typesafe-vuex';
@@ -21,6 +22,7 @@ import {
   commitSetNodeTypes,
   commitSetActiveUserGroup,
   commitSetUserGroups,
+  commitSetUsers,
 } from './mutations';
 import { AdminState } from './state';
 import { MainState } from '../main/state';
@@ -258,6 +260,42 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionAddUserToGroup(context: MainContext, payload: { userGroupID: number; userID: number }) {
+    const userGroupID = payload.userGroupID;
+    const userID = payload.userID;
+    try {
+      const loadingNotification = {
+        content: `Adding user ${userID} to user group ${userGroupID}.`,
+        showProgress: true,
+      };
+      await api.addUserToGroup(context.getters.token, userGroupID, userID);
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: `Successfully added user ${userID} to user group ${userGroupID}.`,
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
+  async actionRemoveUserFromGroup(context: MainContext, payload: { userGroupID: number; userID: number }) {
+    const userGroupID = payload.userGroupID;
+    const userID = payload.userID;
+    try {
+      const loadingNotification = {
+        content: `Removing user ${userID} from user group ${userGroupID}.`,
+        showProgress: true,
+      };
+      await api.removeUserFromGroup(context.getters.token, userGroupID, userID);
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: `Successfully removed user ${userID} from user group ${userGroupID}.`,
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 
   // User Actions
   async actionCreateUser(context: MainContext, payload: IUserProfileCreate) {
@@ -279,6 +317,25 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionGetUsers(
+    context: MainContext,
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+  ) {
+    try {
+      const response = await api.getUsers(
+        context.getters.token,
+        payload.skip,
+        payload.limit,
+        payload.sortBy,
+        payload.sortDesc,
+      );
+      if (response.data) {
+        commitSetUsers(context, response.data);
+      }
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 };
 
 export const dispatchCreateNode = dispatch(actions.actionCreateNode);
@@ -295,5 +352,8 @@ export const dispatchGetOneUserGroup = dispatch(actions.actionGetOneUserGroup);
 export const dispatchCreateUserGroup = dispatch(actions.actionCreateUserGroup);
 export const dispatchUpdateUserGroup = dispatch(actions.actionUpdateUserGroup);
 export const dispatchDeleteUserGroup = dispatch(actions.actionDeleteUserGroup);
+export const dispatchAddUserToGroup = dispatch(actions.actionAddUserToGroup);
+export const dispatchRemoveUserFromGroup = dispatch(actions.actionRemoveUserFromGroup);
 
 export const dispatchCreateUser = dispatch(actions.actionCreateUser);
+export const dispatchGetUsers = dispatch(actions.actionGetUsers);

@@ -53,6 +53,9 @@ const UserCreate = () =>
     '../views/admin/config/form/UserCreate.vue'
   );
 
+const UserSearch = () =>
+  import(/* webpackChunkName: "admin-configure-user-search" */ '../views/admin/config/form/UserSearch.vue');
+
 const ConfirmDelete = () =>
   import(/* webpackChunkName: "admin-configure" */ '../views/admin/config/form/ConfirmDelete.vue');
 
@@ -92,6 +95,11 @@ const routes: Array<RouteConfig> = [
                 component: UserGroupSearch,
               },
               { path: 'user-group/:id/add-user', name: 'admin.configure.user-group.add-user', component: UserCreate },
+              {
+                path: 'user-group/:id/user-search',
+                name: 'admin.configure.user-group.user-search',
+                component: UserSearch,
+              },
             ],
           },
         ],

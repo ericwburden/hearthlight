@@ -558,7 +558,7 @@ def revoke_multiple_permission_for_user_group(
 # --------------------------------------------------------------------------------------
 
 
-@router.put("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
+@router.get("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
 def add_user_to_user_group(
     *,
     db: Session = Depends(deps.get_db),

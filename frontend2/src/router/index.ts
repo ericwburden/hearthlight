@@ -96,7 +96,7 @@ const routes: Array<RouteConfig> = [
               },
               { path: 'user-group/:id/add-user', name: 'admin.configure.user-group.add-user', component: UserCreate },
               {
-                path: 'user-group/:id/user-search',
+                path: 'user-group/:id/user-search/:operation',
                 name: 'admin.configure.user-group.user-search',
                 component: UserSearch,
               },

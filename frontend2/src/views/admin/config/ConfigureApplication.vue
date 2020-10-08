@@ -95,7 +95,7 @@
                       <v-icon>mdi-account-plus</v-icon>
                     </v-btn>
                   </template>
-                  <span>Add User</span>
+                  <span>Add New User</span>
                 </v-tooltip>
 
                 <v-tooltip bottom v-if="item.type == 'user_group'">
@@ -104,7 +104,16 @@
                       <v-icon>mdi-account-search</v-icon>
                     </v-btn>
                   </template>
-                  <span>Add User</span>
+                  <span>Add Existing User</span>
+                </v-tooltip>
+
+                <v-tooltip bottom v-if="item.type == 'user_group'">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn v-if="item.id" @click="removeExistingUser(item)" icon color="error" v-bind="attrs" v-on="on">
+                      <v-icon>mdi-account-remove</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Remove User</span>
                 </v-tooltip>
 
                 <!-- Edit Item Button -->
@@ -211,7 +220,11 @@ export default class ConfigureApplication extends Vue {
   }
 
   public selectExistingUser(userGroup: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/user-group/${userGroup.id}/user-search`);
+    this.$router.push(`/admin/configure/user-group/${userGroup.id}/user-search/add`);
+  }
+
+  public removeExistingUser(userGroup: ApplicationModelEntry) {
+    this.$router.push(`/admin/configure/user-group/${userGroup.id}/user-search/remove`);
   }
 
   public updateItem(item: ApplicationModelEntry) {

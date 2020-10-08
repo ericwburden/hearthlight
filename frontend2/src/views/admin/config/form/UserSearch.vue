@@ -47,9 +47,11 @@ import { IUserProfile, IUserGroup } from '@/interfaces';
 import { readActiveUserGroup, readUsers } from '@/store/admin/getters';
 import {
   dispatchGetNetworks,
+  dispatchGetUsersInGroup,
   dispatchGetUsersNotInGroup,
   dispatchGetOneUserGroup,
   dispatchAddUserToGroup,
+  dispatchRemoveUserFromGroup,
 } from '@/store/admin/actions';
 
 @Component
@@ -92,15 +94,37 @@ export default class UserSearch extends Vue {
     return 'Select an existing user';
   }
 
+  public async refreshUserStore({
+    skip = 0,
+    limit = this.options.itemsPerPage,
+    sortBy = '',
+    sortDesc = false,
+  }: { skip?: number; limit?: number; sortBy?: string; sortDesc?: boolean } = {}) {
+    const userGroupID = parseInt(this.$route.params.id);
+    const operation = this.$route.params.operation;
+    if (operation == 'add') {
+      await dispatchGetUsersNotInGroup(this.$store, {
+        userGroupID: userGroupID,
+        skip: skip,
+        limit: limit,
+        sortBy: sortBy,
+        sortDesc: sortDesc,
+      });
+    }
+    if (operation == 'remove') {
+      await dispatchGetUsersInGroup(this.$store, {
+        userGroupID: userGroupID,
+        skip: skip,
+        limit: limit,
+        sortBy: sortBy,
+        sortDesc: sortDesc,
+      });
+    }
+  }
+
   public async mounted() {
     const userGroupID = parseInt(this.$route.params.id);
-    await dispatchGetUsersNotInGroup(this.$store, {
-      userGroupID: userGroupID,
-      skip: 0,
-      limit: this.options.itemsPerPage,
-      sortBy: '',
-      sortDesc: false,
-    });
+    await this.refreshUserStore();
     await dispatchGetOneUserGroup(this.$store, userGroupID);
     this.users = readUsers(this.$store).records;
     this.loading = false;
@@ -114,8 +138,7 @@ export default class UserSearch extends Vue {
     if (sortBy.length === 1 && sortDesc.length === 1) {
       if (itemsPerPage > 0) {
         const skip = (page - 1) * itemsPerPage;
-        await dispatchGetUsersNotInGroup(this.$store, {
-          userGroupID: parseInt(this.$route.params.id),
+        await this.refreshUserStore({
           skip: skip,
           limit: itemsPerPage,
           sortBy: sortBy[0],
@@ -157,8 +180,12 @@ export default class UserSearch extends Vue {
   }
 
   public async submit() {
-    if (this.parent && this.selectedRow) {
+    const operation = this.$route.params.operation;
+    if (this.parent && this.selectedRow && operation == 'add') {
       await dispatchAddUserToGroup(this.$store, { userGroupID: this.parent.id, userID: this.selectedRow.id });
+    }
+    if (this.parent && this.selectedRow && operation == 'remove') {
+      await dispatchRemoveUserFromGroup(this.$store, { userGroupID: this.parent.id, userID: this.selectedRow.id });
     }
     await dispatchGetNetworks(this.$store);
     this.close();

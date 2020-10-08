@@ -336,6 +336,46 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionGetUsersInGroup(
+    context: MainContext,
+    payload: { userGroupID: number; skip: number; limit: number; sortBy: string; sortDesc: boolean },
+  ) {
+    try {
+      const response = await api.getUsersInGroup(
+        context.getters.token,
+        payload.userGroupID,
+        payload.skip,
+        payload.limit,
+        payload.sortBy,
+        payload.sortDesc,
+      );
+      if (response.data) {
+        commitSetUsers(context, response.data);
+      }
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
+  async actionGetUsersNotInGroup(
+    context: MainContext,
+    payload: { userGroupID: number; skip: number; limit: number; sortBy: string; sortDesc: boolean },
+  ) {
+    try {
+      const response = await api.getUsersNotInGroup(
+        context.getters.token,
+        payload.userGroupID,
+        payload.skip,
+        payload.limit,
+        payload.sortBy,
+        payload.sortDesc,
+      );
+      if (response.data) {
+        commitSetUsers(context, response.data);
+      }
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 };
 
 export const dispatchCreateNode = dispatch(actions.actionCreateNode);
@@ -357,3 +397,5 @@ export const dispatchRemoveUserFromGroup = dispatch(actions.actionRemoveUserFrom
 
 export const dispatchCreateUser = dispatch(actions.actionCreateUser);
 export const dispatchGetUsers = dispatch(actions.actionGetUsers);
+export const dispatchGetUsersInGroup = dispatch(actions.actionGetUsersInGroup);
+export const dispatchGetUsersNotInGroup = dispatch(actions.actionGetUsersNotInGroup);

@@ -47,7 +47,7 @@ import { IUserProfile, IUserGroup } from '@/interfaces';
 import { readActiveUserGroup, readUsers } from '@/store/admin/getters';
 import {
   dispatchGetNetworks,
-  dispatchGetUsers,
+  dispatchGetUsersNotInGroup,
   dispatchGetOneUserGroup,
   dispatchAddUserToGroup,
 } from '@/store/admin/actions';
@@ -93,8 +93,15 @@ export default class UserSearch extends Vue {
   }
 
   public async mounted() {
-    await dispatchGetUsers(this.$store, { skip: 0, limit: this.options.itemsPerPage, sortBy: '', sortDesc: false });
-    await dispatchGetOneUserGroup(this.$store, parseInt(this.$route.params.id));
+    const userGroupID = parseInt(this.$route.params.id);
+    await dispatchGetUsersNotInGroup(this.$store, {
+      userGroupID: userGroupID,
+      skip: 0,
+      limit: this.options.itemsPerPage,
+      sortBy: '',
+      sortDesc: false,
+    });
+    await dispatchGetOneUserGroup(this.$store, userGroupID);
     this.users = readUsers(this.$store).records;
     this.loading = false;
   }
@@ -107,7 +114,8 @@ export default class UserSearch extends Vue {
     if (sortBy.length === 1 && sortDesc.length === 1) {
       if (itemsPerPage > 0) {
         const skip = (page - 1) * itemsPerPage;
-        await dispatchGetUsers(this.$store, {
+        await dispatchGetUsersNotInGroup(this.$store, {
+          userGroupID: parseInt(this.$route.params.id),
           skip: skip,
           limit: itemsPerPage,
           sortBy: sortBy[0],

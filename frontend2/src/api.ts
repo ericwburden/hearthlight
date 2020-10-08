@@ -11,6 +11,7 @@ import {
   IUserGroupList,
   IUserGroupUpdate,
   IUserProfile,
+  IUserProfileList,
   IUserProfileUpdate,
   IUserProfileCreate,
 } from './interfaces';
@@ -48,14 +49,23 @@ export const api = {
   async updateMe(token: string, data: IUserProfileUpdate) {
     return axios.put<IUserProfile>(`${apiUrl}/api/v1/users/me`, data, authHeaders(token));
   },
-  async getUsers(token: string) {
-    return axios.get<IUserProfile[]>(`${apiUrl}/api/v1/users/`, authHeaders(token));
+  async getUsers(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+    return axios.get<IUserProfileList>(
+      `${apiUrl}/api/v1/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      authHeaders(token),
+    );
   },
   async updateUser(token: string, userId: number, data: IUserProfileUpdate) {
     return axios.put(`${apiUrl}/api/v1/users/${userId}`, data, authHeaders(token));
   },
   async createUser(token: string, data: IUserProfileCreate) {
-    return axios.post(`${apiUrl}/api/v1/users/`, data, authHeaders(token));
+    return axios.post<IUserProfile>(`${apiUrl}/api/v1/users/`, data, authHeaders(token));
+  },
+  async deleteUser(token: string, userId: number) {
+    return axios.delete<IUserProfile>(`${apiUrl}/api/v1/users/${userId}`, authHeaders(token));
+  },
+  async getOneUser(token: string, userId: number) {
+    return axios.get<IUserProfile>(`${apiUrl}/api/v1/users/${userId}`, authHeaders(token));
   },
 
   // Node endpoints
@@ -74,9 +84,9 @@ export const api = {
   async getNetworks(token: string) {
     return axios.get<INodeList>(`${apiUrl}/api/v1/nodes/networks/`, authHeaders(token));
   },
-  async getNodes(token: string, skip = 0, limit = 10, sort_by = '', sort_desc = false) {
+  async getNodes(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
     return axios.get<INodeList>(
-      `${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}&sort_by=${sort_by}&sort_desc=${sort_desc}`,
+      `${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
       authHeaders(token),
     );
   },
@@ -91,18 +101,42 @@ export const api = {
   async createUserGroup(token: string, data: IUserGroupCreate) {
     return axios.post<IUserGroup>(`${apiUrl}/api/v1/user_groups/`, data, authHeaders(token));
   },
-  async deleteUserGroup(token: string, UserGroupId: number) {
-    return axios.delete<IUserGroup>(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, authHeaders(token));
+  async deleteUserGroup(token: string, userGroupID: number) {
+    return axios.delete<IUserGroup>(`${apiUrl}/api/v1/user_groups/${userGroupID}`, authHeaders(token));
   },
-  async getOneUserGroup(token: string, UserGroupId: number) {
-    return axios.get<IUserGroup>(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, authHeaders(token));
+  async getOneUserGroup(token: string, userGroupID: number) {
+    return axios.get<IUserGroup>(`${apiUrl}/api/v1/user_groups/${userGroupID}`, authHeaders(token));
   },
-  async updateUserGroup(token: string, UserGroupId: number, data: IUserGroupUpdate) {
-    return axios.put(`${apiUrl}/api/v1/user_groups/${UserGroupId}`, data, authHeaders(token));
+  async updateUserGroup(token: string, userGroupID: number, data: IUserGroupUpdate) {
+    return axios.put(`${apiUrl}/api/v1/user_groups/${userGroupID}`, data, authHeaders(token));
   },
-  async getUserGroups(token: string, skip = 0, limit = 10, sort_by = '', sort_desc = false) {
+  async getUserGroups(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
     return axios.get<IUserGroupList>(
-      `${apiUrl}/api/v1/user_groups/?skip=${skip}&limit=${limit}&sort_by=${sort_by}&sort_desc=${sort_desc}`,
+      `${apiUrl}/api/v1/user_groups/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      authHeaders(token),
+    );
+  },
+  async addUserToGroup(token: string, userGroupID: number, userID: number) {
+    return axios.get<{ user_group_id: number; user_id: number }>(
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/users/${userID}`,
+      authHeaders(token),
+    );
+  },
+  async removeUserFromGroup(token: string, userGroupID: number, userID: number) {
+    return axios.delete<IUserProfile>(
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/users/${userID}`,
+      authHeaders(token),
+    );
+  },
+  async getUsersInGroup(token: string, userGroupID: number, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+    return axios.get<IUserProfileList>(
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      authHeaders(token),
+    );
+  },
+  async getUsersNotInGroup(token: string, userGroupID: number, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+    return axios.get<IUserProfileList>(
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/not/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
       authHeaders(token),
     );
   },

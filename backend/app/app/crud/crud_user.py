@@ -1,11 +1,13 @@
 from typing import Optional, List
 
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.expression import literal_column
 
+
 from app.core.security import get_password_hash, verify_password
-from app.crud.base import CRUDBase
+from app.crud.base import CRUDBase, GenericModelList, parse_sort_col
 from app.models.permission import Permission
 from app.models.user import User
 from app.models.user_group import UserGroup, UserGroupPermissionRel, UserGroupUserRel
@@ -19,6 +21,47 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def get_user_groups(self, db: Session, *, user: User) -> List[UserGroup]:
         return user.user_groups
+
+    def get_multi_in_group(
+        self,
+        db: Session,
+        *,
+        user_group_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        sort_by: Optional[str] = "",
+        sort_desc: Optional[bool] = None,
+    ) -> GenericModelList:
+        base_query = (
+            db.query(User)
+            .join(User.user_groups)
+            .filter(UserGroup.id == user_group_id)
+            .order_by(parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc))
+        )
+        total_records = base_query.count()
+        records = base_query.offset(skip).limit(limit).all()
+        return GenericModelList[User](total_records=total_records, records=records)
+
+    def get_multi_not_in_group(
+        self,
+        db: Session,
+        *,
+        user_group_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        sort_by: Optional[str] = "",
+        sort_desc: Optional[bool] = None,
+    ) -> GenericModelList:
+        filter_expression = UserGroup.id != user_group_id
+        base_query = (
+            db.query(User)
+            .outerjoin(User.user_groups)
+            .filter(or_(UserGroup.id != user_group_id, UserGroup.id == None))
+            .order_by(parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc))
+        )
+        total_records = base_query.count()
+        records = base_query.offset(skip).limit(limit).all()
+        return GenericModelList[User](total_records=total_records, records=records)
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(

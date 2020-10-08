@@ -3,13 +3,15 @@ import { getStoreAccessors } from 'typesafe-vuex';
 import { State } from '../state';
 
 export const getters = {
-  activeNode: (state: AdminState) => state.activeNode,
-  activeUserGroup: (state: AdminState) => state.activeUserGroup,
   applicationModel: (state: AdminState) => state.applicationModel,
   networks: (state: AdminState) => state.networks,
-  nodes: (state: AdminState) => state.nodes,
   nodeTypes: (state: AdminState) => state.nodeTypes,
+  activeNode: (state: AdminState) => state.activeNode,
+  nodes: (state: AdminState) => state.nodes,
+  activeUserGroup: (state: AdminState) => state.activeUserGroup,
   userGroups: (state: AdminState) => state.userGroups,
+  activeUser: (state: AdminState) => state.activeUser,
+  users: (state: AdminState) => state.users,
 };
 
 const { read } = getStoreAccessors<AdminState, State>('');
@@ -22,3 +24,6 @@ export const readNodeTypes = read(getters.nodeTypes);
 
 export const readActiveUserGroup = read(getters.activeUserGroup);
 export const readUserGroups = read(getters.userGroups);
+
+export const readActiveUser = read(getters.activeUser);
+export const readUsers = read(getters.users);

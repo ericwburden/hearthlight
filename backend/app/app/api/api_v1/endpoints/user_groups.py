@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -558,7 +558,7 @@ def revoke_multiple_permission_for_user_group(
 # --------------------------------------------------------------------------------------
 
 
-@router.put("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
+@router.get("/{resource_id}/users/{user_id}", response_model=schemas.UserGroupUser)
 def add_user_to_user_group(
     *,
     db: Session = Depends(deps.get_db),
@@ -794,6 +794,131 @@ def remove_multiple_users_from_user_group(
         db, user_group=user_group, users=users
     )
     return user_group_user
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Endpoints for fetching users in/out of user group ---------------------------
+# --------------------------------------------------------------------------------------
+
+
+@router.get("/{resource_id}/users/", response_model=GenericModelList[schemas.User])
+def read_users_in_group(
+    resource_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    sort_by: Optional[str] = "",
+    sort_desc: Optional[bool] = None,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(user_group_read_validator),
+) -> GenericModelList[schemas.User]:
+    """# Fetch users in a User Group
+
+    Returns a list of users with a relationship to the indicated user
+    group. Note, in order to read these users, the requesting user
+    must either be a superuser or have read permission for the user
+    group. This also means a user with user group read permissions
+    can fetch users records they may not have read access for
+    otherwise.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the User Group
+    - skip (int, optional): Number of records to skip. Defaults to 0.
+    - limit (int, optional): Number of records to retrieve. Defaults
+    to 100.
+    - sort_by (str, optional): Name of a column to sort by.
+    - sort_desc (bool, optional): Should the column be sorted
+    descending (true) or ascending (false).
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults
+    to Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(user_group_read_validator).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the referenced User Group does not exist
+    in the database.
+    - HTTPException: 403 - When the user doesn't have read permissions
+    for the user group.
+
+    ## Returns:
+
+    - GenericModelList[schemas.User]: Object containing a count of
+    returned records and the records returned.
+    """
+
+    user_group = crud.user_group.get(db=db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+    return crud.user.get_multi_in_group(
+        db,
+        user_group_id=user_group.id,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by,
+        sort_desc=sort_desc,
+    )
+
+
+@router.get("/{resource_id}/not/users/", response_model=GenericModelList[schemas.User])
+def read_users_not_in_group(
+    resource_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    sort_by: Optional[str] = "",
+    sort_desc: Optional[bool] = None,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> GenericModelList[schemas.User]:
+    """# Fetch users not in a User Group
+
+    Returns a list of users who DO NOT have a relationship to the
+    indicated user group. This endpoint is only available to
+    superusers since it potentially grants access to the entire
+    user base.
+
+    ## Args:
+
+    - resource_id (int): Primary key ID for the User Group
+    - skip (int, optional): Number of records to skip. Defaults to 0.
+    - limit (int, optional): Number of records to retrieve. Defaults
+    to 100.
+    - sort_by (str, optional): Name of a column to sort by.
+    - sort_desc (bool, optional): Should the column be sorted
+    descending (true) or ascending (false).
+    - db (Session, optional): SQLAlchemy Session, injected. Defaults
+    to Depends(deps.get_db).
+    - current_user (models.User, optional): User object for the user
+    accessing the endpoint. Defaults to
+    Depends(deps.get_current_active_superuser).
+
+    ## Raises:
+
+    - HTTPException: 404 - When the referenced User Group does not exist
+    in the database.
+    - HTTPException: 400 - When the user accessing the endpoint is not a
+    superuser.
+
+    ## Returns:
+
+    - GenericModelList[schemas.User]: Object containing a count of
+    returned records and the records returned.
+    """
+
+    user_group = crud.user_group.get(db=db, id=resource_id)
+    if not user_group:
+        raise HTTPException(status_code=404, detail="Cannot find user group.")
+    return crud.user.get_multi_not_in_group(
+        db,
+        user_group_id=user_group.id,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by,
+        sort_desc=sort_desc,
+    )
 
 
 # --------------------------------------------------------------------------------------

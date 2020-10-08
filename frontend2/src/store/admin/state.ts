@@ -1,4 +1,12 @@
-import { ApplicationModelEntry, INode, INodeList, IUserGroup, IUserGroupList } from '@/interfaces';
+import {
+  ApplicationModelEntry,
+  INode,
+  INodeList,
+  IUserProfile,
+  IUserGroup,
+  IUserGroupList,
+  IUserProfileList,
+} from '@/interfaces';
 
 export interface AdminState {
   applicationModel: ApplicationModelEntry[];
@@ -6,6 +14,8 @@ export interface AdminState {
   networks: INodeList;
   nodes: INodeList;
   nodeTypes: string[];
+  activeUser: IUserProfile | null;
+  users: IUserProfileList;
   activeUserGroup: IUserGroup | null;
   userGroups: IUserGroupList;
 }

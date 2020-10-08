@@ -6,6 +6,11 @@ export interface IUserProfile {
   id: number;
 }
 
+export interface IUserProfileList {
+  total_records: number;
+  records: IUserProfile[];
+}
+
 export interface IUserProfileUpdate {
   email?: string;
   full_name?: string;
@@ -20,4 +25,5 @@ export interface IUserProfileCreate {
   password?: string;
   is_active?: boolean;
   is_superuser?: boolean;
+  user_group_id?: number;
 }

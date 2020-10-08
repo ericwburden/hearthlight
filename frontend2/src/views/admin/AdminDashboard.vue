@@ -25,7 +25,7 @@
       <v-btn icon @click="logout"><v-icon>mdi-logout</v-icon></v-btn>
 
       <template v-slot:extension>
-        <v-tabs align-with-title icons-and-text>
+        <v-tabs align-with-title icons-and-text show-arrows>
           <v-tab to="/admin">Home<v-icon>mdi-home</v-icon></v-tab>
           <v-tab to="/admin/configure">Configure<v-icon>mdi-hammer-wrench</v-icon></v-tab>
           <v-tab>Nodes<v-icon>mdi-family-tree</v-icon></v-tab>

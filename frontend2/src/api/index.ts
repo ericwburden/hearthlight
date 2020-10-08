@@ -14,7 +14,7 @@ import {
   IUserProfileList,
   IUserProfileUpdate,
   IUserProfileCreate,
-} from './interfaces';
+} from '@/interfaces';
 
 function authHeaders(token: string) {
   return {
@@ -141,3 +141,5 @@ export const api = {
     );
   },
 };
+
+export default api;

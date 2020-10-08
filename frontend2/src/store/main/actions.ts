@@ -62,7 +62,7 @@ export const actions = {
       const response = (
         await Promise.all([
           api.updateMe(context.state.token, payload),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitSetUserProfile(context, response.data);
@@ -111,29 +111,29 @@ export const actions = {
     await dispatch(actions.actionLogOut)(context);
     commitAddNotification(context, { content: 'Logged out', color: 'success' });
   },
-  actionRouteLogOut(context: MainContext) {
-    if (router.currentRoute.path !== '/login') {
-      router.push('/login');
+  actionRouteLogOut() {
+    if (router.currentRoute.path !== '/home') {
+      router.push('/home');
     }
   },
   async actionCheckApiError(context: MainContext, payload: AxiosError) {
-    if ([401, 502].includes(payload.response!.status)) {
-      await dispatch(actions.actionLogOut)(context);
-    }
     if (payload.response) {
+      if ([401, 502].includes(payload.response.status)) {
+        await dispatch(actions.actionLogOut)(context);
+      }
       commitAddNotification(context, {
         content: payload.response.data.detail,
         color: 'error',
       });
     }
   },
-  actionRouteLoggedIn(context: MainContext) {
-    if (router.currentRoute.path === '/login' || router.currentRoute.path === '/') {
-      router.push('/main');
+  actionRouteLoggedIn() {
+    if (router.currentRoute.path === '/home' || router.currentRoute.path === '/') {
+      router.push('/admin');
     }
   },
   async removeNotification(context: MainContext, payload: { notification: AppNotification; timeout: number }) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         commitRemoveNotification(context, payload.notification);
         resolve(true);
@@ -147,10 +147,10 @@ export const actions = {
     };
     try {
       commitAddNotification(context, loadingNotification);
-      const response = (
+      (
         await Promise.all([
           api.passwordRecovery(payload.username),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitRemoveNotification(context, loadingNotification);
@@ -174,10 +174,10 @@ export const actions = {
     };
     try {
       commitAddNotification(context, loadingNotification);
-      const response = (
+      (
         await Promise.all([
           api.resetPassword(payload.password, payload.token),
-          await new Promise((resolve, reject) => setTimeout(() => resolve(), 500)),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
         ])
       )[0];
       commitRemoveNotification(context, loadingNotification);

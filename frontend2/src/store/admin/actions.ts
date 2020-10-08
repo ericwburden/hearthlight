@@ -6,7 +6,6 @@ import {
   IUserGroupCreate,
   IUserGroupUpdate,
   IUserProfileCreate,
-  IUserProfileList,
 } from '@/interfaces';
 import { searchApplicationModel } from '@/utils';
 import { getStoreAccessors } from 'typesafe-vuex';

@@ -25,4 +25,5 @@ export interface IUserProfileCreate {
   password?: string;
   is_active?: boolean;
   is_superuser?: boolean;
+  user_group_id?: number;
 }

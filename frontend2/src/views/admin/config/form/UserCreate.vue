@@ -127,6 +127,7 @@ export default class UserCreate extends Vue {
         email: this.userEmail,
         full_name: this.fullName,
         password: this.password,
+        user_group_id: parseInt(this.$route.params.id),
       };
       await dispatchCreateUser(this.$store, userCreate);
       await dispatchGetNetworks(this.$store);

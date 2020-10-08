@@ -1049,7 +1049,7 @@ def test_user_group_add_user(
     user_group = create_random_user_group(db, node_id=node.id)
     new_user = create_random_user(db)
 
-    response = client.put(
+    response = client.get(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{new_user.id}",
         headers=superuser_token_headers,
     )
@@ -1072,7 +1072,7 @@ def test_user_group_add_user_normal_user(
     user_token_headers = authentication_token_from_email(
         client=client, email=setup["user"].email, db=db
     )
-    response = client.put(
+    response = client.get(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{new_user.id}",
         headers=user_token_headers,
     )
@@ -1089,7 +1089,7 @@ def test_user_group_add_user_fail_no_user_group(
 ) -> None:
     new_user = create_random_user(db)
 
-    response = client.put(
+    response = client.get(
         f"{settings.API_V1_STR}/user_groups/{-1}/users/{new_user.id}",
         headers=superuser_token_headers,
     )
@@ -1106,7 +1106,7 @@ def test_user_group_add_user_fail_no_user(
     node = create_random_node(db, node_type="test_user_group_add_user")
     user_group = create_random_user_group(db, node_id=node.id)
 
-    response = client.put(
+    response = client.get(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{-1}",
         headers=superuser_token_headers,
     )
@@ -1128,7 +1128,7 @@ def test_user_group_add_user_normal_user_fail_no_permission(
     user_token_headers = authentication_token_from_email(
         client=client, email=user.email, db=db
     )
-    response = client.put(
+    response = client.get(
         f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/{user.id}",
         headers=user_token_headers,
     )
@@ -1530,6 +1530,182 @@ def test_user_group_remove_multiple_users_normal_user_fail_no_permission(
         f"User ID {users[0].id} does not have update permissions for "
         f"user_group ID {user_group.id}"
     )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for UserGroup fetch users in group-------------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_fetch_users_in_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+    crud.user_group.add_users(db, user_group=user_group, user_ids=user_ids)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/?sort_by=id&sort_desc=true",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    for returned_user in content["records"]:
+        assert returned_user["id"] in user_ids
+
+
+def test_user_group_fetch_users_in_group_normal_user(
+    client: TestClient, db: Session
+) -> None:
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.read, permission_enabled=True
+    )
+    user = setup["user"]
+    user_group = setup["user_group"]
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+    crud.user_group.add_users(db, user_group=user_group, user_ids=user_ids)
+
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/?sort_by=id&sort_desc=true",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 200
+    for returned_user in content["records"]:
+        assert returned_user["id"] in [*user_ids, user.id]
+
+
+def test_user_group_fetch_users_in_group_fail_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+    crud.user_group.add_users(db, user_group=user_group, user_ids=user_ids)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{-1}/users/",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_fetch_users_in_group_normal_user_fail_no_permission(
+    client: TestClient, db: Session
+) -> None:
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.read, permission_enabled=False
+    )
+    user = setup["user"]
+    user_group = setup["user_group"]
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+    crud.user_group.add_users(db, user_group=user_group, user_ids=user_ids)
+
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/users/",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 403
+    assert content["detail"] == (
+        f"User ID {user.id} does not have read permissions for "
+        f"user_group ID {user_group.id}"
+    )
+
+
+# --------------------------------------------------------------------------------------
+# endregion ----------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# region | Tests for UserGroup fetch users not in group---------------------------------
+# --------------------------------------------------------------------------------------
+
+
+def test_user_group_fetch_users_not_in_group(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/not/users/?sort_by=id&sort_desc=true",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    returned_user_ids = [ru["id"] for ru in content["records"]]
+    assert response_status == 200
+    assert all([user_id in returned_user_ids for user_id in user_ids])
+
+
+def test_user_group_fetch_users_not_in_group_fail_not_exist(
+    client: TestClient, superuser_token_headers: dict, db: Session
+) -> None:
+    node = create_random_node(db, node_type="test_user_group_remove_user")
+    user_group = create_random_user_group(db, node_id=node.id)
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{-1}/not/users/?sort_by=id&sort_desc=true",
+        headers=superuser_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 404
+    assert content["detail"] == "Cannot find user group."
+
+
+def test_user_group_fetch_users_not_in_group_fail_normal_user(
+    client: TestClient, db: Session
+) -> None:
+    setup = user_group_permission_setup(
+        db, permission_type=PermissionTypeEnum.read, permission_enabled=True
+    )
+    user = setup["user"]
+    user_group = setup["user_group"]
+    users = [create_random_user(db) for i in range(10)]
+    user_ids = [user.id for user in users]
+
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/user_groups/{user_group.id}/not/users/?sort_by=id&sort_desc=true",
+        headers=user_token_headers,
+    )
+
+    response_status = response.status_code
+    content = response.json()
+    assert response_status == 400
+    assert content["detail"] == "The user is not a superuser"
 
 
 # --------------------------------------------------------------------------------------

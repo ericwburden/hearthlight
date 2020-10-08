@@ -169,3 +169,26 @@ def test_verify_user_node_permission(db: Session, normal_user: User) -> None:
             permission_type=png,
         )
         assert has_permission == False  # noqa: E712
+
+
+def test_get_multi_in_group(db: Session):
+    email = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=email, password=password)
+    user = crud.user.create(db, obj_in=user_in)
+    user_group = create_random_user_group(db)
+    crud.user_group.add_user(db, user_group=user_group, user_id=user.id)
+    users_in_group = crud.user.get_multi_in_group(db, user_group_id=user_group.id)
+    assert user in users_in_group.records
+
+
+def test_get_multi_not_in_group(db: Session):
+    email = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(email=email, password=password)
+    user = crud.user.create(db, obj_in=user_in)
+    user_group = create_random_user_group(db)
+    users_not_in_group = crud.user.get_multi_not_in_group(
+        db, user_group_id=user_group.id, sort_by="id", sort_desc=True
+    )
+    assert user in users_not_in_group.records

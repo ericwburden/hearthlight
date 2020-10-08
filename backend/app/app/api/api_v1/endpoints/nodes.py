@@ -194,7 +194,8 @@ def read_nodes(
 
     ## Returns:
 
-    - List[Node]: List of retrieved nodes
+    - GenericModelList[schemas.Node]: Object containing a count of
+    returned records and the records returned.
     """
     if crud.user.is_superuser(current_user):
         nodes = crud.node.get_multi(

@@ -1,30 +1,21 @@
 <template>
-  <v-container>
-    <v-row align="center" justify="center">
-      <v-spacer></v-spacer>
-      <v-col align="center" justify="center">
-        <v-btn class="mt-5" block elevation="2" x-large color="success" @click="createNetwork()">
-          <v-icon>mdi-plus-circle-outline</v-icon>
-          <span class="ml-2">New Network</span>
-        </v-btn>
-      </v-col>
-      <v-spacer></v-spacer>
-    </v-row>
-    <v-row>
-      <v-col md="6" sm="12" order="1" order-md="2" v-if="showForm">
-        <v-card>
+  <v-container align="center" justify="center">
+    <v-row align="center" justify="center" ref="menuRow">
+      <v-col lg="6" sm="8" xs="12">
+        <vertical-slide-fade>
           <router-view :key="$route.fullPath"></router-view>
-        </v-card>
+        </vertical-slide-fade>
       </v-col>
-      <v-col md="6" sm="12" order="2" order-md="1">
-        <v-card v-if="loading">
+    </v-row>
+    <v-row align="center" justify="center">
+      <v-col lg="6" sm="8" xs="12" v-if="items.length > 0">
+        <v-sheet v-if="loading">
           <v-container>
             <v-skeleton-loader class="mx-auto" type="heading, list-item@5"></v-skeleton-loader>
           </v-container>
-        </v-card>
-        <v-card v-else>
+        </v-sheet>
+        <v-sheet v-else>
           <v-container>
-            <h2>Networks</h2>
             <v-treeview
               :items="items"
               :active.sync="active"
@@ -46,27 +37,6 @@
                 <IconWithTooltip v-if="item.type == 'interface'" icon="mdi-swap-vertical-circl" msg="Interface" />
               </template>
               <template v-slot:append="{ item }">
-                <!-- Node Add New Child Button -->
-                <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-sheet v-bind="attrs" v-on="on" class="d-inline">
-                      <v-menu offset-y>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-btn v-if="item.id" icon color="success" v-bind="attrs" v-on="on">
-                            <v-icon>mdi-layers-plus</v-icon>
-                          </v-btn>
-                        </template>
-                        <v-list>
-                          <v-list-item @click="addNodeChild(item)">Node</v-list-item>
-                          <v-list-item @click="addUserGroupChild(item)">User Group</v-list-item>
-                          <v-list-item @click="selectItem(item)">Interface</v-list-item>
-                        </v-list>
-                      </v-menu>
-                    </v-sheet>
-                  </template>
-                  <span>Add New Child</span>
-                </v-tooltip>
-
                 <!-- Node Assign Existing Child Button -->
                 <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
                   <template v-slot:activator="{ on, attrs }">
@@ -138,7 +108,7 @@
               </template>
             </v-treeview>
           </v-container>
-        </v-card>
+        </v-sheet>
       </v-col>
     </v-row>
   </v-container>
@@ -147,12 +117,13 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import IconWithTooltip from '@/components/IconWithTooltip.vue';
+import VerticalSlideFade from '@/components/transition/VerticalSlideFade.vue';
 import { readApplicationModel } from '@/store/admin/getters';
 import { dispatchGetNetworks, dispatchUpdateApplicationModelChildren } from '@/store/admin/actions';
 import { ApplicationModelEntry } from '@/interfaces';
 
 @Component({
-  components: { IconWithTooltip },
+  components: { IconWithTooltip, VerticalSlideFade },
 })
 export default class ConfigureApplication extends Vue {
   loading = true;
@@ -164,8 +135,17 @@ export default class ConfigureApplication extends Vue {
     return readApplicationModel(this.$store);
   }
 
-  get showForm() {
-    return this.$route.name != 'admin.configure';
+  @Watch('active')
+  async onSelectTreeViewItem(val: ApplicationModelEntry[]) {
+    const id = val[0].id;
+    switch (val[0].type) {
+      case 'node':
+      case 'network':
+        this.$router.push(`/admin/configure/node/${id}`);
+        break;
+      default:
+        break;
+    }
   }
 
   @Watch('open')
@@ -185,7 +165,10 @@ export default class ConfigureApplication extends Vue {
   // in order to provide the opportunity to trigger the 'open'
   // watcher to load in child elements
   @Watch('$route.fullPath')
-  async onFormReset() {
+  async onFormReset(val: string) {
+    if (val == '/admin/configure') {
+      this.active = [];
+    }
     this.open = [];
   }
 

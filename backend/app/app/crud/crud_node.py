@@ -171,7 +171,7 @@ class CRUDNode(
         base_query = (
             db.query(self.model)
             .order_by(self.model.id.desc())
-            .filter(self.model.node_type == "network")
+            .filter(self.model.parent_id == None)
         )
         total_records = base_query.count()
         records = base_query.offset(skip).limit(limit).all()

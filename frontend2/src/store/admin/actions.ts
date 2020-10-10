@@ -318,7 +318,7 @@ export const actions = {
   },
   async actionGetUsers(
     context: MainContext,
-    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean; fullName: string; email: string },
   ) {
     try {
       const response = await api.getUsers(
@@ -327,6 +327,8 @@ export const actions = {
         payload.limit,
         payload.sortBy,
         payload.sortDesc,
+        payload.fullName,
+        payload.email,
       );
       if (response.data) {
         commitSetUsers(context, response.data);

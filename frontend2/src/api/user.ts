@@ -10,9 +10,9 @@ export const user = {
   async updateMe(token: string, data: IUserProfileUpdate) {
     return axios.put<IUserProfile>(`${apiUrl}/api/v1/users/me`, data, authHeaders(token));
   },
-  async getUsers(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+  async getUsers(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false, fullName = '', email = '') {
     return axios.get<IUserProfileList>(
-      `${apiUrl}/api/v1/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      `${apiUrl}/api/v1/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}&full_name=${fullName}&email=${email}`,
       authHeaders(token),
     );
   },

@@ -60,13 +60,13 @@ def create_user(
 
     - models.User: The created user
     """
-    user_group = None
+
+    user_group = crud.user_group.get(db, user_in.user_group_id)
     if not current_user.is_superuser:
         if not user_in.user_group_id:
             raise HTTPException(
                 status_code=403, detail="Non-superuser must provide a user group."
             )
-        user_group = crud.user_group.get(db, user_in.user_group_id)
         if not user_group:
             raise HTTPException(status_code=404, detail="Can not find user group.")
         user_group_create_validator(

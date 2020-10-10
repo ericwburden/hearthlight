@@ -43,15 +43,13 @@ export const userGroup = {
   },
   async getUsersInGroup(token: string, userGroupID: number, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
     return axios.get<IUserProfileList>(
-      `${apiUrl}/api/v1/user_groups/${userGroupID}/users/
-      ?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
       authHeaders(token),
     );
   },
   async getUsersNotInGroup(token: string, userGroupID: number, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
     return axios.get<IUserProfileList>(
-      `${apiUrl}/api/v1/user_groups/${userGroupID}/not/users/
-      ?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      `${apiUrl}/api/v1/user_groups/${userGroupID}/not/users/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
       authHeaders(token),
     );
   },

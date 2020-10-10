@@ -9,12 +9,13 @@ const Home = () => import(/* webpackChunkName: "home" */ '../views/main/Home.vue
 
 // Admin routes
 const AdminDashboard = () => import(/* webpackChunkName: "admin" */ '../views/admin/AdminDashboard.vue');
+const AdminHome = () => import(/* webpackChunkName: "admin-home" */ '../views/admin/home/AdminHome.vue');
 const ConfigureApplication = () =>
   import(
     /* webpackChunkName: "admin-configure" */
     '../views/admin/config/ConfigureApplication.vue'
   );
-const AdminHome = () => import(/* webpackChunkName: "admin-home" */ '../views/admin/home/AdminHome.vue');
+const UserAllSearch = () => import(/* webpackChunkName: "admin-users" */ '../views/admin/users/UserAllSearch.vue');
 
 const routes: Array<RouteConfig> = [
   {
@@ -28,6 +29,7 @@ const routes: Array<RouteConfig> = [
         children: [
           { path: '/', component: AdminHome },
           { path: 'configure', component: ConfigureApplication, children: configRoutes },
+          { path: 'users', component: UserAllSearch },
         ],
       },
     ],

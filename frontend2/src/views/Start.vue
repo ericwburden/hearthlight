@@ -26,7 +26,11 @@ const startRouteGuard = async (to: Route, from: Route, next: Function) => {
       }
     }
   } else if (readIsLoggedIn(store) === false) {
-    next('/home');
+    if (to.path === '/' || (to.path as string).startsWith('/admin')) {
+      next('/home');
+    } else {
+      next();
+    }
   }
 };
 

@@ -8,7 +8,7 @@
         </v-col>
       </v-row>
     </v-parallax>
-    <v-container pt-5> <LoginForm></LoginForm></v-container>
+    <v-container pt-5> <login-form></login-form></v-container>
     <v-spacer></v-spacer>
   </v-main>
 </template>

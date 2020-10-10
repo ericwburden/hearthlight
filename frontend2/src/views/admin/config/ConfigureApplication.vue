@@ -67,17 +67,19 @@ export default class ConfigureApplication extends Vue {
 
   @Watch('active')
   async onSelectTreeViewItem(val: ApplicationModelEntry[]) {
-    const id = val[0].id;
-    switch (val[0].type) {
-      case 'node':
-      case 'network':
-        this.$router.push(`/admin/configure/node/${id}`);
-        break;
-      case 'user_group':
-        this.$router.push(`/admin/configure/user-group/${id}`);
-        break;
-      default:
-        break;
+    if (val[0]) {
+      const id = val[0].id;
+      switch (val[0].type) {
+        case 'node':
+        case 'network':
+          this.$router.push(`/admin/configure/node/${id}`);
+          break;
+        case 'user_group':
+          this.$router.push(`/admin/configure/user-group/${id}`);
+          break;
+        default:
+          break;
+      }
     }
   }
 

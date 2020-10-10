@@ -19,7 +19,6 @@ export default class VerticalSlideFade extends Vue {
 
   public beforeLeave(element: HTMLElement) {
     this.prevHeight = getComputedStyle(element).height;
-    console.log('entering');
   }
 
   public enter(element: HTMLElement) {

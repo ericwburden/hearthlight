@@ -6,6 +6,9 @@ const DefaultMenu = () =>
 const NodeMenu = () =>
   import(/* webpackChunkName: "admin-configure-node-menu" */ '@/views/admin/config/menu/NodeMenu.vue');
 
+const UserGroupMenu = () =>
+  import(/* webpackChunkName: "admin-configure-user-group-menu" */ '@/views/admin/config/menu/UserGroupMenu.vue');
+
 const NodeCreate = () =>
   import(/* webpackChunkName: "admin-configure-node-create" */ '../views/admin/config/form/NodeCreate.vue');
 
@@ -52,6 +55,7 @@ export const configRoutes: Array<RouteConfig> = [
   // Menus
   { path: '/', name: 'admin.configure.default.menu', component: DefaultMenu },
   { path: 'node/:id', name: 'admin.configure.node.menu', component: NodeMenu },
+  { path: 'user-group/:id', name: 'admin.configure.user-group.menu', component: UserGroupMenu },
   { path: 'new-network', name: 'admin.configure.new-network', component: NodeCreate },
   { path: 'node/:id/add-child-node', name: 'admin.configure.node.add-child-node', component: NodeCreate },
   { path: 'node/:id/update', name: 'admin.configure.node.update', component: NodeUpdate },

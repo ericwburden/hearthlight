@@ -27,84 +27,14 @@
               expand-icon="mdi-arrow-down-drop-circle"
               return-object
               ><template v-slot:prepend="{ item }">
-                <IconWithTooltip v-if="item.type == 'network'" icon="mdi-google-circles-extended" msg="Network" />
-                <IconWithTooltip v-if="item.type == 'node'" icon="mdi-circle-double" msg="Node" />
-                <IconWithTooltip
+                <icon-with-tooltip v-if="item.type == 'network'" icon="mdi-google-circles-extended" msg="Network" />
+                <icon-with-tooltip v-if="item.type == 'node'" icon="mdi-circle-double" msg="Node" />
+                <icon-with-tooltip
                   v-if="item.type == 'user_group'"
                   icon="mdi-account-supervisor-circle"
                   msg="User Group"
                 />
-                <IconWithTooltip v-if="item.type == 'interface'" icon="mdi-swap-vertical-circl" msg="Interface" />
-              </template>
-              <template v-slot:append="{ item }">
-                <!-- Node Assign Existing Child Button -->
-                <v-tooltip bottom v-if="['network', 'node'].includes(item.type)">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-sheet v-bind="attrs" v-on="on" class="d-inline">
-                      <v-menu offset-y>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-btn v-if="item.id" icon color="info" v-bind="attrs" v-on="on">
-                            <v-icon>mdi-layers-search</v-icon>
-                          </v-btn>
-                        </template>
-                        <v-list>
-                          <v-list-item @click="selectExistingNode(item)">Node</v-list-item>
-                          <v-list-item @click="selectExistingUserGroup(item)">User Group</v-list-item>
-                          <v-list-item @click="selectItem(item)">Interface</v-list-item>
-                        </v-list>
-                      </v-menu>
-                    </v-sheet>
-                  </template>
-                  <span>Assign Existing Child</span>
-                </v-tooltip>
-
-                <!-- User Group Add User Buttons -->
-                <v-tooltip bottom v-if="item.type == 'user_group'">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="addUserToGroup(item)" icon color="success" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-account-plus</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Add New User</span>
-                </v-tooltip>
-
-                <v-tooltip bottom v-if="item.type == 'user_group'">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="selectExistingUser(item)" icon color="info" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-account-search</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Add Existing User</span>
-                </v-tooltip>
-
-                <v-tooltip bottom v-if="item.type == 'user_group'">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="removeExistingUser(item)" icon color="error" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-account-remove</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Remove User</span>
-                </v-tooltip>
-
-                <!-- Edit Item Button -->
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="updateItem(item)" icon color="info" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-circle-edit-outline</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Edit</span>
-                </v-tooltip>
-
-                <!-- Delete Item Button -->
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-if="item.id" @click="deleteItem(item)" icon color="error" v-bind="attrs" v-on="on">
-                      <v-icon>mdi-layers-remove</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Delete</span>
-                </v-tooltip>
+                <icon-with-tooltip v-if="item.type == 'interface'" icon="mdi-swap-vertical-circle" msg="Interface" />
               </template>
             </v-treeview>
           </v-container>
@@ -143,6 +73,9 @@ export default class ConfigureApplication extends Vue {
       case 'network':
         this.$router.push(`/admin/configure/node/${id}`);
         break;
+      case 'user_group':
+        this.$router.push(`/admin/configure/user-group/${id}`);
+        break;
       default:
         break;
     }
@@ -164,74 +97,18 @@ export default class ConfigureApplication extends Vue {
   // For now, close all the tree nodes when the form changes
   // in order to provide the opportunity to trigger the 'open'
   // watcher to load in child elements
+  // TODO: Handle changes to the application model better
   @Watch('$route.fullPath')
   async onFormReset(val: string) {
     if (val == '/admin/configure') {
       this.active = [];
+      this.open = [];
     }
-    this.open = [];
   }
 
   public async mounted() {
     await dispatchGetNetworks(this.$store);
     this.loading = false;
-  }
-
-  // Functions to manage actions on tree view items
-  public selectItem(item: ApplicationModelEntry) {
-    this.selected = item;
-  }
-
-  public createNetwork() {
-    this.$router.push(`/admin/configure/new-network`);
-  }
-
-  public addNodeChild(node: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/node/${node.id}/add-child-node`);
-  }
-
-  public addUserToGroup(userGroup: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/user-group/${userGroup.id}/add-user`);
-  }
-
-  public selectExistingNode(node: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/node/${node.id}/child-search`);
-  }
-
-  public selectExistingUserGroup(node: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/node/${node.id}/user-group-search`);
-  }
-
-  public selectExistingUser(userGroup: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/user-group/${userGroup.id}/user-search/add`);
-  }
-
-  public removeExistingUser(userGroup: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/user-group/${userGroup.id}/user-search/remove`);
-  }
-
-  public updateItem(item: ApplicationModelEntry) {
-    this.selectItem(item);
-    if (item.type == 'node' || item.type == 'network') {
-      this.$router.push(`/admin/configure/node/${item.id}/update`);
-    }
-    if (item.type == 'user_group') {
-      this.$router.push(`/admin/configure/user-group/${item.id}/update`);
-    }
-  }
-
-  public deleteItem(item: ApplicationModelEntry) {
-    this.selectItem(item);
-    if (item.type == 'node' || item.type == 'network') {
-      this.$router.push(`/admin/configure/node/${item.id}/delete`);
-    }
-    if (item.type == 'user_group') {
-      this.$router.push(`/admin/configure/user-group/${item.id}/delete`);
-    }
-  }
-
-  public addUserGroupChild(node: ApplicationModelEntry) {
-    this.$router.push(`/admin/configure/node/${node.id}/add-user-group`);
   }
 }
 </script>

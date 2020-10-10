@@ -41,7 +41,7 @@ export default class VerticalSlideFade extends Vue {
 <style scoped>
 .vertical-slide-fade-enter-active,
 .vertical-slide-fade-leave-active {
-  transition-duration: 1s;
+  transition-duration: 0.5s;
   transition-property: height, opacity, transform;
   transition-timing-function: ease;
   overflow: hidden;

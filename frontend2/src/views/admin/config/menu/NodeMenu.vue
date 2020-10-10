@@ -117,7 +117,7 @@ import { readActiveNode } from '@/store/admin/getters';
   inheritAttrs: false,
   components: { LabeledMenuButton },
 })
-export default class DefaultMenu extends Vue {
+export default class NodeMenu extends Vue {
   public id = this.$route.params.id;
   public props: { id: number; name: string; icon: string } = { id: 0, name: '', icon: '' };
 
@@ -166,10 +166,5 @@ export default class DefaultMenu extends Vue {
   position: absolute;
   top: -1.5rem;
   background-color: white;
-}
-
-.col {
-  padding-top: 2px;
-  padding-bottom: 2px;
 }
 </style>

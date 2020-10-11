@@ -148,7 +148,6 @@ export default class UserEditForm extends Vue {
     }
   }
 
-  @Emit()
   public async submit() {
     if ((await this.$refs.form.validate()) && this.id && this.user) {
       const userUpdate: IUserProfileUpdate = {
@@ -164,21 +163,19 @@ export default class UserEditForm extends Vue {
         } else {
           this.passwordConfirmError = true;
           this.passwordConfirmErrors = ['Password must match confirmation'];
-          return false;
         }
       }
       if (this.userEmail != this.user.email) {
         userUpdate.email = this.userEmail;
       }
       await dispatchUpdateUser(this.$store, { id: this.id, object: userUpdate });
-      return true;
+      this.cancel();
     }
-    return false;
   }
 
-  @Emit('submit')
+  @Emit('input')
   public cancel() {
-    return true;
+    return false;
   }
 }
 </script>

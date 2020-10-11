@@ -55,11 +55,7 @@
         <v-btn color="warning" @click="reset" class="mx-2">Reset</v-btn>
       </v-col>
     </v-row>
-    <v-dialog v-model="editDialog" max-width="500px">
-      <v-card class="pa-5">
-        <user-edit-form :id="activeUserID" @submit="handleEditDialog"></user-edit-form>
-      </v-card>
-    </v-dialog>
+    <user-edit-form-modal v-model="editDialog" :id="activeUserID" max-width="500px" />
     <confirm-delete-modal
       v-model="deleteDialog"
       type="user"
@@ -73,14 +69,14 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { DataOptions } from 'vuetify';
-import UserEditForm from '@/components/forms/UserEditForm.vue';
+import UserEditFormModal from '@/components/modals/UserEditFormModal.vue';
 import ConfirmDeleteModal from '@/components/modals/ConfirmDeleteModal.vue';
 import { IUserProfile } from '@/interfaces';
 import { readUsers } from '@/store/admin/getters';
 import { dispatchGetUsers } from '@/store/admin/actions';
 
 @Component({
-  components: { UserEditForm, ConfirmDeleteModal },
+  components: { UserEditFormModal, ConfirmDeleteModal },
 })
 export default class UserAllSearch extends Vue {
   public editDialog = false;
@@ -218,16 +214,22 @@ export default class UserAllSearch extends Vue {
     this.editDialog = true;
   }
 
-  public handleEditDialog(result: boolean) {
-    if (result) {
-      this.editDialog = false;
-    }
-  }
-
   public showDeleteModal(item: IUserProfile) {
     this.activeUserID = item.id;
     this.activeUserName = item.email;
     this.deleteDialog = true;
+  }
+
+  get showDialogValues() {
+    return this.editDialog || this.deleteDialog;
+  }
+
+  @Watch('showDialogValues')
+  public async refreshOnDialogClose(val: boolean) {
+    if (!val) {
+      await this.refreshUserStore();
+      this.users = readUsers(this.$store).records;
+    }
   }
 }
 </script>

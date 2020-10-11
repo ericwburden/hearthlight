@@ -11,7 +11,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import UserEditForm from '@/components/forms/UserEditForm.vue';
 
 @Component({ components: { UserEditForm } })
-export default class ConfirmDeleteModal extends Vue {
+export default class UserEditFormModal extends Vue {
   @Prop(Number) readonly id: number | undefined;
   @Prop({ type: Boolean, required: true, default: false }) readonly value!: boolean;
 

@@ -181,6 +181,10 @@ def read_users(
     - sort_by (str, optional): Name of a column to sort by.
     - sort_desc (bool, optional): Should the column be sorted
     descending (true) or ascending (false).
+    - full_name (str, optional): Filter the results by user full name,
+    via full name ILIKE "%full_name%"
+    - email (str, optional): Filter the results by user email address,
+    via email ILIKE "%email%"
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).

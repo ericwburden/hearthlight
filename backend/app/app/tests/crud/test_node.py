@@ -56,11 +56,15 @@ def test_get_multi_node(db: Session, superuser: User) -> None:
 def test_get_multi_network(db: Session, superuser: User) -> None:
     names = [random_lower_string() for n in range(10)]
     new_networks_in = [NodeCreate(name=name, node_type="network") for name in names]
-    [
+    new_networks = [
         crud.node.create(db=db, obj_in=node_in, created_by_id=superuser.id)
         for node_in in new_networks_in
     ]
-    new_node_in = NodeCreate(name=random_lower_string(), node_type="something_else")
+    new_node_in = NodeCreate(
+        name=random_lower_string(),
+        node_type="not a network",
+        parent_id=new_networks[0].id,
+    )
     new_node = crud.node.create(db=db, obj_in=new_node_in, created_by_id=superuser.id)
     stored_nodes = crud.node.get_multi_networks(db=db)
     stored_node_names = [sn.name for sn in stored_nodes.records]

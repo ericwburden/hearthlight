@@ -172,6 +172,8 @@ def read_nodes(
     limit: int = 100,
     sort_by: Optional[str] = "",
     sort_desc: Optional[bool] = None,
+    name: Optional[str] = None,
+    node_type: Optional[str] = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> GenericModelList[schemas.Node]:
     """# Read a list of nodes
@@ -188,6 +190,10 @@ def read_nodes(
     - sort_by (str, optional): Name of a column to sort by.
     - sort_desc (bool, optional): Should the column be sorted
     descending (true) or ascending (false).
+    - name (str, optional): Filter the results by node name, via
+    name ILIKE "%name%"
+    - node_type (str, optional): Filter the results by node type, via
+    node_type ILIKE "%node_type%"
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
@@ -197,9 +203,16 @@ def read_nodes(
     - GenericModelList[schemas.Node]: Object containing a count of
     returned records and the records returned.
     """
+
+    search = {k: v for k, v in {"name": name, "node_type": node_type}.items() if v}
     if crud.user.is_superuser(current_user):
         nodes = crud.node.get_multi(
-            db, skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
+            db,
+            skip=skip,
+            limit=limit,
+            sort_by=sort_by,
+            sort_desc=sort_desc,
+            search=search,
         )
     else:
         nodes = crud.node.get_multi_with_permissions(
@@ -209,6 +222,7 @@ def read_nodes(
             limit=limit,
             sort_by=sort_by,
             sort_desc=sort_desc,
+            search=search,
         )
 
     return nodes

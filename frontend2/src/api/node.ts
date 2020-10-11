@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import axios from 'axios';
 import { apiUrl } from '@/env';
 import { authHeaders } from './headers';
@@ -19,9 +20,9 @@ export const node = {
   async getNetworks(token: string) {
     return axios.get<INodeList>(`${apiUrl}/api/v1/nodes/networks/`, authHeaders(token));
   },
-  async getNodes(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+  async getNodes(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false, name = '', node_type = '') {
     return axios.get<INodeList>(
-      `${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      `${apiUrl}/api/v1/nodes/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}&name=${name}&node_type=${node_type}`,
       authHeaders(token),
     );
   },

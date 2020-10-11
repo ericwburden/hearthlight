@@ -16,6 +16,7 @@ const ConfigureApplication = () =>
     '../views/admin/config/ConfigureApplication.vue'
   );
 const UserAllSearch = () => import(/* webpackChunkName: "admin-users" */ '../views/admin/users/UserAllSearch.vue');
+const NodeAllSearch = () => import(/* webpackChunkName: "admin-nodes" */ '../views/admin/nodes/NodeAllSearch.vue');
 
 const routes: Array<RouteConfig> = [
   {
@@ -30,6 +31,7 @@ const routes: Array<RouteConfig> = [
           { path: '/', component: AdminHome },
           { path: 'configure', component: ConfigureApplication, children: configRoutes },
           { path: 'users', component: UserAllSearch },
+          { path: 'nodes', component: NodeAllSearch },
         ],
       },
     ],

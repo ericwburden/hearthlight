@@ -17,7 +17,7 @@
         <v-img v-bind="props" gradient="to top right, rgba(210,112,25,.7), rgba(255,189,130,.7)"></v-img>
       </template>
       <v-app-bar-nav-icon>
-        <v-icon>$vuetify.icons.hearthlight</v-icon>
+        <v-icon large>$vuetify.icons.hearthlight</v-icon>
       </v-app-bar-nav-icon>
 
       <v-toolbar-title>Administration Panel</v-toolbar-title>
@@ -28,7 +28,7 @@
         <v-tabs align-with-title icons-and-text show-arrows>
           <v-tab to="/admin">Home<v-icon>mdi-home</v-icon></v-tab>
           <v-tab to="/admin/configure">Configure<v-icon>mdi-hammer-wrench</v-icon></v-tab>
-          <v-tab>Nodes<v-icon>mdi-family-tree</v-icon></v-tab>
+          <v-tab to="/admin/nodes">Nodes<v-icon>mdi-family-tree</v-icon></v-tab>
           <v-tab>User Groups<v-icon>mdi-lock-open</v-icon></v-tab>
           <v-tab to="/admin/users">Users<v-icon>mdi-account-multiple</v-icon></v-tab>
           <v-tab>Interfaces<v-icon>mdi-book-information-variant</v-icon></v-tab>
@@ -49,8 +49,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { dispatchLogOut } from '@/store/main/actions';
-
-console.log('AdminDashboard.vue');
 
 @Component({
   components: {},

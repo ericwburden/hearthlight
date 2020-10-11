@@ -43,7 +43,7 @@
             <v-icon class="mx-1" @click.stop="showEditForm(item)">
               mdi-circle-edit-outline
             </v-icon>
-            <v-icon class="mx-1">
+            <v-icon class="mx-1" @click.stop="showDeleteModal(item)">
               mdi-delete
             </v-icon>
           </template>
@@ -60,6 +60,13 @@
         <user-edit-form :id="activeUserID" @submit="handleEditDialog"></user-edit-form>
       </v-card>
     </v-dialog>
+    <confirm-delete-modal
+      v-model="deleteDialog"
+      type="user"
+      :id="activeUserID"
+      :name="activeUserName"
+      max-width="500px"
+    />
   </v-container>
 </template>
 
@@ -67,16 +74,19 @@
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { DataOptions } from 'vuetify';
 import UserEditForm from '@/components/forms/UserEditForm.vue';
+import ConfirmDeleteModal from '@/components/modals/ConfirmDeleteModal.vue';
 import { IUserProfile } from '@/interfaces';
 import { readUsers } from '@/store/admin/getters';
 import { dispatchGetUsers } from '@/store/admin/actions';
 
 @Component({
-  components: { UserEditForm },
+  components: { UserEditForm, ConfirmDeleteModal },
 })
 export default class UserAllSearch extends Vue {
   public editDialog = false;
+  public deleteDialog = false;
   public activeUserID: number | null = null;
+  public activeUserName: string | null = null;
   public searchTerm = '';
   public searchField = 'Full Name';
   public skip = 0;
@@ -204,14 +214,20 @@ export default class UserAllSearch extends Vue {
   }
 
   public showEditForm(item: IUserProfile) {
-    this.editDialog = true;
     this.activeUserID = item.id;
+    this.editDialog = true;
   }
 
   public handleEditDialog(result: boolean) {
     if (result) {
       this.editDialog = false;
     }
+  }
+
+  public showDeleteModal(item: IUserProfile) {
+    this.activeUserID = item.id;
+    this.activeUserName = item.email;
+    this.deleteDialog = true;
   }
 }
 </script>

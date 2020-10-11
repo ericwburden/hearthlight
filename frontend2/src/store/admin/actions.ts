@@ -409,6 +409,19 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionDeleteUser(context: MainContext, payload: number) {
+    try {
+      const loadingNotification = { content: `Deleting user: ID ${payload}`, showProgress: true };
+      await api.deleteUser(context.getters.token, payload);
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: `User ${payload} successfully deleted.`,
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 };
 
 export const dispatchCreateNode = dispatch(actions.actionCreateNode);
@@ -434,3 +447,4 @@ export const dispatchGetUsers = dispatch(actions.actionGetUsers);
 export const dispatchGetUsersInGroup = dispatch(actions.actionGetUsersInGroup);
 export const dispatchGetUsersNotInGroup = dispatch(actions.actionGetUsersNotInGroup);
 export const dispatchUpdateUser = dispatch(actions.actionUpdateUser);
+export const dispatchDeleteUser = dispatch(actions.actionDeleteUser);

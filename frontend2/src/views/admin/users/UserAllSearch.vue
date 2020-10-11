@@ -12,10 +12,11 @@
           label="Search"
           @click:append="search"
           @click:clear="clear"
+          @keyup.enter="search"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="2">
-        <v-select v-model="searchField" hint="Search by..." :items="['Full Name', 'Email']"></v-select>
+        <v-select v-model="searchField" label="Search by..." :items="['Full Name', 'Email']"></v-select>
       </v-col>
     </v-row>
     <v-row>
@@ -38,6 +39,14 @@
             <v-icon v-if="item.is_superuser" color="success">mdi-check-circle</v-icon>
             <v-icon v-else color="secondary">mdi-close-circle-outline </v-icon>
           </template>
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-icon class="mx-1" @click.stop="showEditForm(item)">
+              mdi-circle-edit-outline
+            </v-icon>
+            <v-icon class="mx-1">
+              mdi-delete
+            </v-icon>
+          </template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -46,18 +55,28 @@
         <v-btn color="warning" @click="reset" class="mx-2">Reset</v-btn>
       </v-col>
     </v-row>
+    <v-dialog v-model="editDialog" max-width="500px">
+      <v-card class="pa-5">
+        <user-edit-form :id="activeUserID" @submit="handleEditDialog"></user-edit-form>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { DataOptions } from 'vuetify';
+import UserEditForm from '@/components/forms/UserEditForm.vue';
 import { IUserProfile } from '@/interfaces';
 import { readUsers } from '@/store/admin/getters';
 import { dispatchGetUsers } from '@/store/admin/actions';
 
-@Component
+@Component({
+  components: { UserEditForm },
+})
 export default class UserAllSearch extends Vue {
+  public editDialog = false;
+  public activeUserID: number | null = null;
   public searchTerm = '';
   public searchField = 'Full Name';
   public skip = 0;
@@ -81,6 +100,7 @@ export default class UserAllSearch extends Vue {
     { text: 'Name', sortable: true, value: 'full_name', align: 'center' },
     { text: 'Active', sortable: false, value: 'is_active', align: 'center' },
     { text: 'Superuser', sortable: true, value: 'is_superuser', align: 'center' },
+    { text: 'Actions', value: 'actions', sortable: false, align: 'center' },
   ];
 
   get total(): number {
@@ -181,6 +201,17 @@ export default class UserAllSearch extends Vue {
     this.selectedRow = null;
     await this.refreshUserStore();
     this.users = readUsers(this.$store).records;
+  }
+
+  public showEditForm(item: IUserProfile) {
+    this.editDialog = true;
+    this.activeUserID = item.id;
+  }
+
+  public handleEditDialog(result: boolean) {
+    if (result) {
+      this.editDialog = false;
+    }
   }
 }
 </script>

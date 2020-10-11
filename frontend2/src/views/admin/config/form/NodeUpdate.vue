@@ -87,7 +87,7 @@ export default class NodeCreate extends Vue {
 
   get network() {
     if (this.currentNode) {
-      return this.currentNode.node_type == 'network';
+      return this.currentNode.parent_id == null;
     }
     return false;
   }

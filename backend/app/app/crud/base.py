@@ -1,10 +1,11 @@
+import logging
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from pydantic.generics import GenericModel
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.expression import and_, literal, ColumnElement
+from sqlalchemy.sql.expression import and_, literal, literal_column, ColumnElement
 
 from app.db.base_class import Base
 from app.crud.utils import model_encoder
@@ -111,10 +112,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         limit: int = 100,
         sort_by: Optional[str] = "",
         sort_desc: Optional[bool] = None,
+        search: Optional[Dict[str, str]] = {},
     ) -> GenericModelList:
-        base_query = db.query(self.model).order_by(
-            parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc)
+        search_terms = [
+            getattr(self.model, k).ilike(f"%{v}%") for k, v in search.items()
+        ]
+        base_query = (
+            db.query(self.model)
+            .order_by(parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc))
+            .filter(*search_terms)
         )
+        logging.info(base_query)
+        logging.info(search)
         total_records = base_query.count()
         records = base_query.offset(skip).limit(limit).all()
         return GenericModelList[self.model](

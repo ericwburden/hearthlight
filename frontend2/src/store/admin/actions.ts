@@ -6,7 +6,7 @@ import {
   IUserGroupCreate,
   IUserGroupUpdate,
   IUserProfileCreate,
-  IUserProfileList,
+  IUserProfileUpdate,
 } from '@/interfaces';
 import { searchApplicationModel } from '@/utils';
 import { getStoreAccessors } from 'typesafe-vuex';
@@ -22,6 +22,7 @@ import {
   commitSetNodeTypes,
   commitSetActiveUserGroup,
   commitSetUserGroups,
+  commitSetActiveUser,
   commitSetUsers,
 } from './mutations';
 import { AdminState } from './state';
@@ -317,9 +318,19 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionGetOneUser(context: MainContext, payload: number) {
+    try {
+      const response = await api.getOneUser(context.getters.token, payload);
+      if (response.data) {
+        commitSetActiveUser(context, response.data);
+      }
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
   async actionGetUsers(
     context: MainContext,
-    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean; fullName: string; email: string },
   ) {
     try {
       const response = await api.getUsers(
@@ -328,6 +339,8 @@ export const actions = {
         payload.limit,
         payload.sortBy,
         payload.sortDesc,
+        payload.fullName,
+        payload.email,
       );
       if (response.data) {
         commitSetUsers(context, response.data);
@@ -376,6 +389,39 @@ export const actions = {
       await dispatchCheckApiError(context, error);
     }
   },
+  async actionUpdateUser(context: MainContext, payload: { id: number; object: IUserProfileUpdate }) {
+    try {
+      const loadingNotification = { content: `Updating user: ID ${payload.id}`, showProgress: true };
+      commitAddNotification(context, loadingNotification);
+      const response = (
+        await Promise.all([
+          api.updateUser(context.getters.token, payload.id, payload.object),
+          await new Promise((resolve) => setTimeout(() => resolve(), 500)),
+        ])
+      )[0];
+      commitSetActiveUser(context, response.data);
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: 'User successfully updated',
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
+  async actionDeleteUser(context: MainContext, payload: number) {
+    try {
+      const loadingNotification = { content: `Deleting user: ID ${payload}`, showProgress: true };
+      await api.deleteUser(context.getters.token, payload);
+      commitRemoveNotification(context, loadingNotification);
+      commitAddNotification(context, {
+        content: `User ${payload} successfully deleted.`,
+        color: 'success',
+      });
+    } catch (error) {
+      await dispatchCheckApiError(context, error);
+    }
+  },
 };
 
 export const dispatchCreateNode = dispatch(actions.actionCreateNode);
@@ -396,6 +442,9 @@ export const dispatchAddUserToGroup = dispatch(actions.actionAddUserToGroup);
 export const dispatchRemoveUserFromGroup = dispatch(actions.actionRemoveUserFromGroup);
 
 export const dispatchCreateUser = dispatch(actions.actionCreateUser);
+export const dispatchGetOneUser = dispatch(actions.actionGetOneUser);
 export const dispatchGetUsers = dispatch(actions.actionGetUsers);
 export const dispatchGetUsersInGroup = dispatch(actions.actionGetUsersInGroup);
 export const dispatchGetUsersNotInGroup = dispatch(actions.actionGetUsersNotInGroup);
+export const dispatchUpdateUser = dispatch(actions.actionUpdateUser);
+export const dispatchDeleteUser = dispatch(actions.actionDeleteUser);

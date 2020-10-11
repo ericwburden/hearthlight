@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col>
+      <v-col align="center" justify="center">
         <h2>Really delete {{ props.type }} - {{ props.name }}?</h2>
       </v-col>
     </v-row>
@@ -54,7 +54,7 @@ export default class ConfirmDelete extends Vue {
   }
 
   public close() {
-    this.$router.push('/admin/configure');
+    this.$router.back();
   }
 
   public async confirm() {

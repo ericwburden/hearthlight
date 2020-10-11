@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -60,13 +60,13 @@ def create_user(
 
     - models.User: The created user
     """
-    user_group = None
+
+    user_group = crud.user_group.get(db, user_in.user_group_id)
     if not current_user.is_superuser:
         if not user_in.user_group_id:
             raise HTTPException(
                 status_code=403, detail="Non-superuser must provide a user group."
             )
-        user_group = crud.user_group.get(db, user_in.user_group_id)
         if not user_group:
             raise HTTPException(status_code=404, detail="Can not find user group.")
         user_group_create_validator(
@@ -160,6 +160,10 @@ def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
+    sort_by: Optional[str] = "",
+    sort_desc: Optional[bool] = None,
+    full_name: Optional[str] = None,
+    email: Optional[str] = None,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> GenericModelList[schemas.User]:
     """# Fetch a list of users
@@ -174,16 +178,27 @@ def read_users(
     - skip (int, optional): Number of records to skip. Defaults to 0.
     - limit (int, optional): Number of record to retrieve. Defaults to
     100.
+    - sort_by (str, optional): Name of a column to sort by.
+    - sort_desc (bool, optional): Should the column be sorted
+    descending (true) or ascending (false).
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
 
     ## Returns:
 
-    - List[User]: List of users models retrieved
+    - GenericModelList[schemas.Node]: Object containing a count of
+    returned records and the records returned.
     """
-
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    search = {k: v for k, v in {"full_name": full_name, "email": email}.items() if v}
+    users = crud.user.get_multi(
+        db,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by,
+        sort_desc=sort_desc,
+        search=search,
+    )
     return users
 
 

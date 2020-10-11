@@ -8,14 +8,14 @@
         </v-col>
       </v-row>
     </v-parallax>
-    <v-container pt-5> <LoginForm></LoginForm></v-container>
+    <v-container pt-5> <login-form></login-form></v-container>
     <v-spacer></v-spacer>
   </v-main>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import LoginForm from '@/components/LoginForm.vue';
+import LoginForm from '@/components/forms/LoginForm.vue';
 
 @Component({
   components: { LoginForm },

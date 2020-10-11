@@ -30,7 +30,7 @@
           <v-tab to="/admin/configure">Configure<v-icon>mdi-hammer-wrench</v-icon></v-tab>
           <v-tab>Nodes<v-icon>mdi-family-tree</v-icon></v-tab>
           <v-tab>User Groups<v-icon>mdi-lock-open</v-icon></v-tab>
-          <v-tab>Users<v-icon>mdi-account-multiple</v-icon></v-tab>
+          <v-tab to="/admin/users">Users<v-icon>mdi-account-multiple</v-icon></v-tab>
           <v-tab>Interfaces<v-icon>mdi-book-information-variant</v-icon></v-tab>
         </v-tabs>
       </template>
@@ -49,6 +49,8 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { dispatchLogOut } from '@/store/main/actions';
+
+console.log('AdminDashboard.vue');
 
 @Component({
   components: {},

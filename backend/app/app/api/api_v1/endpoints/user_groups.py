@@ -141,6 +141,9 @@ def read_user_groups(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
+    sort_by: Optional[str] = "",
+    sort_desc: Optional[bool] = None,
+    name: Optional[str] = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> GenericModelList[schemas.UserGroup]:
     """# Read a list of nodes
@@ -154,6 +157,11 @@ def read_user_groups(
     - skip (int, optional): Number of records to skip. Defaults to 0.
     - limit (int, optional): Number of records to retrieve. Defaults
     to 100.
+    - sort_by (str, optional): Name of a column to sort by.
+    - sort_desc (bool, optional): Should the column be sorted
+    descending (true) or ascending (false).
+    - name (str, optional): Filter the results by user group name, via
+    name ILIKE "%name%"
     - current_user (models.User, optional): User object for the user
     accessing the endpoint. Defaults to
     Depends(deps.get_current_active_user).
@@ -162,11 +170,25 @@ def read_user_groups(
 
     - List[Node]: List of retrieved nodes
     """
+    search = {k: v for k, v in {"name": name}.items() if v}
     if crud.user.is_superuser(current_user):
-        user_groups = crud.user_group.get_multi(db, skip=skip, limit=limit)
+        user_groups = crud.user_group.get_multi(
+            db,
+            skip=skip,
+            limit=limit,
+            sort_by=sort_by,
+            sort_desc=sort_desc,
+            search=search,
+        )
     else:
         user_groups = crud.user_group.get_multi_with_permissions(
-            db, user=current_user, skip=skip, limit=limit
+            db,
+            user=current_user,
+            skip=skip,
+            limit=limit,
+            sort_by=sort_by,
+            sort_desc=sort_desc,
+            search=search,
         )
 
     return user_groups

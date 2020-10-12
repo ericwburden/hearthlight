@@ -23,9 +23,9 @@ export const userGroup = {
   async updateUserGroup(token: string, userGroupID: number, data: IUserGroupUpdate) {
     return axios.put(`${apiUrl}/api/v1/user_groups/${userGroupID}`, data, authHeaders(token));
   },
-  async getUserGroups(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false) {
+  async getUserGroups(token: string, skip = 0, limit = 10, sortBy = '', sortDesc = false, name = '') {
     return axios.get<IUserGroupList>(
-      `${apiUrl}/api/v1/user_groups/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}`,
+      `${apiUrl}/api/v1/user_groups/?skip=${skip}&limit=${limit}&sort_by=${sortBy}&sort_desc=${sortDesc}&name=${name}`,
       authHeaders(token),
     );
   },

@@ -2,7 +2,7 @@
   <v-container class="white">
     <v-row>
       <v-col align="center" justify="center">
-        <h2>Really delete {{ type }} - {{ name }}?</h2>
+        <h2>Really delete {{ printType }} - {{ name }}?</h2>
       </v-col>
     </v-row>
     <v-row>

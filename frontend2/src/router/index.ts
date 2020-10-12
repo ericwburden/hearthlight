@@ -17,6 +17,8 @@ const ConfigureApplication = () =>
   );
 const UserAllSearch = () => import(/* webpackChunkName: "admin-users" */ '../views/admin/users/UserAllSearch.vue');
 const NodeAllSearch = () => import(/* webpackChunkName: "admin-nodes" */ '../views/admin/nodes/NodeAllSearch.vue');
+const UserGroupAllSearch = () =>
+  import(/* webpackChunkName: "admin-user-groups" */ '../views/admin/user-groups/UserGroupAllSearch.vue');
 
 const routes: Array<RouteConfig> = [
   {
@@ -32,6 +34,7 @@ const routes: Array<RouteConfig> = [
           { path: 'configure', component: ConfigureApplication, children: configRoutes },
           { path: 'users', component: UserAllSearch },
           { path: 'nodes', component: NodeAllSearch },
+          { path: 'user-groups', component: UserGroupAllSearch },
         ],
       },
     ],

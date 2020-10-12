@@ -29,7 +29,7 @@
           <v-tab to="/admin">Home<v-icon>mdi-home</v-icon></v-tab>
           <v-tab to="/admin/configure">Configure<v-icon>mdi-hammer-wrench</v-icon></v-tab>
           <v-tab to="/admin/nodes">Nodes<v-icon>mdi-family-tree</v-icon></v-tab>
-          <v-tab>User Groups<v-icon>mdi-lock-open</v-icon></v-tab>
+          <v-tab to="/admin/user-groups">User Groups<v-icon>mdi-lock-open</v-icon></v-tab>
           <v-tab to="/admin/users">Users<v-icon>mdi-account-multiple</v-icon></v-tab>
           <v-tab>Interfaces<v-icon>mdi-book-information-variant</v-icon></v-tab>
         </v-tabs>

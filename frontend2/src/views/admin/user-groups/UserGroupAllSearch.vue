@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" sm="6">
+      <v-col cols="12" sm="8">
         <h2>All Nodes/Networks</h2>
       </v-col>
       <v-col align="end" justify="end" cols="12" sm="4">
@@ -15,15 +15,12 @@
           @keyup.enter="search"
         ></v-text-field>
       </v-col>
-      <v-col cols="12" sm="2">
-        <v-select v-model="searchField" label="Search by..." :items="['Name', 'Type']"></v-select>
-      </v-col>
     </v-row>
     <v-row>
       <v-col>
         <v-data-table
           :headers="headers"
-          :items="nodes"
+          :items="userGroups"
           :options.sync="options"
           :server-items-length="total"
           :loading="loading"
@@ -31,10 +28,6 @@
           class="elevation-1"
           @click:row="selectRow"
         >
-          <template v-slot:[`item.is_active`]="{ item }">
-            <v-icon v-if="item.is_active" color="success">mdi-check-circle</v-icon>
-            <v-icon v-else color="secondary">mdi-close-circle-outline </v-icon>
-          </template>
           <template v-slot:[`item.actions`]="{ item }">
             <v-icon class="mx-1" @click.stop="showEditModal(item)">
               mdi-circle-edit-outline
@@ -51,40 +44,39 @@
         <v-btn color="warning" @click="reset" class="mx-2">Reset</v-btn>
       </v-col>
     </v-row>
-    <node-edit-form-modal v-model="editDialog" :id="activeNodeInfo.id" max-width="500px" />
+    <user-group-edit-form-modal v-model="editDialog" :id="activeUserGroupInfo.id" max-width="500px" />
     <confirm-delete-modal
       v-model="deleteDialog"
-      :type="activeNodeInfo.type"
-      :id="activeNodeInfo.id"
-      :name="activeNodeInfo.name"
+      type="user-group"
+      :id="activeUserGroupInfo.id"
+      :name="activeUserGroupInfo.name"
       max-width="500px"
     />
   </v-container>
 </template>
 
 <script lang="ts">
-/* eslint-disable @typescript-eslint/camelcase */
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { DataOptions } from 'vuetify';
-import NodeEditFormModal from '@/components/modals/NodeEditFormModal.vue';
 import ConfirmDeleteModal from '@/components/modals/ConfirmDeleteModal.vue';
-import { INode } from '@/interfaces';
-import { readAdminNodes } from '@/store/admin/getters';
-import { dispatchGetNodes } from '@/store/admin/actions';
+import UserGroupEditFormModal from '@/components/modals/UserGroupEditFormModal.vue';
+import { IUserGroup } from '@/interfaces';
+import { readUserGroups } from '@/store/admin/getters';
+import { dispatchGetUserGroups } from '@/store/admin/actions';
 
 @Component({
-  components: { ConfirmDeleteModal, NodeEditFormModal },
+  components: { ConfirmDeleteModal, UserGroupEditFormModal },
 })
-export default class NodeAllSearch extends Vue {
+export default class UserGroupAllSearch extends Vue {
   public editDialog = false;
   public deleteDialog = false;
-  public activeNodeInfo: { id: number; name: string; type: string } = { id: 0, name: '', type: '' };
+  public activeUserGroupInfo: { id: number; name: string } = { id: 0, name: '' };
   public searchTerm = '';
   public searchField = 'Name';
   public skip = 0;
   public limit = 10;
   public loading = true;
-  public selectedRow: INode | null = null;
+  public selectedRow: IUserGroup | null = null;
   public options: DataOptions = {
     page: 1,
     itemsPerPage: 10,
@@ -95,32 +87,16 @@ export default class NodeAllSearch extends Vue {
     multiSort: false,
     mustSort: false,
   };
-  public nodes: INode[] = [];
+  public userGroups: IUserGroup[] = [];
   public headers = [
     { text: 'ID', sortable: true, value: 'id', align: 'left' },
-    { text: 'Parent ID', sortable: true, value: 'parent_id', align: 'left' },
-    { text: 'Type', sortable: true, value: 'node_type', align: 'center' },
+    { text: 'Node ID', sortable: true, value: 'node_id', align: 'left' },
     { text: 'Name', sortable: true, value: 'name', align: 'center' },
-    { text: 'Active', sortable: false, value: 'is_active', align: 'center' },
     { text: 'Actions', value: 'actions', sortable: false, align: 'center' },
   ];
 
   get total(): number {
-    return readAdminNodes(this.$store).total_records;
-  }
-
-  get nodeName(): string {
-    if (this.searchField == 'Name' && this.searchTerm) {
-      return this.searchTerm;
-    }
-    return '';
-  }
-
-  get nodeType(): string {
-    if (this.searchField == 'Type' && this.searchTerm) {
-      return this.searchTerm;
-    }
-    return '';
+    return readUserGroups(this.$store).total_records;
   }
 
   public async search() {
@@ -144,31 +120,30 @@ export default class NodeAllSearch extends Vue {
     if (sortBy.length === 1 && sortDesc.length === 1) {
       if (itemsPerPage > 0) {
         const skip = (page - 1) * itemsPerPage;
-        await this.refreshNodeStore({
+        await this.refreshUserGroupStore({
           skip: skip,
           limit: itemsPerPage,
           sortBy: sortBy[0],
           sortDesc: sortDesc[0],
         });
-        this.nodes = readAdminNodes(this.$store).records;
+        this.userGroups = readUserGroups(this.$store).records;
       }
     }
     this.loading = false;
   }
 
-  public async refreshNodeStore({
+  public async refreshUserGroupStore({
     skip = 0,
     limit = this.options.itemsPerPage,
     sortBy = '',
     sortDesc = false,
   }: { skip?: number; limit?: number; sortBy?: string; sortDesc?: boolean } = {}) {
-    await dispatchGetNodes(this.$store, {
+    await dispatchGetUserGroups(this.$store, {
       skip: skip,
       limit: limit,
       sortBy: sortBy,
       sortDesc: sortDesc,
-      name: this.nodeName,
-      node_type: this.nodeType,
+      name: this.searchTerm,
     });
   }
 
@@ -177,14 +152,14 @@ export default class NodeAllSearch extends Vue {
     this.loading = false;
   }
 
-  public rowColor(row: INode) {
+  public rowColor(row: IUserGroup) {
     if (this.selectedRow) {
       return row.id == this.selectedRow.id ? 'accent brown--text font-weight-bold' : '';
     }
     return '';
   }
 
-  public selectRow(row: INode) {
+  public selectRow(row: IUserGroup) {
     this.selectedRow = row;
   }
 
@@ -201,17 +176,17 @@ export default class NodeAllSearch extends Vue {
     };
     this.searchTerm = '';
     this.selectedRow = null;
-    await this.refreshNodeStore();
-    this.nodes = readAdminNodes(this.$store).records;
+    await this.refreshUserGroupStore();
+    this.userGroups = readUserGroups(this.$store).records;
   }
 
-  public showEditModal(item: INode) {
-    this.activeNodeInfo = { id: item.id, name: item.name, type: !item.parent_id ? 'network' : 'node' };
+  public showEditModal(item: IUserGroup) {
+    this.activeUserGroupInfo = { id: item.id, name: item.name };
     this.editDialog = true;
   }
 
-  public showDeleteModal(item: INode) {
-    this.activeNodeInfo = { id: item.id, name: item.name, type: !item.parent_id ? 'network' : 'node' };
+  public showDeleteModal(item: IUserGroup) {
+    this.activeUserGroupInfo = { id: item.id, name: item.name };
     this.deleteDialog = true;
   }
 
@@ -222,8 +197,8 @@ export default class NodeAllSearch extends Vue {
   @Watch('showDialogValues')
   public async refreshOnDialogClose(val: boolean) {
     if (!val) {
-      await this.refreshNodeStore();
-      this.nodes = readAdminNodes(this.$store).records;
+      await this.refreshUserGroupStore();
+      this.userGroups = readUserGroups(this.$store).records;
     }
   }
 }

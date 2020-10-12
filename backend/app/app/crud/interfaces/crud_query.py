@@ -21,8 +21,7 @@ from app.schemas.interface.templates import QueryTemplate
 
 
 class QueryTemplateConverter:
-    """Converts QueryTemplate to a SQLAlchemy query
-    """
+    """Converts QueryTemplate to a SQLAlchemy query"""
 
     def __init__(self, base: DeclarativeMeta, engine: Engine):
         self.base = base

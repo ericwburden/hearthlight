@@ -33,7 +33,8 @@ def create_random_form_input_interface(
     db: Session, table_name: Optional[str] = None
 ) -> FormInputInterface:
     form_input_in = FormInputCreate(
-        name=random_lower_string(), template=test_table_template(name=table_name),
+        name=random_lower_string(),
+        template=test_table_template(name=table_name),
     )
     form_input = crud.form_input.create(db, obj_in=form_input_in, created_by_id=1)
     return form_input

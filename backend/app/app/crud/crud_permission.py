@@ -33,8 +33,7 @@ class CRUDPermission(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
             raise e
 
     def update(self, *args, **kwargs) -> None:
-        """This function is disabled for Permissions
-        """
+        """This function is disabled for Permissions"""
         pass
 
     def grant(

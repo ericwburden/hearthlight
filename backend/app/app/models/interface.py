@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 
 
 class InterfaceNodeRel(Base, Default):
-    """Many-to-many association table for Interfaces and Nodes
-    """
+    """Many-to-many association table for Interfaces and Nodes"""
 
     interface_id = Column(Integer, ForeignKey("interface.id"), primary_key=True)
     node_id = Column(Integer, ForeignKey("node.id"), primary_key=True)

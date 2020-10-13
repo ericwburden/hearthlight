@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <v-col cols="12" sm="8">
-        <h2>All Nodes/Networks</h2>
+        <h2>All User Groups</h2>
       </v-col>
       <v-col align="end" justify="end" cols="12" sm="4">
         <v-text-field

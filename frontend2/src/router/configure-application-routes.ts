@@ -12,11 +12,6 @@ const UserGroupMenu = () =>
 const NodeCreate = () =>
   import(/* webpackChunkName: "admin-configure-node-create" */ '../views/admin/config/form/NodeCreate.vue');
 
-const NodeUpdate = () =>
-  import(
-    /* webpackChunkName: "admin-configure-node-update" */
-    '../views/admin/config/form/NodeUpdate.vue'
-  );
 const NodeEditFormRoute = () =>
   import(/* webpackChunkName: "admin-configure-node-update" */ '@/components/routes/NodeEditFormRoute.vue');
 
@@ -32,11 +27,8 @@ const UserGroupCreate = () =>
     '../views/admin/config/form/UserGroupCreate.vue'
   );
 
-const UserGroupUpdate = () =>
-  import(
-    /* webpackChunkName: "admin-configure-user-group-update" */
-    '../views/admin/config/form/UserGroupUpdate.vue'
-  );
+const UserGroupEditFormRoute = () =>
+  import(/* webpackChunkName: "admin-configure-user-group-update" */ '@/components/routes/UserGroupEditFormRoute.vue');
 
 const UserGroupSearch = () =>
   import(/* webpackChunkName: "admin-configure-user-group-search" */ '../views/admin/config/form/UserGroupSearch.vue');
@@ -71,7 +63,7 @@ export const configRoutes: Array<RouteConfig> = [
   {
     path: 'user-group/:id/update',
     name: 'admin.configure.user-group.update',
-    component: UserGroupUpdate,
+    component: UserGroupEditFormRoute,
   },
   {
     path: 'node/:id/user-group-search',

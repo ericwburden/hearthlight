@@ -2,7 +2,7 @@
   <v-container class="white">
     <v-row>
       <v-col align="center" justify="center">
-        <h2>Really delete {{ type }} - {{ name }}?</h2>
+        <h2>Really delete {{ printType }} - {{ name }}?</h2>
       </v-col>
     </v-row>
     <v-row>
@@ -42,6 +42,8 @@ export default class ConfirmDelete extends Vue {
         this.printType = 'User';
         break;
       case 'interface':
+      case 'form_input_interface':
+      case 'query_interface':
         this.printType = 'Interface';
         break;
       default:

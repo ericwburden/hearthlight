@@ -120,7 +120,7 @@ export const actions = {
   },
   async actionGetNodes(
     context: MainContext,
-    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean; name?: string; node_type?: string },
   ) {
     try {
       const response = await api.getNodes(
@@ -129,6 +129,8 @@ export const actions = {
         payload.limit,
         payload.sortBy,
         payload.sortDesc,
+        payload.name,
+        payload.node_type,
       );
       if (response.data) {
         commitSetNodes(context, response.data);
@@ -182,7 +184,7 @@ export const actions = {
   // UserGroup Actions
   async actionGetUserGroups(
     context: MainContext,
-    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean },
+    payload: { skip: number; limit: number; sortBy: string; sortDesc: boolean; name?: string },
   ) {
     try {
       const response = await api.getUserGroups(
@@ -191,6 +193,7 @@ export const actions = {
         payload.limit,
         payload.sortBy,
         payload.sortDesc,
+        payload.name,
       );
       if (response.data) {
         commitSetUserGroups(context, response.data);

@@ -16,6 +16,11 @@ const ConfigureApplication = () =>
     '../views/admin/config/ConfigureApplication.vue'
   );
 const UserAllSearch = () => import(/* webpackChunkName: "admin-users" */ '../views/admin/users/UserAllSearch.vue');
+const NodeAllSearch = () => import(/* webpackChunkName: "admin-nodes" */ '../views/admin/nodes/NodeAllSearch.vue');
+const UserGroupAllSearch = () =>
+  import(/* webpackChunkName: "admin-user-groups" */ '../views/admin/user-groups/UserGroupAllSearch.vue');
+const InterfaceAllSearch = () =>
+  import(/* webpackChunkName: "admin-interfaces" */ '../views/admin/interfaces/InterfaceAllSearch.vue');
 
 const routes: Array<RouteConfig> = [
   {
@@ -30,6 +35,9 @@ const routes: Array<RouteConfig> = [
           { path: '/', component: AdminHome },
           { path: 'configure', component: ConfigureApplication, children: configRoutes },
           { path: 'users', component: UserAllSearch },
+          { path: 'nodes', component: NodeAllSearch },
+          { path: 'user-groups', component: UserGroupAllSearch },
+          { path: 'interfaces', component: InterfaceAllSearch },
         ],
       },
     ],

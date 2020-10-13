@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
@@ -122,8 +121,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .order_by(parse_sort_col(self.model, sort_by=sort_by, sort_desc=sort_desc))
             .filter(*search_terms)
         )
-        logging.info(base_query)
-        logging.info(search)
         total_records = base_query.count()
         records = base_query.offset(skip).limit(limit).all()
         return GenericModelList[self.model](
@@ -235,8 +232,12 @@ class AccessControl(Generic[ModelType, PermissionType]):
         limit: int = 100,
         sort_by: Optional[str] = "",
         sort_desc: Optional[bool] = None,
+        search: Optional[Dict[str, str]] = {},
     ) -> GenericModelList:
         result_model = aliased(self.model)
+        search_terms = [
+            getattr(result_model, k).ilike(f"%{v}%") for k, v in search.items()
+        ]
         base_query = (
             db.query(result_model)
             .join(
@@ -251,7 +252,8 @@ class AccessControl(Generic[ModelType, PermissionType]):
                 and_(
                     User.id == user.id,
                     self.permission_model.permission_type == PermissionTypeEnum.read,
-                    UserGroupPermissionRel.enabled == True,  # noqa E712
+                    UserGroupPermissionRel.enabled == True,  # noqa E712,
+                    *search_terms,
                 )
             )
             .order_by(

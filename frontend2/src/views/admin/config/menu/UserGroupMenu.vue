@@ -116,11 +116,11 @@ export default class UserGroupMenu extends Vue {
   }
 
   get updateRoute() {
-    return `/admin/configure/node/${this.id}/update`;
+    return `/admin/configure/user-group/${this.id}/update`;
   }
 
   get deleteRoute() {
-    return `/admin/configure/node/${this.id}/delete`;
+    return `/admin/configure/user-group/${this.id}/delete`;
   }
 }
 </script>

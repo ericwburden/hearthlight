@@ -2,6 +2,7 @@ import { authentication } from './authentication';
 import { user } from './user';
 import { userGroup } from './user-group';
 import { node } from './node';
+import { interfaces } from './interface';
 
 export const api = {
   // Authentication endpoints
@@ -38,6 +39,9 @@ export const api = {
   removeUserFromGroup: userGroup.removeUserFromGroup,
   getUsersInGroup: userGroup.getUsersInGroup,
   getUsersNotInGroup: userGroup.getUsersNotInGroup,
+
+  // Interface endpoints
+  getInterfaces: interfaces.getInterfaces,
 };
 
 export default api;

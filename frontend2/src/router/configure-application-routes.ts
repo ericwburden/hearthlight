@@ -12,11 +12,8 @@ const UserGroupMenu = () =>
 const NodeCreate = () =>
   import(/* webpackChunkName: "admin-configure-node-create" */ '../views/admin/config/form/NodeCreate.vue');
 
-const NodeUpdate = () =>
-  import(
-    /* webpackChunkName: "admin-configure-node-update" */
-    '../views/admin/config/form/NodeUpdate.vue'
-  );
+const NodeEditFormRoute = () =>
+  import(/* webpackChunkName: "admin-configure-node-update" */ '@/components/routes/NodeEditFormRoute.vue');
 
 const NodeSearch = () =>
   import(
@@ -30,11 +27,8 @@ const UserGroupCreate = () =>
     '../views/admin/config/form/UserGroupCreate.vue'
   );
 
-const UserGroupUpdate = () =>
-  import(
-    /* webpackChunkName: "admin-configure-user-group-update" */
-    '../views/admin/config/form/UserGroupUpdate.vue'
-  );
+const UserGroupEditFormRoute = () =>
+  import(/* webpackChunkName: "admin-configure-user-group-update" */ '@/components/routes/UserGroupEditFormRoute.vue');
 
 const UserGroupSearch = () =>
   import(/* webpackChunkName: "admin-configure-user-group-search" */ '../views/admin/config/form/UserGroupSearch.vue');
@@ -58,7 +52,7 @@ export const configRoutes: Array<RouteConfig> = [
   { path: 'user-group/:id', name: 'admin.configure.user-group.menu', component: UserGroupMenu },
   { path: 'new-network', name: 'admin.configure.new-network', component: NodeCreate },
   { path: 'node/:id/add-child-node', name: 'admin.configure.node.add-child-node', component: NodeCreate },
-  { path: 'node/:id/update', name: 'admin.configure.node.update', component: NodeUpdate },
+  { path: 'node/:id/update', name: 'admin.configure.node.update', component: NodeEditFormRoute },
   { path: 'node/:id/child-search', name: 'admin.configure.node.search', component: NodeSearch },
   { path: ':type/:id/delete', name: 'admin.configure.delete', component: ConfirmDelete },
   {
@@ -69,7 +63,7 @@ export const configRoutes: Array<RouteConfig> = [
   {
     path: 'user-group/:id/update',
     name: 'admin.configure.user-group.update',
-    component: UserGroupUpdate,
+    component: UserGroupEditFormRoute,
   },
   {
     path: 'node/:id/user-group-search',

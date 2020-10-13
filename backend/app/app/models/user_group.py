@@ -12,16 +12,14 @@ if TYPE_CHECKING:
 
 
 class UserGroupUserRel(Base, Default):
-    """Many-to-many association table for UserGroups and Users.
-    """
+    """Many-to-many association table for UserGroups and Users."""
 
     user_group_id = Column(Integer, ForeignKey("user_group.id"), primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
 
 
 class UserGroupPermissionRel(Base, Default):
-    """Many-to-many association table for Permissions *in* UserGroups
-    """
+    """Many-to-many association table for Permissions *in* UserGroups"""
 
     user_group_id = Column(Integer, ForeignKey("user_group.id"), primary_key=True)
     permission_id = Column(Integer, ForeignKey("permission.id"), primary_key=True)

@@ -7,9 +7,9 @@
     xmlns="http://www.w3.org/2000/svg"
     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-    width="208.22072mm"
-    height="208.22072mm"
-    viewBox="0 0 208.22071 208.22071"
+    width="206.03789mm"
+    height="206.03789mm"
+    viewBox="0 0 206.03788 206.03788"
     version="1.1"
     id="svg828"
     inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
@@ -27,8 +27,8 @@
       inkscape:pageopacity="0.0"
       inkscape:pageshadow="2"
       inkscape:zoom="0.35"
-      inkscape:cx="510.63079"
-      inkscape:cy="186.74391"
+      inkscape:cx="0.79151874"
+      inkscape:cy="171.19032"
       inkscape:document-units="mm"
       inkscape:current-layer="layer1"
       showgrid="false"
@@ -37,10 +37,15 @@
       fit-margin-right="0"
       fit-margin-bottom="0"
       inkscape:window-width="1920"
-      inkscape:window-height="1008"
+      inkscape:window-height="1016"
       inkscape:window-x="1366"
-      inkscape:window-y="35"
+      inkscape:window-y="27"
       inkscape:window-maximized="1"
+      inkscape:pagecheckerboard="true"
+      inkscape:snap-bbox="true"
+      inkscape:snap-bbox-midpoints="true"
+      inkscape:snap-object-midpoints="true"
+      inkscape:snap-global="false"
     />
     <metadata id="metadata825">
       <rdf:RDF>
@@ -51,53 +56,48 @@
         </cc:Work>
       </rdf:RDF>
     </metadata>
-    <g
-      inkscape:label="Layer 1"
-      inkscape:groupmode="layer"
-      id="layer1"
-      transform="translate(305.19368,6.9542353)"
-    >
-      <circle
-        style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.26079601"
-        id="path819"
-        cx="-201.08333"
-        cy="97.15612"
-        r="103.97996"
+    <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" transform="translate(304.10228,5.8628225)">
+      <path
+        style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:18.38140869;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
+        d="m -201.08334,3.3275012 46.91431,46.9143108 46.91431,46.914311 -46.91431,46.914307 -46.91431,46.91431 -46.91431,-46.91431 -46.91431,-46.914312 46.91431,-46.914305 z"
+        id="rect819"
+        inkscape:connector-curvature="0"
+        sodipodi:nodetypes="ccccccccc"
       />
       <rect
-        style="fill:#d27019;fill-opacity:1;stroke:#000000;stroke-width:0.26457733;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
+        style="fill:#d27019;fill-opacity:1;stroke:#ffffff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
         id="rect815"
         width="68.035713"
         height="68.035713"
-        x="-73.487633"
-        y="142.85144"
+        x="-71.990929"
+        y="141.35474"
         transform="rotate(45)"
       />
       <rect
-        style="fill:#e77209;fill-opacity:1;stroke:#000000;stroke-width:0.26457733;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
+        style="fill:#e77209;fill-opacity:1;stroke:#ffffff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
         id="rect815-8"
         width="68.035713"
         height="68.035713"
-        x="-141.52335"
-        y="142.85144"
+        x="-143.02005"
+        y="141.35474"
         transform="rotate(45)"
       />
       <rect
-        style="fill:#ffbd82;fill-opacity:1;stroke:#000000;stroke-width:0.26457733;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
+        style="fill:#ffbd82;fill-opacity:1;stroke:#ffffff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
         id="rect815-8-3"
         width="68.035713"
         height="68.035713"
-        x="-141.52335"
-        y="210.88715"
+        x="-143.02005"
+        y="212.38385"
         transform="rotate(45)"
       />
       <rect
-        style="fill:#4d4d4d;fill-opacity:1;stroke:#000000;stroke-width:0.26457733;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
+        style="fill:#4d4d4d;fill-opacity:1;stroke:#ffffff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3.5;stroke-dasharray:none;stroke-opacity:1"
         id="rect815-8-3-6"
         width="68.035713"
         height="68.035713"
-        x="-73.487633"
-        y="210.88715"
+        x="-71.990929"
+        y="212.38385"
         transform="rotate(45)"
       />
     </g>

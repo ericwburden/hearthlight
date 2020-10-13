@@ -7,26 +7,20 @@ from .templates import TableTemplate
 
 
 class InterfaceTypeEnum(str, Enum):
-    test = "test"
-    form_input = "form_input"
-
-
-class InterfaceTemplate(BaseModel):
-    table: Optional[TableTemplate]
+    form_input = "form_input_interface"
+    query = "query_interface"
 
 
 # Shared properties
 class InterfaceBase(BaseModel):
     name: Optional[str]
     interface_type: Optional[InterfaceTypeEnum]
-    template: Optional[InterfaceTemplate]
 
 
 # Properties to receive on node creation
 class InterfaceCreate(InterfaceBase):
     name: str
     interface_type: InterfaceTypeEnum
-    template: InterfaceTemplate
 
 
 # Properties to receive on node update
@@ -37,7 +31,6 @@ class InterfaceUpdate(InterfaceBase):
 # Properties shared by models stored in DB
 class InterfaceInDBBase(InterfaceBase):
     id: int
-    table_created: bool = False
     created_at: datetime
     updated_at: datetime
     created_by_id: int

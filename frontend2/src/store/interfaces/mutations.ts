@@ -7,8 +7,7 @@ export const mutations = {
   setInterfaces(state: InterfaceState, payload: InterfaceList) {
     state.interfaces = payload;
   },
-}
-
+};
 
 // eslint-disable-next-line
 const { commit } = getStoreAccessors<InterfaceState | any, State>('');

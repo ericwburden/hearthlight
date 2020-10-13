@@ -31,7 +31,7 @@
           <v-tab to="/admin/nodes">Nodes<v-icon>mdi-family-tree</v-icon></v-tab>
           <v-tab to="/admin/user-groups">User Groups<v-icon>mdi-lock-open</v-icon></v-tab>
           <v-tab to="/admin/users">Users<v-icon>mdi-account-multiple</v-icon></v-tab>
-          <v-tab>Interfaces<v-icon>mdi-book-information-variant</v-icon></v-tab>
+          <v-tab to="/admin/interfaces">Interfaces<v-icon>mdi-book-information-variant</v-icon></v-tab>
         </v-tabs>
       </template>
     </v-app-bar>

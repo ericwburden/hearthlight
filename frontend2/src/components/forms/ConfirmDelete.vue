@@ -42,6 +42,8 @@ export default class ConfirmDelete extends Vue {
         this.printType = 'User';
         break;
       case 'interface':
+      case 'form_input_interface':
+      case 'query_interface':
         this.printType = 'Interface';
         break;
       default:

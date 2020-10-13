@@ -3,7 +3,6 @@ from .interface import (
     InterfaceCreate,
     InterfaceInDB,
     InterfaceUpdate,
-    InterfaceTemplate,
     TableTemplate,
     ColumnTemplate,
     FormInput,

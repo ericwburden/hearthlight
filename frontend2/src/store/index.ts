@@ -3,6 +3,7 @@ import Vuex, { StoreOptions } from 'vuex';
 
 import { mainModule } from './main';
 import { adminModule } from './admin';
+import { interfaceModule } from './interfaces';
 import { State } from './state';
 
 Vue.use(Vuex);
@@ -11,6 +12,7 @@ const storeOptions: StoreOptions<State> = {
   modules: {
     main: mainModule,
     admin: adminModule,
+    interfaces: interfaceModule,
   },
 };
 

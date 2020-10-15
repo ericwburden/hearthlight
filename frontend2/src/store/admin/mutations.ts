@@ -30,9 +30,6 @@ export const mutations = {
   setNetworks(state: AdminState, payload: INodeList) {
     state.networks = payload;
   },
-  setNodeTypes(state: AdminState, payload: string[]) {
-    state.nodeTypes = payload;
-  },
   setActiveNode(state: AdminState, payload: INode) {
     state.activeNode = payload;
   },
@@ -61,7 +58,6 @@ export const commitSetActiveNode = commit(mutations.setActiveNode);
 export const commitSetApplicationModel = commit(mutations.setApplicationModel);
 export const commitSetNetworks = commit(mutations.setNetworks);
 export const commitSetNodes = commit(mutations.setNodes);
-export const commitSetNodeTypes = commit(mutations.setNodeTypes);
 
 export const commitSetActiveUserGroup = commit(mutations.setActiveUserGroup);
 export const commitSetUserGroups = commit(mutations.setUserGroups);

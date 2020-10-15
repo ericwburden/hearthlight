@@ -40,13 +40,10 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { Component, Vue } from 'vue-property-decorator';
 import { INodeCreate } from '@/interfaces';
-import {
-  dispatchCreateNode,
-  dispatchGetNetworks,
-  dispatchGetNodeTypes,
-  dispatchGetOneNode,
-} from '@/store/admin/actions';
-import { readActiveNode, readNodeTypes } from '@/store/admin/getters';
+import { dispatchCreateNode, dispatchGetNetworks, dispatchGetOneNode } from '@/store/admin/actions';
+import { readActiveNode } from '@/store/admin/getters';
+import { dispatchGetNodeTypes } from '@/store/utils/actions';
+import { readNodeTypes } from '@/store/utils/getters';
 
 @Component
 export default class NodeCreate extends Vue {

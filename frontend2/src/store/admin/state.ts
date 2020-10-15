@@ -13,7 +13,6 @@ export interface AdminState {
   activeNode: INode | null;
   networks: INodeList;
   nodes: INodeList;
-  nodeTypes: string[];
   activeUser: IUserProfile | null;
   users: IUserProfileList;
   activeUserGroup: IUserGroup | null;

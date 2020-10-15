@@ -8,7 +8,6 @@ import { AdminState } from './state';
 const defaultState: AdminState = {
   applicationModel: [],
   networks: { total_records: 0, records: [] },
-  nodeTypes: [],
   activeNode: null,
   nodes: { total_records: 0, records: [] },
   activeUserGroup: null,

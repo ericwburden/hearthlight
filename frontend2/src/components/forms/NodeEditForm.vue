@@ -51,8 +51,10 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator';
 import { INode, INodeUpdate } from '@/interfaces';
-import { dispatchGetOneNode, dispatchUpdateNode, dispatchGetNodeTypes } from '@/store/admin/actions';
-import { readActiveNode, readNodeTypes } from '@/store/admin/getters';
+import { dispatchGetOneNode, dispatchUpdateNode } from '@/store/admin/actions';
+import { readActiveNode } from '@/store/admin/getters';
+import { dispatchGetNodeTypes } from '@/store/utils/actions';
+import { readNodeTypes } from '@/store/utils/getters';
 
 @Component
 export default class NodeEditForm extends Vue {

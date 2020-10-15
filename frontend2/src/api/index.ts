@@ -3,6 +3,7 @@ import { user } from './user';
 import { userGroup } from './user-group';
 import { node } from './node';
 import { interfaces } from './interface';
+import { utils } from './utils';
 
 export const api = {
   // Authentication endpoints
@@ -27,7 +28,6 @@ export const api = {
   getNetworks: node.getNetworks,
   getNodes: node.getNodes,
   getNodeChildren: node.getNodeChildren,
-  getNodeTypes: node.getNodeTypes,
 
   // User Group endpoints
   createUserGroup: userGroup.createUserGroup,
@@ -42,6 +42,11 @@ export const api = {
 
   // Interface endpoints
   getInterfaces: interfaces.getInterfaces,
+
+  // Utils endpoints
+  getColumnNames: utils.getColumnNames,
+  getNodeTypes: utils.getNodeTypes,
+  getTableNames: utils.getTableNames,
 };
 
 export default api;

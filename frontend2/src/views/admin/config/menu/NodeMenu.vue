@@ -41,6 +41,16 @@
                   icon
                 ></labeled-menu-button>
               </v-col>
+
+              <v-col>
+                <labeled-menu-button
+                  use-icon="mdi-swap-vertical-circle"
+                  label="Interface"
+                  color="success"
+                  :to="newInterfaceRoute"
+                  icon
+                ></labeled-menu-button>
+              </v-col>
             </v-row>
           </v-container>
         </v-card>
@@ -139,6 +149,10 @@ export default class NodeMenu extends Vue {
 
   get newUserGroupRoute() {
     return `/admin/configure/node/${this.id}/add-user-group`;
+  }
+
+  get newInterfaceRoute() {
+    return `/admin/configure/node/${this.id}/add-interface`;
   }
 
   get existingNodeRoute() {

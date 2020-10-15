@@ -19,7 +19,6 @@ import {
   commitSetApplicationModel,
   commitSetNetworks,
   commitSetNodes,
-  commitSetNodeTypes,
   commitSetActiveUserGroup,
   commitSetUserGroups,
   commitSetActiveUser,
@@ -134,16 +133,6 @@ export const actions = {
       );
       if (response.data) {
         commitSetNodes(context, response.data);
-      }
-    } catch (error) {
-      await dispatchCheckApiError(context, error);
-    }
-  },
-  async actionGetNodeTypes(context: MainContext) {
-    try {
-      const response = await api.getNodeTypes();
-      if (response.data) {
-        commitSetNodeTypes(context, response.data);
       }
     } catch (error) {
       await dispatchCheckApiError(context, error);
@@ -433,7 +422,6 @@ export const dispatchGetOneNode = dispatch(actions.actionReadOneNode);
 export const dispatchUpdateNode = dispatch(actions.actionUpdateNode);
 export const dispatchGetNetworks = dispatch(actions.actionGetNetworks);
 export const dispatchGetNodes = dispatch(actions.actionGetNodes);
-export const dispatchGetNodeTypes = dispatch(actions.actionGetNodeTypes);
 export const dispatchUpdateApplicationModelChildren = dispatch(actions.actionUpdateApplicationModelChildren);
 
 export const dispatchGetUserGroups = dispatch(actions.actionGetUserGroups);

@@ -32,7 +32,7 @@ import { readApplicationModel } from '../admin/getters';
 
 type MainContext = ActionContext<MainState, State>;
 
-//eslint-disable-next-line
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { dispatch } = getStoreAccessors<AdminState | MainState | any, State>('');
 
 /* eslint-disable @typescript-eslint/camelcase */

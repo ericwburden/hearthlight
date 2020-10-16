@@ -42,6 +42,12 @@ const UserCreate = () =>
 const UserSearch = () =>
   import(/* webpackChunkName: "admin-configure-user-search" */ '../views/admin/config/form/UserSearch.vue');
 
+const InterfaceFormInputCreate = () =>
+  import(
+    /* webpackChunkName: "admin-configure-interface-create" */
+    '../views/admin/config/form/InterfaceFormInputCreate.vue'
+  );
+
 const ConfirmDelete = () =>
   import(/* webpackChunkName: "admin-configure" */ '../views/admin/config/form/ConfirmDelete.vue');
 
@@ -76,4 +82,5 @@ export const configRoutes: Array<RouteConfig> = [
     name: 'admin.configure.user-group.user-search',
     component: UserSearch,
   },
+  { path: 'node/:id/add-interface', name: 'admin.configure.node.add-interface', component: InterfaceFormInputCreate },
 ];
